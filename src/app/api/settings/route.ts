@@ -47,6 +47,36 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+export async function POST() {
+  try {
+    const apiKey = await settingsService.getApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { success: false, error: "No API key configured" },
+        { status: 400 }
+      );
+    }
+
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 10,
+      messages: [{ role: "user", content: "hi" }],
+    });
+
+    return NextResponse.json({
+      success: true,
+      model: response.model,
+      usage: response.usage,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
+  }
+}
+
 export async function DELETE() {
   try {
     await settingsService.deleteApiKey();

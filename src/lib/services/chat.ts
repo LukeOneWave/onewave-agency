@@ -42,6 +42,17 @@ export const chatService = {
     });
   },
 
+  async getRecentSessions(limit = 20) {
+    return prisma.chatSession.findMany({
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      include: {
+        agent: { select: { name: true, division: true, slug: true } },
+        _count: { select: { messages: true } },
+      },
+    });
+  },
+
   async updateSessionTitle(id: string, title: string) {
     return prisma.chatSession.update({
       where: { id },

@@ -52,6 +52,20 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
+        let closed = false;
+
+        function safeClose() {
+          if (!closed) {
+            closed = true;
+            controller.close();
+          }
+        }
+
+        function safeEnqueue(data: string) {
+          if (!closed) {
+            controller.enqueue(encoder.encode(data));
+          }
+        }
 
         try {
           const anthropicStream = client.messages.stream({
@@ -69,7 +83,7 @@ export async function POST(request: NextRequest) {
           anthropicStream.on("text", (text) => {
             fullResponse += text;
             const event = JSON.stringify({ type: "text", text });
-            controller.enqueue(encoder.encode(`data: ${event}\n\n`));
+            safeEnqueue(`data: ${event}\n\n`);
           });
 
           anthropicStream.on("end", async () => {
@@ -81,7 +95,7 @@ export async function POST(request: NextRequest) {
               };
 
               const doneEvent = JSON.stringify({ type: "done", usage });
-              controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
+              safeEnqueue(`data: ${doneEvent}\n\n`);
 
               // Persist messages
               if (sessionId && lastUserMessage) {
@@ -104,7 +118,7 @@ export async function POST(request: NextRequest) {
               // Persistence errors should not break the stream
             }
 
-            controller.close();
+            safeClose();
           });
 
           anthropicStream.on("error", (error) => {
@@ -113,8 +127,8 @@ export async function POST(request: NextRequest) {
               message:
                 error instanceof Error ? error.message : "Stream error",
             });
-            controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
-            controller.close();
+            safeEnqueue(`data: ${errorEvent}\n\n`);
+            safeClose();
           });
         } catch (error) {
           const errorEvent = JSON.stringify({
@@ -122,8 +136,8 @@ export async function POST(request: NextRequest) {
             message:
               error instanceof Error ? error.message : "Failed to start stream",
           });
-          controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
-          controller.close();
+          safeEnqueue(`data: ${errorEvent}\n\n`);
+          safeClose();
         }
       },
     });

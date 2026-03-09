@@ -30,6 +30,10 @@ export function ChatPage({ session }: ChatPageProps) {
   const error = useChatStore((s) => s.error);
 
   useEffect(() => {
+    // Only init if switching to a different session — don't wipe in-memory messages
+    const current = useChatStore.getState();
+    if (current.sessionId === session.id) return;
+
     useChatStore.getState().initSession(
       session.id,
       session.agent.slug,
@@ -40,7 +44,7 @@ export function ChatPage({ session }: ChatPageProps) {
         content: m.content,
       }))
     );
-  }, [session]);
+  }, [session.id]);
 
   useEffect(() => {
     if (error) {

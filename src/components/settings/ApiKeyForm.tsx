@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export function ApiKeyForm() {
@@ -14,6 +14,7 @@ export function ApiKeyForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     fetchStatus();
@@ -134,18 +135,49 @@ export function ApiKeyForm() {
       </div>
 
       {hasKey && (
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Remove API Key"
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              setTesting(true);
+              try {
+                const res = await fetch("/api/settings", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                  toast.success(`API key works! Connected to ${data.model}`);
+                } else {
+                  toast.error(data.error || "API key test failed");
+                }
+              } catch {
+                toast.error("Failed to test API key");
+              } finally {
+                setTesting(false);
+              }
+            }}
+            disabled={testing}
+          >
+            {testing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+            )}
+            Test API Key
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <XCircle className="mr-2 h-4 w-4" />
+            )}
+            Remove
+          </Button>
+        </div>
       )}
     </div>
   );
