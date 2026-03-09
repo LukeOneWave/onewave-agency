@@ -7,10 +7,10 @@
 
 ### Agent Management
 
-- [ ] **AGNT-01**: User can browse all 61 agents in a grid view
-- [ ] **AGNT-02**: User can filter agents by division using tabs
-- [ ] **AGNT-03**: User can search agents by name or description
-- [ ] **AGNT-04**: User can view agent detail page with full personality, process, and metrics
+- [x] **AGNT-01**: User can browse all 61 agents in a grid view
+- [x] **AGNT-02**: User can filter agents by division using tabs
+- [x] **AGNT-03**: User can search agents by name or description
+- [x] **AGNT-04**: User can view agent detail page with full personality, process, and metrics
 
 ### Chat
 
@@ -99,10 +99,10 @@
 | FNDN-01 | Phase 1 | Pending |
 | FNDN-02 | Phase 1 | Complete |
 | FNDN-03 | Phase 1 | Complete |
-| AGNT-01 | Phase 1 | Pending |
-| AGNT-02 | Phase 1 | Pending |
-| AGNT-03 | Phase 1 | Pending |
-| AGNT-04 | Phase 1 | Pending |
+| AGNT-01 | Phase 1 | Complete |
+| AGNT-02 | Phase 1 | Complete |
+| AGNT-03 | Phase 1 | Complete |
+| AGNT-04 | Phase 1 | Complete |
 | CHAT-01 | Phase 2 | Pending |
 | CHAT-02 | Phase 2 | Pending |
 | CHAT-03 | Phase 2 | Pending |
