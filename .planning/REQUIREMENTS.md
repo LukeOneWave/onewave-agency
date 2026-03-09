@@ -41,7 +41,7 @@
 
 ### Foundation
 
-- [ ] **FNDN-01**: User can configure Anthropic API key in settings
+- [x] **FNDN-01**: User can configure Anthropic API key in settings
 - [x] **FNDN-02**: App persists data in local SQLite database
 - [x] **FNDN-03**: All 61 agents are seeded from agency-agents repo on first run
 
@@ -96,7 +96,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FNDN-01 | Phase 1 | Pending |
+| FNDN-01 | Phase 1 | Complete |
 | FNDN-02 | Phase 1 | Complete |
 | FNDN-03 | Phase 1 | Complete |
 | AGNT-01 | Phase 1 | Complete |
