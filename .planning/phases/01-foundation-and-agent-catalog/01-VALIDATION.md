@@ -2,8 +2,8 @@
 phase: 1
 slug: foundation-and-agent-catalog
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-09
 ---
 
@@ -18,7 +18,7 @@ created: 2026-03-09
 | Property | Value |
 |----------|-------|
 | **Framework** | vitest |
-| **Config file** | vitest.config.ts (Wave 0 installs) |
+| **Config file** | vitest.config.ts (created in Plan 01 Task 1) |
 | **Quick run command** | `npx vitest run --reporter=verbose` |
 | **Full suite command** | `npx vitest run` |
 | **Estimated runtime** | ~10 seconds |
@@ -38,13 +38,15 @@ created: 2026-03-09
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 1-01-01 | 01 | 1 | FNDN-02 | integration | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-01-02 | 01 | 1 | FNDN-03 | unit | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-02-01 | 02 | 1 | AGNT-01 | e2e/manual | manual browser check | N/A | ⬜ pending |
-| 1-02-02 | 02 | 1 | AGNT-02 | e2e/manual | manual browser check | N/A | ⬜ pending |
-| 1-02-03 | 02 | 1 | AGNT-03 | e2e/manual | manual browser check | N/A | ⬜ pending |
-| 1-02-04 | 02 | 1 | AGNT-04 | e2e/manual | manual browser check | N/A | ⬜ pending |
-| 1-03-01 | 03 | 1 | FNDN-01 | e2e/manual | manual browser check | N/A | ⬜ pending |
+| 1-01-01 | 01 | 1 | FNDN-02 | integration | `npx prisma db push 2>&1 && npm run build 2>&1 \| tail -5` | N/A | ⬜ pending |
+| 1-01-02 | 01 | 1 | FNDN-03 | integration | `npx prisma db seed 2>&1 \| tail -5` | N/A | ⬜ pending |
+| 1-01-03 | 01 | 1 | FNDN-02, FNDN-03 | unit | `npx vitest run --reporter=verbose` | ✅ (created in task) | ⬜ pending |
+| 1-02-01 | 02 | 2 | AGNT-01, AGNT-02, AGNT-03, AGNT-04 | unit+integration | `npx vitest run src/lib/services/__tests__/agent.test.ts --reporter=verbose` | ✅ (created in task) | ⬜ pending |
+| 1-02-02 | 02 | 2 | AGNT-01 | build | `npm run build 2>&1 \| tail -10` | N/A | ⬜ pending |
+| 1-02-03 | 02 | 2 | AGNT-04 | build | `npm run build 2>&1 \| tail -10` | N/A | ⬜ pending |
+| 1-03-01 | 03 | 2 | FNDN-01 | build | `npm run build 2>&1 \| tail -10` | N/A | ⬜ pending |
+| 1-03-02 | 03 | 2 | FNDN-01 | build | `npm run build 2>&1 \| tail -10` | N/A | ⬜ pending |
+| 1-03-03 | 03 | 2 | ALL | manual | checkpoint:human-verify | N/A | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,12 +54,12 @@ created: 2026-03-09
 
 ## Wave 0 Requirements
 
-- [ ] `vitest` + `@testing-library/react` — test framework installation
-- [ ] `vitest.config.ts` — vitest configuration
-- [ ] `src/__tests__/agents-loader.test.ts` — stubs for FNDN-03 (agent parsing)
-- [ ] `src/__tests__/prisma-seed.test.ts` — stubs for FNDN-02 (database seeding)
+- [x] `vitest` + `@testing-library/react` — installed in Plan 01 Task 1
+- [x] `vitest.config.ts` — created in Plan 01 Task 1
+- [x] `src/__tests__/agents-loader.test.ts` — created in Plan 01 Task 3
+- [x] `src/__tests__/prisma-seed.test.ts` — created in Plan 01 Task 3
 
-*Test infrastructure must exist before plans execute.*
+*All Wave 0 test infrastructure is created by Plan 01 tasks.*
 
 ---
 
@@ -76,11 +78,11 @@ created: 2026-03-09
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 15s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 15s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
