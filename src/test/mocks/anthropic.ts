@@ -39,6 +39,12 @@ export function mockStream(textChunks: string[], options?: { error?: Error }) {
         usage: { input_tokens: 10, output_tokens: 20 },
       };
     },
+
+    async finalMessage() {
+      return {
+        usage: { input_tokens: 10, output_tokens: 20 },
+      };
+    },
   };
 
   return stream;
