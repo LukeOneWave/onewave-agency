@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can browse all 61 agents in a grid view with name, description, and division color
   4. User can filter agents by division using tabs and search by name or description
   5. User can click an agent to view its full detail page showing personality, process, and metrics
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Scaffold Next.js 15 app with Prisma 7 + SQLite, seed all agents from agency-agents repo
+- [ ] 01-02-PLAN.md — Agent catalog UI: grid view, division tabs, search, and detail pages
+- [ ] 01-03-PLAN.md — Settings page with API key management, navigation shell with sidebar and dark mode
 
 ### Phase 2: Chat and Streaming
 **Goal**: Users can have real-time conversations with any agent and see rich, well-formatted responses
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Agent Catalog | 0/3 | Not started | - |
+| 1. Foundation and Agent Catalog | 0/3 | Planning complete | - |
 | 2. Chat and Streaming | 0/2 | Not started | - |
 | 3. Review System | 0/2 | Not started | - |
 | 4. Multi-Agent Orchestration | 0/2 | Not started | - |
