@@ -46,11 +46,11 @@ Plans:
   2. Agent responses stream in real-time with visible token-by-token rendering
   3. Chat messages render markdown formatting and syntax-highlighted code blocks correctly
   4. User can select which Claude model (Sonnet/Opus/Haiku) to use for a session
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Prisma schema (ChatSession/Message), chat service layer, SSE streaming API route, Zustand chat store
+- [ ] 02-02-PLAN.md — Chat UI components (message list, input, model selector, markdown rendering), agent detail integration, sidebar nav
 
 ### Phase 3: Review System
 **Goal**: Users can review agent deliverables with approve/revise actions and send revision feedback back to agents
