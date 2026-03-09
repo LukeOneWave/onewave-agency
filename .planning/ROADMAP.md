@@ -46,9 +46,10 @@ Plans:
   2. Agent responses stream in real-time with visible token-by-token rendering
   3. Chat messages render markdown formatting and syntax-highlighted code blocks correctly
   4. User can select which Claude model (Sonnet/Opus/Haiku) to use for a session
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
+- [ ] 02-00-PLAN.md — Wave 0: Test stubs and Anthropic SDK mocks for all CHAT requirements
 - [ ] 02-01-PLAN.md — Prisma schema (ChatSession/Message), chat service layer, SSE streaming API route, Zustand chat store
 - [ ] 02-02-PLAN.md — Chat UI components (message list, input, model selector, markdown rendering), agent detail integration, sidebar nav
 
@@ -103,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Agent Catalog | 1/3 | In Progress|  |
-| 2. Chat and Streaming | 0/2 | Not started | - |
+| 2. Chat and Streaming | 0/3 | Not started | - |
 | 3. Review System | 0/2 | Not started | - |
 | 4. Multi-Agent Orchestration | 0/2 | Not started | - |
 | 5. Dashboard and Polish | 0/1 | Not started | - |
