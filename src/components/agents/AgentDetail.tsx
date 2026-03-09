@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Agent } from "@/types/agent";
 import { ArrowLeft } from "lucide-react";
+import { ChatWithAgentButton } from "./ChatWithAgentButton";
 
 export function AgentDetail({ agent }: { agent: Agent }) {
   const tools = agent.tools
@@ -31,6 +32,9 @@ export function AgentDetail({ agent }: { agent: Agent }) {
         <p className="mt-2 text-lg text-muted-foreground">
           {agent.description}
         </p>
+        <div className="mt-4">
+          <ChatWithAgentButton agentId={agent.id} agentName={agent.name} />
+        </div>
       </div>
 
       {tools.length > 0 && (
