@@ -14,10 +14,10 @@
 
 ### Chat
 
-- [ ] **CHAT-01**: User can start a chat session with any agent
-- [ ] **CHAT-02**: Agent responses stream in real-time via Claude API
+- [x] **CHAT-01**: User can start a chat session with any agent
+- [x] **CHAT-02**: Agent responses stream in real-time via Claude API
 - [ ] **CHAT-03**: Chat renders markdown and syntax-highlighted code blocks
-- [ ] **CHAT-04**: User can select which Claude model to use (Sonnet/Opus/Haiku)
+- [x] **CHAT-04**: User can select which Claude model to use (Sonnet/Opus/Haiku)
 
 ### Review
 
@@ -103,10 +103,10 @@
 | AGNT-02 | Phase 1 | Complete |
 | AGNT-03 | Phase 1 | Complete |
 | AGNT-04 | Phase 1 | Complete |
-| CHAT-01 | Phase 2 | Pending |
-| CHAT-02 | Phase 2 | Pending |
+| CHAT-01 | Phase 2 | Complete |
+| CHAT-02 | Phase 2 | Complete |
 | CHAT-03 | Phase 2 | Pending |
-| CHAT-04 | Phase 2 | Pending |
+| CHAT-04 | Phase 2 | Complete |
 | REVW-01 | Phase 3 | Pending |
 | REVW-02 | Phase 3 | Pending |
 | REVW-03 | Phase 3 | Pending |
