@@ -13,7 +13,7 @@ OneWave delivers a local AI agent management platform where the review workflow 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation and Agent Catalog** - App scaffolding, database, agent seeding, browsing/filtering UI, settings
-- [ ] **Phase 2: Chat and Streaming** - Real-time chat with agents via Claude API, markdown rendering, model selection
+- [x] **Phase 2: Chat and Streaming** - Real-time chat with agents via Claude API, markdown rendering, model selection (completed 2026-03-09)
 - [ ] **Phase 3: Review System** - Deliverable extraction, approve/revise workflow, revision feedback loop
 - [ ] **Phase 4: Multi-Agent Orchestration** - Parallel agent execution on shared briefs with independent streaming lanes
 - [ ] **Phase 5: Dashboard and Polish** - Stats, activity feed, utilization charts, refined states
@@ -46,7 +46,7 @@ Plans:
   2. Agent responses stream in real-time with visible token-by-token rendering
   3. Chat messages render markdown formatting and syntax-highlighted code blocks correctly
   4. User can select which Claude model (Sonnet/Opus/Haiku) to use for a session
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 02-00-PLAN.md — Wave 0: Test stubs and Anthropic SDK mocks for all CHAT requirements
@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Agent Catalog | 3/3 | Complete | 2026-03-09 |
-| 2. Chat and Streaming | 2/3 | In Progress | - |
+| 2. Chat and Streaming | 3/3 | Complete   | 2026-03-09 |
 | 3. Review System | 0/2 | Not started | - |
 | 4. Multi-Agent Orchestration | 0/2 | Not started | - |
 | 5. Dashboard and Polish | 0/1 | Not started | - |
