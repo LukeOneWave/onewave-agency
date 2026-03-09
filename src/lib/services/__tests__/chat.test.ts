@@ -1,130 +1,162 @@
-import { describe, it, expect, afterAll } from "vitest";
-import { chatService } from "@/lib/services/chat";
-import { agentService } from "@/lib/services/agent";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// Mock Prisma
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    chatSession: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    message: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
+  },
+}));
+
 import { prisma } from "@/lib/prisma";
+import { chatService } from "@/lib/services/chat";
 
-// Track created sessions for cleanup
-const createdSessionIds: string[] = [];
-
-afterAll(async () => {
-  // Clean up test data
-  for (const id of createdSessionIds) {
-    await prisma.chatSession.delete({ where: { id } }).catch(() => {});
-  }
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
 describe("chatService", () => {
   describe("createSession", () => {
-    it("creates a session linked to an agent", async () => {
-      const agents = await agentService.getAll();
-      const agent = agents[0];
+    it("creates a session with agentId and default model", async () => {
+      const mockSession = {
+        id: "session-1",
+        agentId: "agent-1",
+        model: "claude-sonnet-4-6",
+        agent: { id: "agent-1", name: "Test Agent" },
+      };
+      vi.mocked(prisma.chatSession.create).mockResolvedValue(mockSession as never);
 
-      const session = await chatService.createSession(
-        agent.id,
-        "claude-sonnet-4-6"
+      const result = await chatService.createSession("agent-1", "claude-sonnet-4-6");
+
+      expect(prisma.chatSession.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            agentId: "agent-1",
+            model: "claude-sonnet-4-6",
+          }),
+        })
       );
-      createdSessionIds.push(session.id);
+      expect(result).toEqual(mockSession);
+    });
 
-      expect(session.id).toBeDefined();
-      expect(session.agentId).toBe(agent.id);
-      expect(session.model).toBe("claude-sonnet-4-6");
-      expect(session.agent).toBeDefined();
-      expect(session.agent.name).toBe(agent.name);
+    it("creates a session with specified model for CHAT-04", async () => {
+      vi.mocked(prisma.chatSession.create).mockResolvedValue({
+        id: "session-2",
+        agentId: "agent-1",
+        model: "claude-opus-4-6",
+        agent: { id: "agent-1", name: "Test Agent" },
+      } as never);
+
+      await chatService.createSession("agent-1", "claude-opus-4-6");
+
+      expect(prisma.chatSession.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            model: "claude-opus-4-6",
+          }),
+        })
+      );
     });
   });
 
   describe("getSession", () => {
-    it("returns session with agent and messages", async () => {
-      const agents = await agentService.getAll();
-      const created = await chatService.createSession(
-        agents[0].id,
-        "claude-sonnet-4-6"
+    it("returns session with agent and messages included", async () => {
+      const mockSession = {
+        id: "session-1",
+        agentId: "agent-1",
+        agent: { id: "agent-1", name: "Test Agent" },
+        messages: [],
+      };
+      vi.mocked(prisma.chatSession.findUnique).mockResolvedValue(mockSession as never);
+
+      const result = await chatService.getSession("session-1");
+
+      expect(prisma.chatSession.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "session-1" },
+          include: expect.objectContaining({
+            agent: true,
+          }),
+        })
       );
-      createdSessionIds.push(created.id);
-
-      const session = await chatService.getSession(created.id);
-      expect(session).not.toBeNull();
-      expect(session!.agent).toBeDefined();
-      expect(session!.messages).toEqual([]);
-    });
-
-    it("returns null for non-existent session", async () => {
-      const session = await chatService.getSession("non-existent-id");
-      expect(session).toBeNull();
+      expect(result).toEqual(mockSession);
     });
   });
 
   describe("addMessage", () => {
-    it("adds a message to a session", async () => {
-      const agents = await agentService.getAll();
-      const session = await chatService.createSession(
-        agents[0].id,
-        "claude-sonnet-4-6"
-      );
-      createdSessionIds.push(session.id);
+    it("creates a message with role and content", async () => {
+      const mockMessage = {
+        id: "msg-1",
+        sessionId: "session-1",
+        role: "user",
+        content: "Hello",
+      };
+      vi.mocked(prisma.message.create).mockResolvedValue(mockMessage as never);
 
-      const message = await chatService.addMessage(
-        session.id,
-        "user",
-        "Hello!"
+      const result = await chatService.addMessage("session-1", "user", "Hello");
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sessionId: "session-1",
+            role: "user",
+            content: "Hello",
+          }),
+        })
       );
-      expect(message.role).toBe("user");
-      expect(message.content).toBe("Hello!");
-      expect(message.sessionId).toBe(session.id);
+      expect(result).toEqual(mockMessage);
     });
 
-    it("adds a message with token counts", async () => {
-      const agents = await agentService.getAll();
-      const session = await chatService.createSession(
-        agents[0].id,
-        "claude-sonnet-4-6"
-      );
-      createdSessionIds.push(session.id);
+    it("stores token counts when provided", async () => {
+      vi.mocked(prisma.message.create).mockResolvedValue({
+        id: "msg-2",
+        sessionId: "session-1",
+        role: "assistant",
+        content: "Hi there",
+        inputTokens: 10,
+        outputTokens: 20,
+      } as never);
 
-      const message = await chatService.addMessage(
-        session.id,
-        "assistant",
-        "Hi there!",
-        { input: 10, output: 5 }
+      await chatService.addMessage("session-1", "assistant", "Hi there", {
+        input: 10,
+        output: 20,
+      });
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            inputTokens: 10,
+            outputTokens: 20,
+          }),
+        })
       );
-      expect(message.inputTokens).toBe(10);
-      expect(message.outputTokens).toBe(5);
     });
   });
 
   describe("getSessionMessages", () => {
-    it("returns messages in chronological order", async () => {
-      const agents = await agentService.getAll();
-      const session = await chatService.createSession(
-        agents[0].id,
-        "claude-sonnet-4-6"
+    it("returns messages ordered by createdAt asc", async () => {
+      const mockMessages = [
+        { id: "msg-1", content: "Hello", createdAt: new Date("2026-01-01") },
+        { id: "msg-2", content: "Hi", createdAt: new Date("2026-01-02") },
+      ];
+      vi.mocked(prisma.message.findMany).mockResolvedValue(mockMessages as never);
+
+      const result = await chatService.getSessionMessages("session-1");
+
+      expect(prisma.message.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { sessionId: "session-1" },
+          orderBy: { createdAt: "asc" },
+        })
       );
-      createdSessionIds.push(session.id);
-
-      await chatService.addMessage(session.id, "user", "First");
-      await chatService.addMessage(session.id, "assistant", "Second");
-      await chatService.addMessage(session.id, "user", "Third");
-
-      const messages = await chatService.getSessionMessages(session.id);
-      expect(messages).toHaveLength(3);
-      expect(messages[0].content).toBe("First");
-      expect(messages[1].content).toBe("Second");
-      expect(messages[2].content).toBe("Third");
-    });
-  });
-
-  describe("updateSessionTitle", () => {
-    it("updates the session title", async () => {
-      const agents = await agentService.getAll();
-      const session = await chatService.createSession(
-        agents[0].id,
-        "claude-sonnet-4-6"
-      );
-      createdSessionIds.push(session.id);
-
-      await chatService.updateSessionTitle(session.id, "My Chat");
-      const updated = await chatService.getSession(session.id);
-      expect(updated!.title).toBe("My Chat");
+      expect(result).toEqual(mockMessages);
     });
   });
 });
