@@ -9,5 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Agent'
+export type * from './models/ChatSession'
+export type * from './models/Message'
 export type * from './models/Setting'
 export type * from './commonInputTypes'
