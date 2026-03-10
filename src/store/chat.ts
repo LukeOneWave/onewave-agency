@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatMessage, SSEEvent } from "@/types/chat";
+import type { ChatMessage, SSEEvent, DeliverableState } from "@/types/chat";
 
 interface ChatMessageUI {
   id?: string;
@@ -16,6 +16,7 @@ interface ChatState {
   selectedModel: string;
   error: string | null;
   _abortController: AbortController | null;
+  deliverables: Record<string, DeliverableState>;
 
   initSession: (
     sessionId: string,
@@ -27,6 +28,9 @@ interface ChatState {
   sendMessage: (content: string) => Promise<void>;
   clearChat: () => void;
   stopStreaming: () => void;
+  approveDeliverable: (messageId: string, deliverableIndex: number) => Promise<void>;
+  requestRevision: (messageId: string, deliverableIndex: number, feedback: string) => Promise<void>;
+  loadDeliverables: (messageId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>()((set, get) => ({
@@ -38,6 +42,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   selectedModel: "claude-sonnet-4-6",
   error: null,
   _abortController: null,
+  deliverables: {},
 
   initSession: (sessionId, agentSlug, agentName, existingMessages) => {
     set({
@@ -46,7 +51,17 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       agentName,
       messages: existingMessages ?? [],
       error: null,
+      deliverables: {},
     });
+
+    // Lazily load deliverable statuses for existing assistant messages
+    if (existingMessages) {
+      for (const msg of existingMessages) {
+        if (msg.role === "assistant" && msg.id) {
+          get().loadDeliverables(msg.id);
+        }
+      }
+    }
   },
 
   setModel: (model) => {
@@ -181,6 +196,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       selectedModel: "claude-sonnet-4-6",
       error: null,
       _abortController: null,
+      deliverables: {},
     });
   },
 
@@ -188,5 +204,87 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const state = get();
     state._abortController?.abort();
     set({ isStreaming: false, _abortController: null });
+  },
+
+  approveDeliverable: async (messageId, deliverableIndex) => {
+    const key = `${messageId}-${deliverableIndex}`;
+    const prev = get().deliverables[key];
+
+    // Optimistic update
+    set((s) => ({
+      deliverables: {
+        ...s.deliverables,
+        [key]: { status: "approved" },
+      },
+    }));
+
+    try {
+      await fetch(`/api/deliverables/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: deliverableIndex, status: "approved" }),
+      });
+    } catch {
+      // Revert on error
+      set((s) => ({
+        deliverables: {
+          ...s.deliverables,
+          [key]: prev ?? { status: "pending" },
+        },
+        error: "Failed to approve deliverable",
+      }));
+    }
+  },
+
+  requestRevision: async (messageId, deliverableIndex, feedback) => {
+    const key = `${messageId}-${deliverableIndex}`;
+
+    set((s) => ({
+      deliverables: {
+        ...s.deliverables,
+        [key]: { status: "revised", feedback },
+      },
+    }));
+
+    try {
+      await fetch(`/api/deliverables/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          index: deliverableIndex,
+          status: "revised",
+          feedback,
+        }),
+      });
+    } catch {
+      // Status already set, API persist is best-effort
+    }
+
+    // Auto-send revision as next message
+    const revisionPrompt = `Please revise the deliverable based on this feedback:\n\n${feedback}`;
+    await get().sendMessage(revisionPrompt);
+  },
+
+  loadDeliverables: async (messageId) => {
+    try {
+      const res = await fetch(`/api/deliverables/${messageId}`);
+      if (!res.ok) return;
+      const records = await res.json();
+      if (!Array.isArray(records) || records.length === 0) return;
+
+      set((s) => {
+        const updated = { ...s.deliverables };
+        for (const record of records) {
+          const key = `${messageId}-${record.index}`;
+          updated[key] = {
+            status: record.status,
+            ...(record.feedback && { feedback: record.feedback }),
+          };
+        }
+        return { deliverables: updated };
+      });
+    } catch {
+      // Silently fail -- deliverables will show as pending
+    }
   },
 }));
