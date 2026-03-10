@@ -73,8 +73,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const abortController = new AbortController();
 
     // Add user message and empty assistant placeholder
-    const userMessage: ChatMessageUI = { role: "user", content };
-    const assistantMessage: ChatMessageUI = { role: "assistant", content: "" };
+    const userMessage: ChatMessageUI = { id: crypto.randomUUID(), role: "user", content };
+    const assistantMessage: ChatMessageUI = { id: crypto.randomUUID(), role: "assistant", content: "" };
     const updatedMessages = [...state.messages, userMessage, assistantMessage];
 
     set({
