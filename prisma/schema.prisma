@@ -21,6 +21,7 @@ model Agent {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   sessions     ChatSession[]
+  missions     MissionLane[]
 }
 
 model ChatSession {
@@ -29,9 +30,10 @@ model ChatSession {
   agent     Agent     @relation(fields: [agentId], references: [id])
   model     String    @default("claude-sonnet-4-6")
   title     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  messages  Message[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  messages    Message[]
+  missionLane MissionLane?
 }
 
 model Message {
@@ -65,4 +67,28 @@ model Setting {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Mission {
+  id        String        @id @default(cuid())
+  brief     String
+  model     String        @default("claude-sonnet-4-6")
+  status    String        @default("pending") // pending | streaming | done
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  lanes     MissionLane[]
+}
+
+model MissionLane {
+  id        String      @id @default(cuid())
+  missionId String
+  mission   Mission     @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  agentId   String
+  agent     Agent       @relation(fields: [agentId], references: [id])
+  sessionId String      @unique
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+  status    String      @default("pending") // pending | streaming | done | error
+  createdAt DateTime    @default(now())
+
+  @@unique([missionId, agentId])
 }
