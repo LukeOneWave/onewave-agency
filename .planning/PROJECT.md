@@ -76,5 +76,24 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 | Multiplexed SSE for orchestration | Single stream endpoint with lane-tagged events vs N separate connections | ✓ Good |
 | Team collaboration context | System prompt amendment gives each agent awareness of team without inter-agent messaging | ✓ Good |
 
+## Current Milestone: v2.0 Power User Platform
+
+**Goal:** Transform OneWave from a chat-and-review tool into a full project management platform with custom agents, advanced review workflows, and production-grade UX.
+
+**Target features:**
+- Create and edit custom agents
+- Review queue widget on dashboard with pending items
+- Inline editing and commenting on deliverables
+- Diff view between revision versions
+- Orchestration review board (Kanban for mission deliverables)
+- Project management with agent assignment and task tracking
+- Task Kanban board (To Do / In Progress / Review / Done)
+- Deliverables tab on projects with review status
+- Global search (Cmd+K) across agents, projects, sessions
+- Dark/light mode toggle
+- Keyboard shortcuts for review workflow (j/k navigate, a approve, r revise)
+- Past session browsing and resumption
+- Production-grade polish: animations, loading skeletons, page transitions
+
 ---
-*Last updated: 2026-03-10 after v1.0 milestone*
+*Last updated: 2026-03-10 after v2.0 milestone started*
