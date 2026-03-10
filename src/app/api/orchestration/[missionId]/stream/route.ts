@@ -109,15 +109,13 @@ export async function GET(
                   output_tokens: finalMessage.usage.output_tokens,
                 };
 
-                send({ type: "agent_done", agentId: lane.agentId, usage });
-
                 // Persist messages
                 await chatService.addMessage(
                   lane.sessionId,
                   "user",
                   mission.brief
                 );
-                await chatService.addMessage(
+                const assistantMsg = await chatService.addMessage(
                   lane.sessionId,
                   "assistant",
                   fullResponse,
@@ -126,6 +124,8 @@ export async function GET(
                     output: usage.output_tokens,
                   }
                 );
+
+                send({ type: "agent_done", agentId: lane.agentId, usage, messageId: assistantMsg.id });
 
                 await orchestrationService.updateLaneStatus(lane.id, "done");
               } catch {

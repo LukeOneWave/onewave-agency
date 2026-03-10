@@ -183,7 +183,11 @@ export const useOrchestrationStore = create<OrchestrationState>()((set, get) => 
           return {
             lanes: {
               ...state.lanes,
-              [event.agentId]: { ...lane, status: "done" },
+              [event.agentId]: {
+                ...lane,
+                status: "done",
+                messageId: event.messageId,
+              },
             },
           };
         });
