@@ -54,6 +54,7 @@ export const ModelName = {
   Agent: 'Agent',
   ChatSession: 'ChatSession',
   Message: 'Message',
+  Deliverable: 'Deliverable',
   Setting: 'Setting'
 } as const
 
@@ -111,6 +112,19 @@ export const MessageScalarFieldEnum = {
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
+
+
+export const DeliverableScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  index: 'index',
+  status: 'status',
+  feedback: 'feedback',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeliverableScalarFieldEnum = (typeof DeliverableScalarFieldEnum)[keyof typeof DeliverableScalarFieldEnum]
 
 
 export const SettingScalarFieldEnum = {

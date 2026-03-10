@@ -33,6 +33,11 @@ export type ChatSession = Prisma.ChatSessionModel
  */
 export type Message = Prisma.MessageModel
 /**
+ * Model Deliverable
+ * 
+ */
+export type Deliverable = Prisma.DeliverableModel
+/**
  * Model Setting
  * 
  */

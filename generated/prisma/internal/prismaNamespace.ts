@@ -387,6 +387,7 @@ export const ModelName = {
   Agent: 'Agent',
   ChatSession: 'ChatSession',
   Message: 'Message',
+  Deliverable: 'Deliverable',
   Setting: 'Setting'
 } as const
 
@@ -403,7 +404,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agent" | "chatSession" | "message" | "setting"
+    modelProps: "agent" | "chatSession" | "message" | "deliverable" | "setting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -629,6 +630,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Deliverable: {
+      payload: Prisma.$DeliverablePayload<ExtArgs>
+      fields: Prisma.DeliverableFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DeliverableFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DeliverableFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        findFirst: {
+          args: Prisma.DeliverableFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DeliverableFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        findMany: {
+          args: Prisma.DeliverableFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>[]
+        }
+        create: {
+          args: Prisma.DeliverableCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        createMany: {
+          args: Prisma.DeliverableCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DeliverableCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>[]
+        }
+        delete: {
+          args: Prisma.DeliverableDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        update: {
+          args: Prisma.DeliverableUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        deleteMany: {
+          args: Prisma.DeliverableDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DeliverableUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DeliverableUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>[]
+        }
+        upsert: {
+          args: Prisma.DeliverableUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeliverablePayload>
+        }
+        aggregate: {
+          args: Prisma.DeliverableAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDeliverable>
+        }
+        groupBy: {
+          args: Prisma.DeliverableGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeliverableGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DeliverableCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeliverableCountAggregateOutputType> | number
+        }
+      }
+    }
     Setting: {
       payload: Prisma.$SettingPayload<ExtArgs>
       fields: Prisma.SettingFieldRefs
@@ -780,6 +855,19 @@ export const MessageScalarFieldEnum = {
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
+
+
+export const DeliverableScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  index: 'index',
+  status: 'status',
+  feedback: 'feedback',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeliverableScalarFieldEnum = (typeof DeliverableScalarFieldEnum)[keyof typeof DeliverableScalarFieldEnum]
 
 
 export const SettingScalarFieldEnum = {
@@ -947,6 +1035,7 @@ export type GlobalOmitConfig = {
   agent?: Prisma.AgentOmit
   chatSession?: Prisma.ChatSessionOmit
   message?: Prisma.MessageOmit
+  deliverable?: Prisma.DeliverableOmit
   setting?: Prisma.SettingOmit
 }
 

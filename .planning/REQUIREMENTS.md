@@ -21,10 +21,10 @@
 
 ### Review
 
-- [ ] **REVW-01**: Review panel appears in chat when agent produces a deliverable
-- [ ] **REVW-02**: User can approve a deliverable
-- [ ] **REVW-03**: User can request revision with feedback notes
-- [ ] **REVW-04**: Revision feedback is sent back to the agent as the next prompt
+- [x] **REVW-01**: Review panel appears in chat when agent produces a deliverable
+- [x] **REVW-02**: User can approve a deliverable
+- [x] **REVW-03**: User can request revision with feedback notes
+- [x] **REVW-04**: Revision feedback is sent back to the agent as the next prompt
 
 ### Orchestration
 
@@ -107,10 +107,10 @@
 | CHAT-02 | Phase 2 | Complete |
 | CHAT-03 | Phase 2 | Complete |
 | CHAT-04 | Phase 2 | Complete |
-| REVW-01 | Phase 3 | Pending |
-| REVW-02 | Phase 3 | Pending |
-| REVW-03 | Phase 3 | Pending |
-| REVW-04 | Phase 3 | Pending |
+| REVW-01 | Phase 3 | Complete |
+| REVW-02 | Phase 3 | Complete |
+| REVW-03 | Phase 3 | Complete |
+| REVW-04 | Phase 3 | Complete |
 | ORCH-01 | Phase 4 | Pending |
 | ORCH-02 | Phase 4 | Pending |
 | ORCH-03 | Phase 4 | Pending |
