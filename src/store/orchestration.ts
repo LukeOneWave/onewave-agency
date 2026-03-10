@@ -76,10 +76,7 @@ export const useOrchestrationStore = create<OrchestrationState>()((set, get) => 
       }
 
       const { missionId } = await response.json();
-      set({ missionId });
-
-      // Start streaming
-      await get().connectStream(missionId);
+      set({ missionId, missionStatus: "idle" });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to create mission",

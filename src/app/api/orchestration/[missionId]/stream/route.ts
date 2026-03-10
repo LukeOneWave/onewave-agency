@@ -78,13 +78,35 @@ export async function GET(
           safeClose();
         });
 
+        // Build team context so each agent knows who else is on the mission
+        const teamRoster = mission.lanes
+          .map((l) => `- ${l.agent.name} (${l.agent.division})`)
+          .join("\n");
+
         // Spawn parallel streams for each lane
         for (const lane of mission.lanes) {
           try {
+            const otherAgents = mission.lanes
+              .filter((l) => l.agentId !== lane.agentId)
+              .map((l) => l.agent.name)
+              .join(", ");
+
+            const missionContext = `
+
+## Mission Context
+You are part of a collaborative mission team working together on a client brief. Each agent handles their area of expertise to produce a coordinated result.
+
+**Team members on this mission:**
+${teamRoster}
+
+**Your role:** Focus on your area of expertise (${lane.agent.division}). The other agents (${otherAgents}) are handling their respective areas in parallel. Produce your specific deliverable — do NOT try to cover other agents' domains.
+
+**Important:** This is a mission brief, not a conversation. Produce your complete deliverable immediately. Do NOT ask clarifying questions. Work with what you have and make reasonable assumptions.`;
+
             const anthropicStream = client.messages.stream({
               model: mission.model,
               max_tokens: 4096,
-              system: lane.agent.systemPrompt + deliverableInstruction,
+              system: lane.agent.systemPrompt + missionContext + deliverableInstruction,
               messages: [{ role: "user", content: mission.brief }],
             });
 
