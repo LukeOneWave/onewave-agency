@@ -35,9 +35,9 @@
 
 ### Dashboard
 
-- [ ] **DASH-01**: Dashboard shows stats (active sessions, agents used, tokens consumed)
-- [ ] **DASH-02**: Dashboard shows recent activity feed
-- [ ] **DASH-03**: Dashboard shows agent utilization chart
+- [x] **DASH-01**: Dashboard shows stats (active sessions, agents used, tokens consumed)
+- [x] **DASH-02**: Dashboard shows recent activity feed
+- [x] **DASH-03**: Dashboard shows agent utilization chart
 
 ### Foundation
 
@@ -115,9 +115,9 @@
 | ORCH-02 | Phase 4 | Complete |
 | ORCH-03 | Phase 4 | Complete |
 | ORCH-04 | Phase 4 | Complete |
-| DASH-01 | Phase 5 | Pending |
-| DASH-02 | Phase 5 | Pending |
-| DASH-03 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
+| DASH-02 | Phase 5 | Complete |
+| DASH-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total
