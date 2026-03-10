@@ -34,7 +34,7 @@ const iconMap = {
 
 export function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
-    <div className="rounded-lg border p-6">
+    <div className="rounded-2xl bg-card p-6 shadow-sm">
       <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
       {activities.length === 0 ? (
         <p className="text-muted-foreground text-sm">
@@ -47,9 +47,11 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
             return (
               <div
                 key={`${item.timestamp}-${i}`}
-                className="flex items-start gap-3"
+                className="flex items-start gap-3 rounded-xl p-2 hover:bg-muted/50 transition-colors"
               >
-                <Icon className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+                <div className="rounded-lg bg-primary/10 p-1.5 mt-0.5">
+                  <Icon className="h-4 w-4 text-primary shrink-0" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{item.description}</p>
                   <p className="text-xs text-muted-foreground">

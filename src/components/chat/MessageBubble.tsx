@@ -25,7 +25,7 @@ export function MessageBubble({
   if (role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2 text-primary-foreground">
+        <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-3 text-primary-foreground shadow-sm">
           {content}
         </div>
       </div>
@@ -66,7 +66,7 @@ function AssistantContent({
   // Only parse deliverables after streaming completes and when we have a messageId
   if (isStreaming || !messageId) {
     return (
-      <div className="prose prose-invert max-w-none">
+      <div className="prose dark:prose-invert max-w-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeHighlight]}
@@ -81,7 +81,7 @@ function AssistantContent({
 
   if (!parsed.hasDeliverables) {
     return (
-      <div className="prose prose-invert max-w-none">
+      <div className="prose dark:prose-invert max-w-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeHighlight]}
@@ -99,7 +99,7 @@ function AssistantContent({
         if (segment.type === "text") {
           if (!segment.content.trim()) return null;
           return (
-            <div key={i} className="prose prose-invert max-w-none">
+            <div key={i} className="prose dark:prose-invert max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
@@ -119,7 +119,7 @@ function AssistantContent({
             key={i}
             className="rounded-lg border border-primary/20 p-4 bg-muted/30"
           >
-            <div className="prose prose-invert max-w-none">
+            <div className="prose dark:prose-invert max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}

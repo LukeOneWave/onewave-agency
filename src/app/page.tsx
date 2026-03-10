@@ -12,7 +12,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Good vibes only</h1>
+        <p className="text-muted-foreground mt-1">Here's what your agents have been up to.</p>
+      </div>
 
       <StatCards stats={stats} />
 

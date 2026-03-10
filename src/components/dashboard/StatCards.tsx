@@ -15,22 +15,28 @@ export function StatCards({ stats }: StatCardsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="flex items-center gap-4 rounded-lg border p-6">
-        <Activity className="h-8 w-8 text-primary" />
+      <div className="flex items-center gap-4 rounded-2xl bg-card p-6 shadow-sm">
+        <div className="rounded-xl bg-primary/10 p-3">
+          <Activity className="h-6 w-6 text-primary" />
+        </div>
         <div>
           <p className="text-2xl font-bold">{stats.activeSessions}</p>
           <p className="text-sm text-muted-foreground">Active Sessions</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 rounded-lg border p-6">
-        <Users className="h-8 w-8 text-primary" />
+      <div className="flex items-center gap-4 rounded-2xl bg-card p-6 shadow-sm">
+        <div className="rounded-xl bg-accent p-3">
+          <Users className="h-6 w-6 text-accent-foreground" />
+        </div>
         <div>
           <p className="text-2xl font-bold">{stats.agentsUsed}</p>
           <p className="text-sm text-muted-foreground">Agents Used</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 rounded-lg border p-6">
-        <Zap className="h-8 w-8 text-primary" />
+      <div className="flex items-center gap-4 rounded-2xl bg-card p-6 shadow-sm">
+        <div className="rounded-xl bg-secondary p-3">
+          <Zap className="h-6 w-6 text-secondary-foreground" />
+        </div>
         <div>
           <p className="text-2xl font-bold">{tokenDisplay}</p>
           <p className="text-sm text-muted-foreground">Tokens Consumed</p>

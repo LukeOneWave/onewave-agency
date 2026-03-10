@@ -57,7 +57,7 @@ export function BriefInput({
             id="model-select"
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
           >
             {CLAUDE_MODELS.map((m) => (
               <option key={m.id} value={m.id}>

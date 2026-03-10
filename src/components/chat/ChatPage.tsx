@@ -58,7 +58,7 @@ export function ChatPage({ session }: ChatPageProps) {
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">{session.agent.name}</h1>
-          <Badge variant="secondary">{session.agent.division}</Badge>
+          <Badge variant="secondary" className="rounded-lg">{session.agent.division}</Badge>
         </div>
         <ModelSelector />
       </div>

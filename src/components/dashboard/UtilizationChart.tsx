@@ -22,7 +22,7 @@ interface UtilizationChartProps {
 
 export function UtilizationChart({ data }: UtilizationChartProps) {
   return (
-    <div className="rounded-lg border p-6">
+    <div className="rounded-2xl bg-card p-6 shadow-sm">
       <h2 className="text-xl font-semibold mb-4">Agent Utilization</h2>
       {data.length === 0 ? (
         <p className="text-muted-foreground text-sm">
@@ -34,7 +34,7 @@ export function UtilizationChart({ data }: UtilizationChartProps) {
             <XAxis type="number" />
             <YAxis type="category" dataKey="name" width={80} />
             <Tooltip />
-            <Bar dataKey="sessions">
+            <Bar dataKey="sessions" radius={[0, 6, 6, 0]}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}

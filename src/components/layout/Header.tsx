@@ -15,6 +15,8 @@ const pageTitles: Record<string, string> = {
 function getPageTitle(pathname: string): string {
   if (pageTitles[pathname]) return pageTitles[pathname];
   if (pathname.startsWith("/agents/")) return "Agent Detail";
+  if (pathname.startsWith("/chat")) return "Chat";
+  if (pathname.startsWith("/orchestration")) return "Missions";
   return "Page";
 }
 
@@ -27,8 +29,8 @@ export function Header() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b px-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-foreground">
           {getPageTitle(pathname)}
         </span>
       </div>
@@ -39,6 +41,7 @@ export function Header() {
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             aria-label="Toggle theme"
+            className="rounded-xl"
           >
             {theme === "dark" ? (
               <Sun className="h-4 w-4" />

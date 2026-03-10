@@ -14,7 +14,7 @@ export default async function ChatIndexPage() {
       <h1 className="text-3xl font-bold mb-6">Chat</h1>
 
       {sessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl bg-card shadow-sm">
           <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No conversations yet</h2>
           <p className="text-muted-foreground mb-4">
@@ -23,7 +23,7 @@ export default async function ChatIndexPage() {
           </p>
           <Link
             href="/agents"
-            className="text-primary hover:underline"
+            className="text-primary font-medium hover:underline"
           >
             Browse Agents
           </Link>
@@ -34,7 +34,7 @@ export default async function ChatIndexPage() {
             <Link
               key={session.id}
               href={`/chat/${session.id}`}
-              className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+              className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
             >
               <div>
                 <p className="font-medium">{session.agent.name}</p>

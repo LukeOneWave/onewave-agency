@@ -22,10 +22,10 @@ export function AgentDetail({ agent }: { agent: Agent }) {
         Back to Agent Catalog
       </Link>
 
-      <div className="mb-6">
+      <div className="rounded-2xl bg-card p-6 shadow-sm mb-6">
         <div className="flex items-start gap-3">
           <h1 className="text-3xl font-bold">{agent.name}</h1>
-          <Badge variant="secondary" className="mt-1">
+          <Badge variant="secondary" className="mt-1 rounded-lg">
             {agent.division}
           </Badge>
         </div>
@@ -38,25 +38,22 @@ export function AgentDetail({ agent }: { agent: Agent }) {
       </div>
 
       {tools.length > 0 && (
-        <>
-          <div className="mb-4">
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">
-              Tools
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {tools.map((tool) => (
-                <Badge key={tool} variant="outline">
-                  {tool}
-                </Badge>
-              ))}
-            </div>
+        <div className="rounded-2xl bg-card p-6 shadow-sm mb-6">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            Tools
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {tools.map((tool) => (
+              <Badge key={tool} variant="outline" className="rounded-lg">
+                {tool}
+              </Badge>
+            ))}
           </div>
-          <Separator className="my-6" />
-        </>
+        </div>
       )}
 
-      <div>
-        <h2 className="mb-4 text-sm font-medium text-muted-foreground">
+      <div className="rounded-2xl bg-card p-6 shadow-sm">
+        <h2 className="mb-4 text-sm font-medium text-muted-foreground uppercase tracking-wider">
           System Prompt
         </h2>
         <div className="prose dark:prose-invert max-w-none">

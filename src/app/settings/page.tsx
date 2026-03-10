@@ -12,7 +12,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
 
-      <Card>
+      <Card className="rounded-2xl shadow-sm border-0">
         <CardHeader>
           <CardTitle>Anthropic API Key</CardTitle>
           <CardDescription>

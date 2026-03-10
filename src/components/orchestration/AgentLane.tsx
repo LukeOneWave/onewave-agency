@@ -14,16 +14,16 @@ import { cn } from "@/lib/utils";
 import type { DeliverableStatus } from "@/types/chat";
 
 const divisionColors: Record<string, string> = {
-  engineering: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  design: "bg-pink-500/15 text-pink-700 dark:text-pink-400",
-  product: "bg-purple-500/15 text-purple-700 dark:text-purple-400",
-  marketing: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
-  sales: "bg-green-500/15 text-green-700 dark:text-green-400",
-  support: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
-  operations: "bg-teal-500/15 text-teal-700 dark:text-teal-400",
-  finance: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  hr: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
-  legal: "bg-slate-500/15 text-slate-700 dark:text-slate-400",
+  engineering: "bg-sky-500/15 text-sky-700 dark:text-sky-400",
+  design: "bg-pink-400/15 text-pink-600 dark:text-pink-400",
+  product: "bg-violet-400/15 text-violet-600 dark:text-violet-400",
+  marketing: "bg-amber-400/15 text-amber-700 dark:text-amber-400",
+  sales: "bg-emerald-400/15 text-emerald-700 dark:text-emerald-400",
+  support: "bg-yellow-400/15 text-yellow-700 dark:text-yellow-400",
+  operations: "bg-teal-400/15 text-teal-700 dark:text-teal-400",
+  finance: "bg-lime-400/15 text-lime-700 dark:text-lime-400",
+  hr: "bg-rose-400/15 text-rose-600 dark:text-rose-400",
+  legal: "bg-slate-400/15 text-slate-600 dark:text-slate-400",
 };
 
 interface AgentLaneProps {
@@ -93,7 +93,7 @@ export function AgentLane({ agentId }: AgentLaneProps) {
   }
 
   return (
-    <Card className="flex flex-col min-h-[400px]">
+    <Card className="flex flex-col min-h-[400px] rounded-2xl shadow-sm border-0 bg-card">
       <CardHeader className="pb-2 flex-none">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -123,7 +123,7 @@ export function AgentLane({ agentId }: AgentLaneProps) {
                 if (segment.type === "text") {
                   if (!segment.content.trim()) return null;
                   return (
-                    <div key={i} className="prose prose-invert prose-sm max-w-none">
+                    <div key={i} className="prose dark:prose-invert prose-sm max-w-none">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeHighlight]}
@@ -142,7 +142,7 @@ export function AgentLane({ agentId }: AgentLaneProps) {
                     key={i}
                     className="rounded-lg border border-primary/20 p-4 bg-muted/30"
                   >
-                    <div className="prose prose-invert prose-sm max-w-none">
+                    <div className="prose dark:prose-invert prose-sm max-w-none">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeHighlight]}
@@ -166,7 +166,7 @@ export function AgentLane({ agentId }: AgentLaneProps) {
               })}
             </div>
           ) : (
-            <div className="prose prose-invert prose-sm max-w-none">
+            <div className="prose dark:prose-invert prose-sm max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
