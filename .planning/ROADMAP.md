@@ -78,11 +78,12 @@ Plans:
   2. Selected agents execute in parallel, each processing the shared brief independently
   3. User can see each agent's streaming output in separate, simultaneously updating lanes
   4. Orchestration deliverables flow into the review system for approve/revise actions
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Prisma Mission/MissionLane schema, orchestration types, service layer with mission CRUD
+- [ ] 04-02-PLAN.md — Multiplexed SSE streaming endpoint, Zustand orchestration store with lane demuxing
+- [ ] 04-03-PLAN.md — Mission creation UI (agent selector + brief), parallel lanes UI, review integration, sidebar nav
 
 ### Phase 5: Dashboard and Polish
 **Goal**: Users have a dashboard providing visibility into their agency activity and overall app feels production-grade
@@ -107,5 +108,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation and Agent Catalog | 3/3 | Complete | 2026-03-09 |
 | 2. Chat and Streaming | 3/3 | Complete   | 2026-03-09 |
 | 3. Review System | 3/3 | Complete   | 2026-03-10 |
-| 4. Multi-Agent Orchestration | 0/2 | Not started | - |
+| 4. Multi-Agent Orchestration | 0/3 | Not started | - |
 | 5. Dashboard and Polish | 0/1 | Not started | - |
