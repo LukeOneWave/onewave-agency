@@ -25,7 +25,8 @@ import { prisma } from "@/lib/prisma";
 import { chatService } from "@/lib/services/chat";
 import { orchestrationService } from "@/lib/services/orchestration";
 
-const mockPrisma = vi.mocked(prisma);
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const mockPrisma = prisma as any;
 const mockChatService = vi.mocked(chatService);
 
 describe("orchestrationService", () => {

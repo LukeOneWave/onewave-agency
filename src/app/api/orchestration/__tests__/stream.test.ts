@@ -21,7 +21,7 @@ vi.mock("@/lib/services/settings", () => ({
 
 vi.mock("@/lib/services/chat", () => ({
   chatService: {
-    addMessage: vi.fn().mockResolvedValue(undefined),
+    addMessage: vi.fn().mockResolvedValue({ id: "msg-1", role: "assistant", content: "" }),
   },
 }));
 

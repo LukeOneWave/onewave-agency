@@ -60,7 +60,7 @@ export async function GET(
           if (activeStreams <= 0) {
             send({ type: "mission_done" });
             orchestrationService
-              .updateMissionStatus(mission.id, "done")
+              .updateMissionStatus(missionId, "done")
               .catch(() => {});
             safeClose();
           }
