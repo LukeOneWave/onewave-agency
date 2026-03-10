@@ -2,7 +2,7 @@
 phase: 4
 slug: multi-agent-orchestration
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-10
 ---
@@ -36,21 +36,23 @@ created: 2026-03-10
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 04-00-01 | 00 | 0 | ORCH-01, ORCH-02 | unit | `npx vitest run src/lib/services/__tests__/orchestration.test.ts` | 04-00 creates | ⬜ pending |
-| 04-00-02 | 00 | 0 | ORCH-03 | unit | `npx vitest run src/app/api/orchestration/__tests__/stream.test.ts` | 04-00 creates | ⬜ pending |
-| 04-00-03 | 00 | 0 | ORCH-04 | unit | `npx vitest run src/store/__tests__/orchestration.test.ts` | 04-00 creates | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Created By | Status |
+|---------|------|------|-------------|-----------|-------------------|------------|--------|
+| 04-01-02 | 01 | 1 | ORCH-01, ORCH-02 | unit | `npx vitest run src/lib/services/__tests__/orchestration.test.ts` | 04-01 Task 2 | ⬜ pending |
+| 04-02-01 | 02 | 2 | ORCH-03 | unit | `npx vitest run src/app/api/orchestration/__tests__/stream.test.ts` | 04-02 Task 1 | ⬜ pending |
+| 04-02-02 | 02 | 2 | ORCH-04 | unit | `npx vitest run src/store/__tests__/orchestration.test.ts` | 04-02 Task 2 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 ---
 
-## Wave 0 Requirements
+## Test Creation Mapping
 
-- [ ] `src/lib/services/__tests__/orchestration.test.ts` — stubs for ORCH-01, ORCH-02 (mission CRUD, brief storage)
-- [ ] `src/app/api/orchestration/__tests__/stream.test.ts` — stubs for ORCH-03 (parallel streaming)
-- [ ] `src/store/__tests__/orchestration.test.ts` — stubs for ORCH-04 (store demuxing, deliverable flow)
+Tests are created inline within their respective plan tasks (no separate Wave 0 plan):
+
+- **`src/lib/services/__tests__/orchestration.test.ts`** — Created by Plan 01, Task 2 (TDD task covering ORCH-01, ORCH-02: mission CRUD, brief storage)
+- **`src/app/api/orchestration/__tests__/stream.test.ts`** — Created by Plan 02, Task 1 (covering ORCH-03: parallel streaming endpoint)
+- **`src/store/__tests__/orchestration.test.ts`** — Created by Plan 02, Task 2 (TDD task covering ORCH-04: store demuxing, deliverable flow)
 
 ---
 
@@ -66,11 +68,11 @@ created: 2026-03-10
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 8s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or inline test creation
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Test files mapped to creating plan/task (no orphaned references)
+- [x] No watch-mode flags
+- [x] Feedback latency < 8s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
