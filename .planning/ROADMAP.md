@@ -40,11 +40,11 @@
   2. User sees a review queue widget on the dashboard listing all pending deliverables with agent name and session context
   3. Data-fetching pages display skeleton placeholders while loading instead of blank screens or spinners
   4. New Prisma models (Project, Task, DeliverableVersion) exist in the database and migrations run without data loss
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Schema migration (Project, Task, DeliverableVersion) + review queue dashboard widget
+- [ ] 06-02-PLAN.md — Theme toggle verification + loading skeletons for all data-fetching pages
 
 ### Phase 7: Custom Agents + Session History
 **Goal**: Users can extend the agent roster with their own agents and revisit past conversations
@@ -132,7 +132,7 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 3. Review System | v1.0 | 3/3 | Complete | 2026-03-10 |
 | 4. Multi-Agent Orchestration | v1.0 | 3/3 | Complete | 2026-03-10 |
 | 5. Dashboard and Polish | v1.0 | 2/2 | Complete | 2026-03-10 |
-| 6. Infrastructure + Quick Wins | v2.0 | 0/? | Not started | - |
+| 6. Infrastructure + Quick Wins | v2.0 | 0/2 | Planned | - |
 | 7. Custom Agents + Session History | v2.0 | 0/? | Not started | - |
 | 8. Project Management + Task Kanban | v2.0 | 0/? | Not started | - |
 | 9. Advanced Review | v2.0 | 0/? | Not started | - |
