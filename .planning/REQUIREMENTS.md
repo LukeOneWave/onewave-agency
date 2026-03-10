@@ -57,7 +57,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | Real-time collaboration | Single user |
 | Agent-to-agent communication | Agents work independently on shared briefs |
 | Multi-provider AI | Anthropic Claude only |
-| Rich text editor (Tiptap/Slate) | Deliverables are markdown — textarea edit is sufficient |
+| Rich text editor (Tiptap/Slate) | Deliverables are markdown -- textarea edit is sufficient |
 | Full-text search engine | SQLite LIKE queries sufficient at single-user scale |
 | Task dependencies/subtasks | Keep project management lightweight for v2.0 |
 | Due dates on tasks | Keep project management lightweight for v2.0 |
@@ -69,31 +69,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGNT-01 | — | Pending |
-| AGNT-02 | — | Pending |
-| AGNT-03 | — | Pending |
-| AGNT-04 | — | Pending |
-| REVW-01 | — | Pending |
-| REVW-02 | — | Pending |
-| REVW-03 | — | Pending |
-| PROJ-01 | — | Pending |
-| PROJ-02 | — | Pending |
-| PROJ-03 | — | Pending |
-| PROJ-04 | — | Pending |
-| PROJ-05 | — | Pending |
-| PROJ-06 | — | Pending |
-| PROJ-07 | — | Pending |
-| UX-01 | — | Pending |
-| UX-02 | — | Pending |
-| UX-03 | — | Pending |
-| UX-04 | — | Pending |
-| UX-05 | — | Pending |
+| AGNT-01 | Phase 7 | Pending |
+| AGNT-02 | Phase 7 | Pending |
+| AGNT-03 | Phase 7 | Pending |
+| AGNT-04 | Phase 7 | Pending |
+| REVW-01 | Phase 6 | Pending |
+| REVW-02 | Phase 9 | Pending |
+| REVW-03 | Phase 9 | Pending |
+| PROJ-01 | Phase 8 | Pending |
+| PROJ-02 | Phase 8 | Pending |
+| PROJ-03 | Phase 8 | Pending |
+| PROJ-04 | Phase 8 | Pending |
+| PROJ-05 | Phase 8 | Pending |
+| PROJ-06 | Phase 9 | Pending |
+| PROJ-07 | Phase 9 | Pending |
+| UX-01 | Phase 10 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 7 | Pending |
+| UX-04 | Phase 6 | Pending |
+| UX-05 | Phase 11 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after initial definition*
+*Last updated: 2026-03-10 after roadmap creation*
