@@ -1,189 +1,197 @@
 # Project Research Summary
 
-**Project:** OneWave AI Digital Agency
-**Domain:** AI agent management platform (local, single-user, review-centric)
-**Researched:** 2026-03-09
+**Project:** OneWave AI Digital Agency v2.0
+**Domain:** AI agent management platform -- v2.0 power-user features added to existing local Next.js app
+**Researched:** 2026-03-10
 **Confidence:** HIGH
 
 ## Executive Summary
 
-OneWave is a local Next.js application for managing 61 specialized AI agents organized across 9 divisions. The product's unique position is treating AI output as reviewable work product rather than disposable chat -- the review workflow is the centerpiece. Research confirms this is a genuine gap: no existing platform (CrewAI, Vibe Kanban, ChatGPT/Claude UI) combines a specialized agent catalog with structured deliverable review. The recommended approach is a monolithic Next.js 15 App Router application with a service-layer architecture, using AI SDK 6 for Claude streaming, Prisma 7 with SQLite for zero-config persistence, and shadcn/ui for a polished component library.
+OneWave v1.0 is a shipped, working local application (172 files, 6,823 LOC) for managing 61 AI agents with streaming chat, deliverable review, multi-agent orchestration, and a dashboard. The v2.0 research focused exclusively on NEW features: custom agent creation, Kanban boards (task + orchestration), diff view between deliverable revisions, inline editing and commenting, global search (Cmd+K), keyboard shortcuts, session history, project management, and production polish. The existing stack (Next.js 16, React 19, Prisma 7, SQLite, Zustand, shadcn/ui, Tailwind v4) is validated and unchanged. Only 6 new npm packages are needed (~60kb gzipped total): motion, @dnd-kit/core + sortable + utilities, diff, and react-diff-viewer-continued. Nine new shadcn/ui components are added via CLI (no npm deps).
 
-The build should follow a strict dependency chain: agents first (the atomic unit everything references), then chat with streaming (the primary interaction that produces raw material), then the review system (the core differentiator), then project management (organizational scaffolding), then multi-agent orchestration (the most complex feature), and finally polish. This ordering is not arbitrary -- each layer depends on the one before it. Attempting to build orchestration before chat and review are solid will result in compounding bugs.
+The recommended approach is incremental: start with schema migration and infrastructure (new Prisma models, store conventions, shortcut registry), then build independent quick-win features (theme toggle, review queue, session history, custom agents), then tackle the complex interactive features (Kanban boards with dnd-kit, diff view, inline editing), and finish with power-user UX (Cmd+K, keyboard shortcuts) and production polish (animations, skeletons, transitions). This order is driven by three factors: schema dependencies (Project/Task/DeliverableVersion/Comment models must exist before features that use them), shared component reuse (Kanban primitives built once, used by both task board and orchestration review board), and risk sequencing (the hardest problems -- drag-and-drop, inline editing cursor management, text range commenting -- come after simpler features validate the patterns).
 
-The top risks are: SSE streaming error handling (errors arrive mid-stream after HTTP 200, requiring event-level error detection), SQLite write contention during parallel agent execution (requires WAL mode and write buffering from day one), and the review workflow becoming unused dead weight if it feels bolted onto chat rather than integrated into it. All three are preventable with upfront architectural decisions documented in detail across the research files.
+The top risks are: SQLite migration destroying existing data (all new foreign keys on existing tables MUST be optional), monolithic Zustand stores becoming unmaintainable (enforce one store per feature domain from day one), keyboard shortcuts firing inside text inputs (build centralized registry before any individual shortcuts), and contentEditable cursor jumping making inline editing unusable (use click-to-edit with textarea, not raw contentEditable). All four are preventable with upfront architectural decisions.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is modern, well-supported, and specifically chosen for a single-user local application. Every technology is at its current stable version with strong ecosystem support. See `.planning/research/STACK.md` for full rationale and installation commands.
+The existing stack is fully validated. New additions are minimal and targeted. See `.planning/research/STACK.md` for full rationale, alternatives considered, and installation commands.
 
-**Core technologies:**
-- **Next.js 15.x + React 19 + TypeScript:** App framework with App Router, SSR, API routes. Not 14 (too old) or 16 (breaking changes still settling).
-- **AI SDK 6 + @ai-sdk/anthropic 3.x:** Streaming chat, tool execution, agent orchestration. Replaces need to hand-roll SSE streaming from Claude.
-- **Prisma 7 + SQLite (better-sqlite3 adapter):** Type-safe ORM with zero-config file database. No Docker, no external services.
-- **shadcn/ui + Tailwind CSS 4:** Component library as source code (full ownership) with utility-first CSS. Includes Command palette, drag-and-drop via dnd-kit.
-- **Zustand 5:** Lightweight client state for app-level concerns. Chat state lives in AI SDK's useChat hook.
+**New dependencies (6 packages, ~60kb gzipped):**
+- **motion (v12.35):** Page transitions, layout animations, drag feedback -- CSS cannot animate unmounting components or layout reflows
+- **@dnd-kit/core + sortable + utilities:** Kanban drag-and-drop -- lightweight (~10kb), accessible, proven with shadcn/ui + Tailwind
+- **diff + react-diff-viewer-continued:** Deliverable revision diffing -- GitHub-style split/unified diff view from string comparison
+
+**Explicitly NOT adding:** Tiptap/Slate (overkill for markdown editing), react-hotkeys-hook (custom 50-line hook suffices), @tanstack/react-query (would create two state management patterns), any auth library (single-user local app), any search engine (SQLite LIKE is sub-millisecond at this scale).
+
+**New shadcn/ui components (9, via CLI):** command, dialog, skeleton, switch, select, popover, context-menu, progress, collapsible.
 
 ### Expected Features
 
-**Must have (table stakes):**
-- Agent catalog with division filtering and search
-- Agent detail view (personality, process, tools from YAML frontmatter)
-- Chat with streaming responses and markdown/code rendering
-- Conversation history and persistence
-- Settings with API key management (gate for all AI functionality)
-- Dashboard with activity overview and review queue
-- Dark mode (default), loading/empty/error states
-- Global search (Cmd+K) and keyboard shortcuts
+See `.planning/research/FEATURES.md` for full feature landscape with complexity estimates and dependency mapping.
+
+**Must have (table stakes for v2.0):**
+- Dark/light mode toggle -- next-themes already installed, just needs a button
+- Review queue on dashboard -- aggregation query over existing Deliverable model
+- Session history and resumption -- existing ChatSession/Message models, needs sidebar UI
+- Keyboard shortcuts for review (j/k/a/r) -- standard Gmail/GitHub pattern
+- Loading skeletons -- baseline UX in 2026
+- Global search (Cmd+K) -- every modern productivity tool has this
 
 **Should have (differentiators):**
-- Review workflow for agent deliverables (approve, revise, edit inline, comment) -- THE core differentiator
-- Review queue surfaced prominently on dashboard
-- Inline editing of agent output with diff view
-- Project management with agent assignment and task Kanban
-- Multi-agent orchestration with parallel execution lanes
-- Orchestration review board (Kanban for deliverable status)
+- Custom agent builder -- transforms fixed toolkit into configurable platform
+- Diff view between deliverable revisions -- makes iterative review genuinely useful
+- Inline editing on deliverables -- edit without re-prompting
+- Orchestration review board (Kanban) -- visual multi-agent output review
+- Task Kanban with project management -- visual project workflow with agent assignment
+- Page transitions and micro-interactions -- production polish
 
-**Defer (v2+):**
-- Custom agent creation/editing (61 built-in agents are sufficient initially)
-- Agent utilization charts (needs accumulated usage data)
-- Orchestration review board (depends on both orchestration AND review being solid)
-- Usage billing / cost dashboards (show token counts, defer cost analytics)
+**Defer to v3+:**
+- Inline commenting with text range anchoring -- highest complexity for lowest single-user value
+- Full project management suite (Gantt, timelines, dependencies) -- scope creep, this is an AI tool not Monday.com
+- AI-powered semantic search -- SQLite is fast enough, no vector DB needed
+- Agent marketplace/sharing -- single user, no network
 
 ### Architecture Approach
 
-A monolithic Next.js App Router application with clearly separated layers: thin API routes and Server Actions handling HTTP concerns, a service layer (AgentService, ChatService, ProjectService, ReviewService, OrchestrationService, DeliverableService) containing all business logic, and Prisma as the data access layer over SQLite. The architecture is review-centric -- every data flow ultimately produces deliverables that enter the review pipeline. See `.planning/research/ARCHITECTURE.md` for full data model, directory structure, and data flow diagrams.
+v2.0 extends the established 4-layer architecture (Presentation > State > API > Service > Data) without changing patterns. New features follow existing conventions: server components fetch initial data, client components handle mutations with optimistic Zustand updates, API routes stay thin with business logic in services. See `.planning/research/ARCHITECTURE.md` for full system diagram, data flows, and ~40 new files breakdown.
 
-**Major components:**
-1. **Service Layer** -- Six services encapsulating all business logic, keeping API routes thin and testable
-2. **Deliverable System** -- First-class entities extracted from chat (typed, versioned, with review status), not just chat messages
-3. **Centralized Orchestrator** -- Single OrchestrationService dispatches to agents and collects results; no peer-to-peer agent communication
-4. **SSE Streaming** -- All real-time data (chat, orchestration progress, review updates) via Server-Sent Events, not WebSockets
+**Major new components:**
+1. **KanbanBoard/KanbanColumn/TaskCard** -- Shared primitives used by both task Kanban AND orchestration review board
+2. **AgentEditor** -- Form for custom agent CRUD, reuses Agent detail layout
+3. **DiffViewer** -- Side-by-side/unified diff between DeliverableVersion records
+4. **CommandPalette** -- Cmd+K overlay using shadcn Command, searches agents/projects/sessions
+5. **InlineEditor** -- Click-to-edit textarea toggle on deliverable content (NOT contentEditable)
+
+**New Prisma models (4):** Project, Task, DeliverableVersion, Comment
+**Modified models (3):** Agent (+tasks relation), ChatSession (+task relation), Deliverable (+content field, +versions, +comments)
+**New Zustand stores (3):** useProjectStore, useCommandStore, useReviewStore
+**New service files (3):** projectService, searchService, commentService
+**New API routes (~12):** agents CRUD, projects CRUD, tasks CRUD + reorder, search, review/pending, deliverable versions, comments
 
 ### Critical Pitfalls
 
-1. **Streaming errors after 200 OK** -- Claude streaming returns 200 immediately; mid-stream errors (429, 529, network drops) bypass HTTP error handling. Must listen for SSE error events, track message completion status, and show retry buttons on partial responses.
-2. **SQLite write contention** -- Parallel agents in orchestration trigger concurrent writes. Enable WAL mode, buffer writes in memory, batch to DB at intervals, and set generous busy_timeout. Design the write-buffering pattern in the chat phase so orchestration inherits it.
-3. **Review workflow nobody uses** -- If review feels like separate bureaucracy bolted onto chat, users skip it. Surface review inline in chat when deliverables are detected, keep actions to one-click, and make the dashboard's primary CTA the pending review count.
-4. **SSE connection leaks** -- Orphaned SSE connections from navigation/unmounting hit browser's 6-connection limit. Use AbortController in every streaming fetch, implement a connection manager singleton, and multiplex parallel agent streams over a single SSE connection.
-5. **The prompting fallacy** -- When multi-agent output is poor, teams tweak prompts instead of fixing architectural issues (output format inconsistency, missing context sharing). Define explicit output schemas per agent role and validate outputs before review.
+See `.planning/research/PITFALLS.md` for all 14 pitfalls with detailed prevention strategies.
+
+1. **SQLite migration destroys existing data** -- Adding required foreign keys to populated tables causes Prisma to suggest `migrate reset`. Prevention: all new FKs on existing tables MUST be optional, use `--create-only` to review SQL first, back up dev.db before every migration.
+2. **Monolithic Zustand store** -- Adding Kanban/search/review state to existing 300-line chat store creates cascading re-renders. Prevention: dedicated stores per domain, Zustand selectors everywhere, never mix server-cache and UI state.
+3. **Keyboard shortcuts fire in text inputs** -- Pressing "a" to type "and" triggers "approve deliverable." Prevention: centralized shortcut registry with ONE document listener, always check event.target for input/textarea/contenteditable.
+4. **ContentEditable cursor jumping** -- React reconciliation resets browser Selection API on re-render, making inline editing unusable. Prevention: use click-to-edit with textarea toggle, NOT raw contentEditable with React state.
+5. **Cmd+K search feels laggy** -- Prisma `contains` on SQLite is unindexed substring scan. Prevention: client-side fuzzy search (or simple LIKE) is fine for <1000 items at single-user scale; debounce at 150ms minimum.
 
 ## Implications for Roadmap
 
-Based on combined research, the build should follow 6 phases driven by dependency chains. Each phase produces a working increment.
+Based on combined research, suggested 6-phase structure driven by schema dependencies, shared component reuse, and risk sequencing.
 
-### Phase 1: Foundation and Agent Catalog
-**Rationale:** Agents are the atomic unit -- every feature references them. Database and UI scaffolding must exist before anything else.
-**Delivers:** Working app with Prisma schema, SQLite setup, agent seeding from markdown files, agent browsing/filtering UI, agent detail view, settings page with API key management, dark mode, app shell with navigation.
-**Features addressed:** Agent catalog, agent detail, settings, dark mode, loading/empty states.
-**Pitfalls to avoid:** Prisma singleton pattern (HMR creates multiple clients without it), agent seeding fragility (use gray-matter + Zod validation), API key must stay server-side only.
-**Research needed:** LOW -- standard CRUD patterns, well-documented.
+### Phase 1: Schema Migration + Infrastructure + Quick Wins
+**Rationale:** Every feature depends on schema. Store conventions and shortcut registry must be established before building features. Quick wins (theme toggle, review queue, skeletons) ship immediately to validate the upgrade path.
+**Delivers:** Prisma migration (4 new models + 3 model modifications), 3 new Zustand stores (empty shells with conventions), keyboard shortcut registry, theme toggle, review queue dashboard widget, loading skeletons.
+**Features addressed:** Dark/light toggle, review queue widget, loading skeletons.
+**Avoids:** Data loss from careless migration (Pitfall 1), monolithic store (Pitfall 2), shortcuts in inputs (Pitfall 3).
+**Stack:** No new npm deps needed -- uses existing next-themes, shadcn skeleton/switch, Zustand.
 
-### Phase 2: Chat and Streaming
-**Rationale:** Chat is the primary interaction and produces the raw material (messages) for everything downstream. Must get streaming, error handling, and connection management right here.
-**Delivers:** Working chat with any agent via streaming Claude responses, conversation history, markdown/code rendering, message persistence.
-**Features addressed:** Chat with streaming, conversation history, rich markdown rendering.
-**Pitfalls to avoid:** SSE error handling after 200 (track message completion status), connection leak management (AbortController + connection manager singleton), markdown XSS (use rehype-sanitize), write buffering pattern (establish here for orchestration to inherit).
-**Research needed:** MEDIUM -- AI SDK 6 Agent abstraction and streaming patterns may warrant a quick `/gsd:research-phase` to nail the exact API usage.
+### Phase 2: Custom Agents + Session History
+**Rationale:** Independent features with no cross-dependencies. Both extend existing patterns (Agent CRUD, ChatSession queries). Quick wins that are immediately visible and useful. Custom agents unlocks platform extensibility.
+**Delivers:** AgentEditor form, /agents/new and /agents/[slug]/edit pages, agent API CRUD routes, enhanced /chat page with session search/filter/auto-titles, session sidebar.
+**Features addressed:** Custom agent builder, session history and resumption.
+**Avoids:** Broken agents from missing validation (Pitfall 8 -- Zod validation, auto-slug, protect seeded agents), session list loading all message content (Pitfall 14 -- metadata-only endpoint).
+**Stack:** No new npm deps.
 
-### Phase 3: Review System
-**Rationale:** The core differentiator. Must exist before project management and orchestration, which both produce deliverables in bulk. Building review after orchestration means a flood of unreviewed deliverables with no workflow to handle them.
-**Delivers:** Deliverable extraction from chat, review panel (approve/revise/edit inline/comment), review queue on dashboard, deliverable versioning on revision.
-**Features addressed:** Review workflow, review queue, inline editing, review comments.
-**Pitfalls to avoid:** Review feeling bolted on (surface review inline in chat, auto-detect deliverables, one-click actions, keyboard shortcuts a/r/j/k). This is the make-or-break phase for the product's value proposition.
-**Research needed:** MEDIUM -- the deliverable extraction heuristic (identifying reviewable content in chat) has no established pattern. Needs design thinking.
+### Phase 3: Project Management + Task Kanban
+**Rationale:** Establishes the Kanban interaction pattern (dnd-kit + shadcn Card + optimistic Zustand) that is reused in Phase 4. New Project/Task models are the organizational backbone.
+**Delivers:** Project pages + API routes, KanbanBoard + KanbanColumn + TaskCard shared components, useProjectStore with optimistic drag-and-drop, agent assignment to tasks.
+**Features addressed:** Task Kanban board, project management with agent assignment.
+**Avoids:** Server Component hydration mismatch (Pitfall 6 -- "use client" boundary on entire board), scope creep (Pitfall 9 -- strict 2-model limit, 4 statuses only, no due dates/dependencies/subtasks).
+**Stack:** @dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities (install at phase start).
 
-### Phase 4: Project Management and Kanban
-**Rationale:** Organizational scaffolding that ties agents, tasks, and deliverables together. Depends on agents (Phase 1) and deliverables (Phase 3).
-**Delivers:** Project CRUD, task Kanban board with drag-and-drop, agent assignment to tasks, deliverables tab on projects.
-**Features addressed:** Project management, task Kanban, agent assignment, deliverables aggregation.
-**Pitfalls to avoid:** Kanban performance (use dnd-kit from the start, memoize cards, optimistic updates).
-**Research needed:** LOW -- dnd-kit + shadcn/ui Kanban is a well-documented pattern with multiple open-source references.
+### Phase 4: Advanced Review Features
+**Rationale:** Depends on DeliverableVersion schema (Phase 1) AND Kanban patterns (Phase 3). Groups all deliverable-enhancement features together since they share the version model and review UX.
+**Delivers:** DeliverableVersion content snapshots on revision, DiffViewer component (split/unified), InlineEditor (click-to-edit textarea), comment system with character anchoring, MissionKanban (reuses Phase 3 Kanban primitives), orchestration review board tab.
+**Features addressed:** Diff view between revisions, inline editing, inline commenting, orchestration review board.
+**Avoids:** ContentEditable cursor jumping (Pitfall 4 -- textarea toggle, not contentEditable), diff performance on large deliverables (Pitfall 7 -- virtualization, cache diffs), N+1 review queue queries (Pitfall 10 -- single Prisma include with nested relations).
+**Stack:** diff + react-diff-viewer-continued (install at phase start).
 
-### Phase 5: Multi-Agent Orchestration
-**Rationale:** Most complex feature. Depends on chat (Phase 2), review (Phase 3), and projects (Phase 4) all being solid. Building this too early compounds bugs from incomplete foundations.
-**Delivers:** Orchestration runs with parallel agent execution, independent SSE streams per agent, orchestration progress UI with parallel lanes, deliverables flowing into review queue.
-**Features addressed:** Multi-agent orchestration, parallel execution, orchestration review board.
-**Pitfalls to avoid:** SQLite write contention (WAL mode + write queue + batch writes), SSE connection limits (multiplex streams), prompting fallacy (enforce output schemas, start sequential before parallel), token cost blindness (track and display cost per orchestration run).
-**Research needed:** HIGH -- multi-agent coordination, stream multiplexing, and the orchestrator pattern need dedicated research. This is where novel engineering happens.
+### Phase 5: Power User UX
+**Rationale:** Search needs routes from Phases 2-4 to have navigation targets. Shortcuts need reviewable content from Phase 4 to act on. These are cross-cutting features that span all surfaces.
+**Delivers:** CommandPalette (Cmd+K) with grouped results, useCommandStore, keyboard navigation (j/k/a/r) for review queue, shortcut help overlay (?), keyboard-first review workflow.
+**Features addressed:** Global search (Cmd+K), keyboard shortcuts for review.
+**Avoids:** Search lag (Pitfall 5 -- client-side filtering sufficient at this scale, debounce 150ms).
+**Stack:** shadcn command component (install via CLI at phase start).
 
-### Phase 6: Polish and Search
-**Rationale:** Touches all surfaces; benefits from stable underlying features. Data-dependent features (utilization charts, activity feeds) need accumulated usage.
-**Delivers:** Dashboard stats and activity feed, Cmd+K global search, keyboard shortcuts across all views, animations, refined loading/empty states.
-**Features addressed:** Global search, keyboard shortcuts, agent utilization charts, dashboard enhancements.
-**Pitfalls to avoid:** Search performance on large datasets (use SQLite FTS5 for chat messages), glassmorphism contrast issues in dark mode.
-**Research needed:** LOW -- standard UI polish patterns.
+### Phase 6: Production Polish
+**Rationale:** Polish is cosmetic. Apply once functionality is stable across all routes. Animations added last avoid jank during rapid feature development.
+**Delivers:** Page transitions (AnimatePresence), entrance animations, micro-interactions (hover/press), empty states for all new pages, refined loading states.
+**Features addressed:** Page transitions and animations, micro-interactions.
+**Avoids:** Animation jank in lists (Pitfall 13 -- CSS transitions first, motion sparingly, virtualize before animating).
+**Stack:** motion (install at phase start).
 
 ### Phase Ordering Rationale
 
-- Agents first because they are referenced by every other entity (sessions, tasks, orchestration steps).
-- Chat before review because review operates on deliverables extracted from chat output.
-- Review before orchestration because orchestration produces many deliverables simultaneously -- without a working review pipeline, they pile up with no workflow.
-- Projects after review because project deliverables tab aggregates review statuses.
-- Orchestration last among core features because it depends on chat + review + projects all working correctly.
-- Polish last because it spans all surfaces and needs stable foundations to refine.
+- Schema first because Project, Task, DeliverableVersion, and Comment models are referenced by features in every subsequent phase.
+- Quick wins (toggle, queue, skeletons) in Phase 1 to ship immediate visible progress.
+- Custom agents and session history are independent, zero cross-dependencies -- parallel-friendly.
+- Task Kanban before advanced review because the Kanban interaction pattern (dnd-kit wiring, optimistic store updates, column reordering) is reused by the orchestration review board.
+- All deliverable-enhancement features (diff, inline edit, comments) grouped together because they share the DeliverableVersion model and review UX context.
+- Power user UX (search, shortcuts) last among functional features because they are cross-cutting and need navigation targets from all prior phases.
+- Polish last because it spans every surface and benefits from stable foundations.
 
 ### Research Flags
 
 **Phases likely needing `/gsd:research-phase` during planning:**
-- **Phase 2 (Chat):** AI SDK 6 streaming patterns, SSE error recovery strategies, connection management architecture.
-- **Phase 3 (Review):** Deliverable extraction heuristics -- no established pattern for identifying reviewable content in LLM chat responses.
-- **Phase 5 (Orchestration):** Multi-agent coordination, stream multiplexing, write contention prevention, output schema enforcement. This is the highest-risk phase.
+- **Phase 3 (Kanban):** dnd-kit cross-container sorting with optimistic reordering has nuances. The Georgegriff reference implementation should be studied closely. Moderate complexity.
+- **Phase 4 (Advanced Review):** Deliverable content snapshotting (extracting content from Message.content using parseDeliverables) is the most impactful schema change. The inline comment anchoring strategy (character offset vs text snippet) needs a firm design decision.
 
-**Phases with standard patterns (skip research):**
-- **Phase 1 (Foundation):** Standard Next.js + Prisma + shadcn/ui setup. Well-documented.
-- **Phase 4 (Project/Kanban):** dnd-kit + shadcn/ui Kanban has multiple production references.
-- **Phase 6 (Polish):** Standard UI refinement patterns.
+**Phases with standard patterns (skip research-phase):**
+- **Phase 1 (Infrastructure):** Standard Prisma migration, Zustand store setup, shadcn component installation. Well-documented.
+- **Phase 2 (Custom Agents + Sessions):** CRUD forms, API routes, session list queries. Extends existing patterns exactly.
+- **Phase 5 (Power User UX):** shadcn Command component is purpose-built for Cmd+K. Keyboard shortcut hook is ~50 lines.
+- **Phase 6 (Polish):** Motion library has extensive documentation and examples.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All technologies are current stable versions with official documentation. AI SDK 6 and Prisma 7 are mature. No speculative choices. |
-| Features | MEDIUM-HIGH | Table stakes are clear from competitive analysis. Differentiator value (review workflow) is validated by the gap analysis but untested with real users. |
-| Architecture | HIGH | Monolithic Next.js with service layer is the standard pattern. Data model is well-defined. Build order rationale is dependency-driven. |
-| Pitfalls | HIGH | Critical pitfalls are verified across multiple authoritative sources (Anthropic docs, SQLite docs, browser specs). Review UX pitfall is MEDIUM confidence -- synthesized from patterns, no direct precedent. |
+| Stack | HIGH | Only 6 new packages, all actively maintained with recent releases. Existing stack validated at current versions. Zero speculative choices. |
+| Features | MEDIUM-HIGH | Table stakes are clear from competitive analysis. Priority ordering is well-reasoned. Inline commenting complexity may be underestimated -- consider deferring to v3. |
+| Architecture | HIGH | Direct codebase analysis of 172 existing files. New features follow established patterns exactly. ~40 new files, ~12 modified files -- scope is well-defined. |
+| Pitfalls | HIGH | 14 pitfalls identified across critical/moderate/minor. Top 5 are verified with authoritative sources. Phase-specific warnings mapped to mitigation strategies. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Deliverable extraction logic:** How exactly to detect reviewable content in agent chat responses (code blocks? document markers? agent-declared deliverables?). Needs design decision during Phase 3 planning.
-- **Stream multiplexing for orchestration:** The exact pattern for multiplexing N agent streams over one SSE connection is not well-documented. Needs prototyping during Phase 5.
-- **Review UX validation:** No precedent for a single-user review workflow for AI output. The UX assumptions (inline review in chat, one-click actions) need validation during Phase 3 implementation. Be prepared to iterate.
-- **Agent YAML consistency:** The 61 agent markdown files may have formatting inconsistencies. The seed script needs to be robust, but specific edge cases are unknown until implementation.
-- **Token cost display:** Anthropic pricing is public, but the exact token metadata available in AI SDK 6 streaming responses needs verification during Phase 2.
+- **DeliverableVersion content extraction:** The existing `parseDeliverables()` regex extracts deliverable content at render time from `Message.content`. For versioning, this content must be snapshotted into `Deliverable.content`. The exact trigger point (on message save? on first review action?) needs a design decision during Phase 1 migration planning.
+- **Comment anchoring strategy:** STACK.md recommends character offset (`anchorStart`/`anchorEnd`), FEATURES.md recommends text snippet (`anchorText`). These break differently when content is edited. Need to pick one strategy before Phase 4. Recommendation: text snippet is more resilient to edits but harder to highlight precisely.
+- **Kanban card ordering algorithm:** When a task is dropped between two existing cards, how are `order` values recalculated? Fractional indexing, gap-based integers, or full reorder? Needs decision during Phase 3 planning.
+- **Search scope:** Does Cmd+K search message content or just entity names/titles? Message content search at scale needs FTS5 raw queries. Entity-only search is trivially fast with LIKE. Recommendation: entity-only for v2.0, defer message search.
+- **Minor STACK.md vs FEATURES.md disagreement:** FEATURES.md recommends react-hotkeys-hook; STACK.md recommends a custom hook. Recommendation: custom hook (STACK.md rationale is stronger -- <10 shortcuts does not justify a dependency).
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [AI SDK 6 Documentation](https://ai-sdk.dev/docs/introduction) -- streaming, agents, tool calling
-- [AI SDK Anthropic Provider](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic) -- Claude integration
-- [Prisma Next.js Guide](https://www.prisma.io/nextjs) -- singleton pattern, SQLite setup
-- [Prisma SQLite Quickstart](https://www.prisma.io/docs/getting-started/prisma-orm/quickstart/sqlite) -- schema, migrations
-- [Next.js 15 Blog](https://nextjs.org/blog/next-15) -- version rationale
-- [Anthropic Streaming Docs](https://platform.claude.com/docs/en/build-with-claude/streaming) -- SSE event types, error handling
-- [Anthropic Rate Limits](https://platform.claude.com/docs/en/api/rate-limits) -- 429/529 handling
-- [Microsoft AI Agent Design Patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns) -- orchestrator pattern
-- [dnd-kit](https://dndkit.com/) -- drag-and-drop library
-- [SQLite Concurrent Writes](https://tenthousandmeters.com/blog/sqlite-concurrent-writes-and-database-is-locked-errors/) -- WAL mode, contention
+- Direct codebase analysis: 172 files, 6,823 LOC TypeScript
+- [Motion v12.35 docs](https://motion.dev/docs/react) -- animation library
+- [dnd-kit official docs](https://dndkit.com/) -- drag-and-drop
+- [dnd-kit + shadcn/ui Kanban reference](https://github.com/Georgegriff/react-dnd-kit-tailwind-shadcn-ui)
+- [react-diff-viewer-continued v4.1.2](https://www.npmjs.com/package/react-diff-viewer-continued) -- diff rendering
+- [diff (jsdiff) v8.0.3](https://www.npmjs.com/package/diff) -- text diffing engine
+- [shadcn/ui Command component](https://ui.shadcn.com/docs/components/radix/command) -- Cmd+K
+- [shadcn/ui dark mode + next-themes](https://ui.shadcn.com/docs/dark-mode/next) -- theme integration
+- Prisma schema analysis: 7 existing models, Agent.isCustom already present
 
 ### Secondary (MEDIUM confidence)
-- [GitHub Blog: Multi-agent workflows](https://github.blog/ai-and-ml/generative-ai/multi-agent-workflows-often-fail-heres-how-to-engineer-ones-that-dont/) -- orchestration failure patterns
-- [Anthropic Engineering: Multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) -- agent coordination
-- [O'Reilly: Multi-Agent Architectures](https://www.oreilly.com/radar/designing-effective-multi-agent-architectures/) -- prompting fallacy
-- [Vibe Kanban](https://vibekanban.com/) -- competitive analysis, parallel agent execution patterns
-- [CrewAI](https://crewai.com/) -- competitive analysis, multi-agent platform patterns
-- [Permit.io HITL Patterns](https://www.permit.io/blog/human-in-the-loop-for-ai-agents-best-practices-frameworks-use-cases-and-demo) -- review workflow patterns
-- [Designative: Agentic AI UX](https://www.designative.info/2025/11/20/flows-age-agentic-ai-what-if-our-core-ux-models-no-longer-apply/) -- review workflow UX
+- [Marmelab Kanban tutorial (Jan 2026)](https://marmelab.com/blog/2026/01/15/building-a-kanban-board-with-shadcn.html)
+- [React ContentEditable caret issue #2047](https://github.com/facebook/react/issues/2047) -- cursor jumping bug
+- [Prisma FTS5 SQLite issue #9414](https://github.com/prisma/prisma/issues/9414) -- search limitations
+- [PatternFly chatbot conversation history](https://www.patternfly.org/patternfly-ai/chatbot/chatbot-conversation-history/) -- session history UX
+- [Atlassian Inline Edit pattern](https://developer.atlassian.com/platform/forge/ui-kit/components/inline-edit/) -- editing UX
 
 ### Tertiary (needs validation)
-- shadcn/ui CLI v4 agent-friendly skills -- referenced but changelog needs verification during implementation
-- better-sqlite3 adapter "100x faster" claim -- directionally correct but benchmark conditions unknown
-- Multi-agent stream multiplexing pattern -- described in concept, no production reference found
+- Inline comment text-snippet anchoring resilience -- described in concept, no production reference for single-user review tool
+- Kanban fractional indexing for card ordering -- multiple approaches exist, no consensus on best for SQLite
 
 ---
-*Research completed: 2026-03-09*
+*Research completed: 2026-03-10*
 *Ready for roadmap: yes*
