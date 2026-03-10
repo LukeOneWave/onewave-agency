@@ -93,15 +93,16 @@ Plans:
   1. Dashboard displays stats including active sessions, agents used, and tokens consumed
   2. Dashboard shows a chronological activity feed of recent actions across the app
   3. Dashboard shows an agent utilization chart visualizing which agents are used most
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Dashboard service layer with TDD: stats aggregation, activity feed, agent utilization queries
+- [ ] 05-02-PLAN.md — Dashboard UI: stat cards, activity feed, Recharts utilization chart, page rewrite
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -109,4 +110,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Chat and Streaming | 3/3 | Complete   | 2026-03-09 |
 | 3. Review System | 3/3 | Complete   | 2026-03-10 |
 | 4. Multi-Agent Orchestration | 3/3 | Complete   | 2026-03-10 |
-| 5. Dashboard and Polish | 0/1 | Not started | - |
+| 5. Dashboard and Polish | 0/2 | Not started | - |
