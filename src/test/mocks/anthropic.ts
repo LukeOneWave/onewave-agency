@@ -80,3 +80,25 @@ export function mockAnthropicModule() {
     __streamFn: streamFn,
   };
 }
+
+/**
+ * Mock multi-stream helper for orchestration tests.
+ * Creates N independent mock streams (one per agent) for simulating parallel streaming.
+ * Each stream emits its configured text chunks then completes.
+ */
+interface MockMultiStreamConfig {
+  agentId: string;
+  chunks: string[];
+}
+
+export function mockMultiStream(
+  configs: MockMultiStreamConfig[]
+): Map<string, ReturnType<typeof mockStream>> {
+  const streams = new Map<string, ReturnType<typeof mockStream>>();
+
+  for (const config of configs) {
+    streams.set(config.agentId, mockStream(config.chunks));
+  }
+
+  return streams;
+}
