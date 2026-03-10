@@ -95,17 +95,15 @@ export async function POST(request: NextRequest) {
                 output_tokens: finalMessage.usage.output_tokens,
               };
 
-              const doneEvent = JSON.stringify({ type: "done", usage });
-              safeEnqueue(`data: ${doneEvent}\n\n`);
-
-              // Persist messages
+              // Persist messages before sending done event (need messageId)
+              let messageId: string | undefined;
               if (sessionId && lastUserMessage) {
                 await chatService.addMessage(
                   sessionId,
                   lastUserMessage.role,
                   lastUserMessage.content
                 );
-                await chatService.addMessage(
+                const assistantMsg = await chatService.addMessage(
                   sessionId,
                   "assistant",
                   fullResponse,
@@ -114,7 +112,11 @@ export async function POST(request: NextRequest) {
                     output: usage.output_tokens,
                   }
                 );
+                messageId = assistantMsg.id;
               }
+
+              const doneEvent = JSON.stringify({ type: "done", usage, messageId });
+              safeEnqueue(`data: ${doneEvent}\n\n`);
             } catch {
               // Persistence errors should not break the stream
             }

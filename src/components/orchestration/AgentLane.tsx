@@ -61,10 +61,10 @@ export function AgentLane({ agentId }: AgentLaneProps) {
     const key = `${messageId}-${deliverableIndex}`;
     setDeliverableStates((prev) => ({ ...prev, [key]: "approved" }));
 
-    fetch(`/api/chat/messages/${messageId}/deliverables`, {
-      method: "POST",
+    fetch(`/api/deliverables/${messageId}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ index: deliverableIndex, action: "approve" }),
+      body: JSON.stringify({ index: deliverableIndex, status: "approved" }),
     }).catch(() => {
       // Revert on error
       setDeliverableStates((prev) => ({ ...prev, [key]: "pending" }));
@@ -79,12 +79,12 @@ export function AgentLane({ agentId }: AgentLaneProps) {
     const key = `${messageId}-${deliverableIndex}`;
     setDeliverableStates((prev) => ({ ...prev, [key]: "revised" }));
 
-    fetch(`/api/chat/messages/${messageId}/deliverables`, {
-      method: "POST",
+    fetch(`/api/deliverables/${messageId}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         index: deliverableIndex,
-        action: "revise",
+        status: "revised",
         feedback,
       }),
     }).catch(() => {

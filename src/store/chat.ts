@@ -153,7 +153,19 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 return { messages: msgs };
               });
             } else if (event.type === "done") {
-              set({ isStreaming: false, _abortController: null });
+              // Replace client UUID with real DB messageId
+              if (event.messageId) {
+                set((s) => {
+                  const msgs = [...s.messages];
+                  const last = msgs[msgs.length - 1];
+                  if (last && last.role === "assistant") {
+                    msgs[msgs.length - 1] = { ...last, id: event.messageId };
+                  }
+                  return { messages: msgs, isStreaming: false, _abortController: null };
+                });
+              } else {
+                set({ isStreaming: false, _abortController: null });
+              }
             } else if (event.type === "error") {
               set({
                 error: event.message,

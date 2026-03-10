@@ -54,5 +54,5 @@ export interface ParsedContent {
 // SSE event types
 export type SSEEvent =
   | { type: "text"; text: string }
-  | { type: "done"; usage: { input_tokens: number; output_tokens: number } }
+  | { type: "done"; usage: { input_tokens: number; output_tokens: number }; messageId?: string }
   | { type: "error"; message: string };
