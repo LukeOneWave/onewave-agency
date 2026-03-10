@@ -62,7 +62,7 @@ Plans:
   2. User can approve a deliverable with a single click and see its status change to approved
   3. User can request a revision with written feedback notes explaining what needs to change
   4. Revision feedback is automatically sent to the agent as the next message, continuing the conversation
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 03-00-PLAN.md — Wave 0: Prisma Deliverable model, types, deliverable parser with TDD, test stubs
@@ -106,6 +106,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation and Agent Catalog | 3/3 | Complete | 2026-03-09 |
 | 2. Chat and Streaming | 3/3 | Complete   | 2026-03-09 |
-| 3. Review System | 0/3 | Not started | - |
+| 3. Review System | 2/3 | In Progress|  |
 | 4. Multi-Agent Orchestration | 0/2 | Not started | - |
 | 5. Dashboard and Polish | 0/1 | Not started | - |
