@@ -34,6 +34,23 @@ export const CLAUDE_MODELS = [
 
 export type ClaudeModel = (typeof CLAUDE_MODELS)[number]["id"];
 
+// Deliverable types
+export type DeliverableStatus = "pending" | "approved" | "revised";
+
+export interface DeliverableState {
+  status: DeliverableStatus;
+  feedback?: string;
+}
+
+export type ParsedSegment =
+  | { type: "text"; content: string }
+  | { type: "deliverable"; content: string; index: number };
+
+export interface ParsedContent {
+  segments: ParsedSegment[];
+  hasDeliverables: boolean;
+}
+
 // SSE event types
 export type SSEEvent =
   | { type: "text"; text: string }
