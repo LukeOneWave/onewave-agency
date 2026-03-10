@@ -6,6 +6,7 @@ import { MessageBubble } from "./MessageBubble";
 
 export function MessageList() {
   const messages = useChatStore((s) => s.messages);
+  const isStreaming = useChatStore((s) => s.isStreaming);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,6 +28,8 @@ export function MessageList() {
           key={message.id ?? index}
           role={message.role}
           content={message.content}
+          messageId={message.id}
+          isStreaming={isStreaming && index === messages.length - 1}
         />
       ))}
       <div ref={bottomRef} />
