@@ -5,6 +5,17 @@ import { agentService } from "@/lib/services/agent";
 import { chatService } from "@/lib/services/chat";
 import type { ChatMessage } from "@/types/chat";
 
+const deliverableInstruction = `
+
+## Output Format
+When you produce a final deliverable (a complete piece of work like a strategy document, code, copy, design brief, plan, or any actionable output), wrap it in <deliverable> tags:
+
+<deliverable>
+[Your complete deliverable here]
+</deliverable>
+
+Use <deliverable> tags ONLY for complete, reviewable outputs. Do NOT wrap conversational responses, questions, clarifications, or partial work in these tags.`;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
           const anthropicStream = client.messages.stream({
             model,
             max_tokens: 4096,
-            system: agent.systemPrompt,
+            system: agent.systemPrompt + deliverableInstruction,
             messages: messages.map((m) => ({
               role: m.role,
               content: m.content,
