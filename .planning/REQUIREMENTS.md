@@ -30,8 +30,8 @@
 
 - [x] **ORCH-01**: User can select multiple agents for a mission
 - [x] **ORCH-02**: User can write a project brief/objective
-- [ ] **ORCH-03**: Selected agents execute in parallel on the shared brief
-- [ ] **ORCH-04**: User can see each agent's streaming output in separate lanes
+- [x] **ORCH-03**: Selected agents execute in parallel on the shared brief
+- [x] **ORCH-04**: User can see each agent's streaming output in separate lanes
 
 ### Dashboard
 
@@ -113,8 +113,8 @@
 | REVW-04 | Phase 3 | Complete |
 | ORCH-01 | Phase 4 | Complete |
 | ORCH-02 | Phase 4 | Complete |
-| ORCH-03 | Phase 4 | Pending |
-| ORCH-04 | Phase 4 | Pending |
+| ORCH-03 | Phase 4 | Complete |
+| ORCH-04 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Pending |
 | DASH-02 | Phase 5 | Pending |
 | DASH-03 | Phase 5 | Pending |

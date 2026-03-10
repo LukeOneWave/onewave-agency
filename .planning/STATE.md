@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-10T01:28:19Z"
-last_activity: 2026-03-10 — Completed 04-01 Orchestration Data Foundation
+last_updated: "2026-03-10T01:35:48Z"
+last_activity: 2026-03-10 — Completed 04-02 Streaming Endpoint & Store
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 10
-  completed_plans: 10
-  percent: 91
+  completed_plans: 11
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-09)
 ## Current Position
 
 Phase: 4 of 5 (Multi-Agent Orchestration)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-10 — Completed 04-01 Orchestration Data Foundation
+Last activity: 2026-03-10 — Completed 04-02 Streaming Endpoint & Store
 
-Progress: [█████████░] 91%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [█████████░] 91%
 | Phase 03-01 P01 | 3min | 2 tasks | 6 files |
 | Phase 03 P02 | 4min | 3 tasks | 4 files |
 | Phase 04 P01 | 2min | 2 tasks | 5 files |
+| Phase 04 P02 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Revision feedback auto-sent as next chat message via store sendMessage
 - [04-01]: Used prisma db push (non-destructive) instead of force-reset to preserve dev data
 - [04-01]: mockMultiStream reuses existing mockStream helper for consistency
+- [04-02]: Extracted deliverableInstruction to shared src/lib/constants.ts for reuse
+- [04-02]: Lane errors don't kill other streams -- each lane independently completes or errors
+- [04-02]: Anthropic mock uses function constructor pattern for Vitest compatibility
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T01:28:19Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-10T01:35:48Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
