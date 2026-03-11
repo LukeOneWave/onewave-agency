@@ -2,12 +2,10 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { agentService } from "@/lib/services/agent";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { AgentGrid } from "@/components/agents/AgentGrid";
 import { DivisionTabs } from "@/components/agents/DivisionTabs";
 import { AgentSearch } from "@/components/agents/AgentSearch";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Agent Catalog | OneWave",
@@ -46,7 +44,10 @@ export default async function AgentsPage({
             <h1 className="text-3xl font-bold">Agent Catalog</h1>
             <Badge variant="secondary">{count} agents</Badge>
           </div>
-          <Link href="/agents/new" className={cn(buttonVariants({ size: "sm" }))}>
+          <Link
+            href="/agents/new"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-xs hover:bg-primary/90"
+          >
             <Plus className="h-4 w-4" />
             Create Agent
           </Link>
