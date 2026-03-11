@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Zap,
   Waves,
+  FolderKanban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Users },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/orchestration", label: "Missions", icon: Zap },
   { href: "/settings", label: "Settings", icon: Settings },
