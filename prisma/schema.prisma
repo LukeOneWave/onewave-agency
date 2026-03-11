@@ -57,6 +57,8 @@ model Deliverable {
   status    String   @default("pending") // pending | approved | revised
   feedback  String?  // Revision notes when status is "revised"
   content   String?
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   versions  DeliverableVersion[]
@@ -97,13 +99,14 @@ model MissionLane {
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tasks       Task[]
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  status       String        @default("active")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  tasks        Task[]
+  deliverables Deliverable[]
 }
 
 model Task {
