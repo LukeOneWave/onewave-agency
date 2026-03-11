@@ -9,10 +9,10 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 
 ### Agent Management
 
-- [ ] **AGNT-01**: User can create a custom agent with name, division, role, personality, and process instructions
-- [ ] **AGNT-02**: User can edit a custom agent's details after creation
+- [x] **AGNT-01**: User can create a custom agent with name, division, role, personality, and process instructions
+- [x] **AGNT-02**: User can edit a custom agent's details after creation
 - [ ] **AGNT-03**: User can clone a seeded or custom agent as a starting point
-- [ ] **AGNT-04**: User can delete a custom agent
+- [x] **AGNT-04**: User can delete a custom agent
 
 ### Review & Deliverables
 
@@ -69,10 +69,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGNT-01 | Phase 7 | Pending |
-| AGNT-02 | Phase 7 | Pending |
+| AGNT-01 | Phase 7 | Complete |
+| AGNT-02 | Phase 7 | Complete |
 | AGNT-03 | Phase 7 | Pending |
-| AGNT-04 | Phase 7 | Pending |
+| AGNT-04 | Phase 7 | Complete |
 | REVW-01 | Phase 6 | Complete |
 | REVW-02 | Phase 9 | Pending |
 | REVW-03 | Phase 9 | Pending |
