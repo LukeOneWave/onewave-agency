@@ -1,9 +1,13 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { agentService } from "@/lib/services/agent";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { AgentGrid } from "@/components/agents/AgentGrid";
 import { DivisionTabs } from "@/components/agents/DivisionTabs";
 import { AgentSearch } from "@/components/agents/AgentSearch";
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Agent Catalog | OneWave",
@@ -31,14 +35,21 @@ export default async function AgentsPage({
     description: a.description,
     division: a.division,
     color: a.color,
+    isCustom: a.isCustom,
   }));
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Agent Catalog</h1>
-          <Badge variant="secondary">{count} agents</Badge>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Agent Catalog</h1>
+            <Badge variant="secondary">{count} agents</Badge>
+          </div>
+          <Link href="/agents/new" className={cn(buttonVariants({ size: "sm" }))}>
+            <Plus className="h-4 w-4" />
+            Create Agent
+          </Link>
         </div>
         <p className="mt-1 text-muted-foreground">
           Browse and explore AI agents across all divisions
