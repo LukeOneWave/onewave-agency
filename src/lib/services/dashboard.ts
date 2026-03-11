@@ -125,4 +125,32 @@ export const dashboardService = {
       };
     });
   },
+
+  async getPendingReview(limit: number = 5) {
+    return prisma.deliverable.findMany({
+      where: { status: "pending" },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        message: {
+          select: {
+            content: true,
+            session: {
+              select: {
+                id: true,
+                title: true,
+                agent: {
+                  select: { name: true, slug: true, color: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  },
 };
+
+export type PendingDeliverable = Awaited<
+  ReturnType<typeof dashboardService.getPendingReview>
+>[number];
