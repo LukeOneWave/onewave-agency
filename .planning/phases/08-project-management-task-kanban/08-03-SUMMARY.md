@@ -51,6 +51,9 @@ key-decisions:
   - "Batch PATCH via Promise.all for all changed tasks on dragEnd — one round-trip per drag"
   - "Agent list fetched server-side in page.tsx and passed as prop to KanbanBoard (avoids client-side fetch)"
   - "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 layout for responsive board on smaller screens"
+  - "Prisma client regenerated and .next cache cleared to resolve stale client/schema mismatch"
+
+requirements-completed: [PROJ-02, PROJ-04, PROJ-05]
 
 # Metrics
 duration: ~3min
@@ -83,6 +86,9 @@ completed: 2026-03-11
 
 1. **Task 1: Kanban board components** - `cb28a0c` (feat)
 2. **Task 2: Task creation form with agent assignment** - `6c24beb` (feat)
+3. **Task 3: Verify complete project management flow** - Human checkpoint, all 12 steps approved
+
+**Deviation fix:** `097877e` (fix: regenerate prisma client and clear stale cache)
 
 ## Files Created
 
@@ -102,22 +108,44 @@ completed: 2026-03-11
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
 
-## Checkpoint: Human Verification Required
+**1. [Rule 3 - Blocking] Prisma client regeneration after stale .next cache mismatch**
+- **Found during:** Post-build verification
+- **Issue:** Stale .next cache caused Prisma client to reference outdated schema, producing runtime errors
+- **Fix:** Deleted .next cache and ran `prisma generate` to regenerate the client
+- **Files modified:** Prisma generated client (runtime artifact, not source files)
+- **Verification:** Application started cleanly, Kanban board loaded without Prisma errors
+- **Committed in:** `097877e`
 
-Task 3 is a `checkpoint:human-verify`. The dev server is running at http://localhost:3000.
+---
 
-**Verification steps:**
-1. Navigate to http://localhost:3000 — verify "Projects" appears in sidebar
-2. Click "Projects" — should show empty state or project list
-3. Click "New Project" — fill in name and description, submit
-4. Verify redirect to /projects with project card visible
-5. Click the project card — should open /projects/[id] with Kanban board (4 columns)
-6. Click "Add Task" — fill in title, optionally assign an agent, submit
-7. Verify task appears in "To Do" column
-8. Create 2-3 more tasks
-9. Drag a task from "To Do" to "In Progress" — verify it moves
-10. Drag a task from "In Progress" to "Done" — verify it moves
-11. Reload the page — verify tasks remain in new columns and positions
-12. Go back to /projects — verify progress bar shows updated counts
+**Total deviations:** 1 auto-fixed (1 blocking)
+**Impact on plan:** Required for correct operation; no scope creep.
+
+## Verification Result
+
+Task 3 (`checkpoint:human-verify`) — **All 12 verification steps passed.** User confirmed "approved":
+1. "Projects" visible in sidebar
+2. Projects list page loads
+3. New Project form submits successfully
+4. Redirect to /projects with project card visible
+5. Project card links to /projects/[id] with 4-column Kanban board
+6. "Add Task" modal opens, task created successfully
+7. Task appears in "To Do" column
+8. Multiple tasks created
+9. Drag from "To Do" to "In Progress" works
+10. Drag from "In Progress" to "Done" works
+11. Page reload preserves task positions
+12. /projects progress bar shows updated counts
+
+## Issues Encountered
+- Prisma client/schema cache mismatch after initial build — resolved by regenerating client and clearing .next cache
+
+## User Setup Required
+None - no external service configuration required.
+
+## Next Phase Readiness
+- Full project management flow is working end-to-end (project CRUD + Kanban + drag persistence)
+- Ready for Phase 9 or any feature requiring project/task data
+- Task detail view (click-through from card) is a natural next step not yet built
