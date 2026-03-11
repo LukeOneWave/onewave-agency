@@ -73,11 +73,12 @@ Plans:
   3. User can view project progress showing task counts by status
   4. User can create tasks within a project and see them appear on a Kanban board
   5. User can drag tasks between Kanban columns (To Do / In Progress / Review / Done) and the new position persists after page reload
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Backend: types, validations, services, API routes, unit tests for project and task CRUD
+- [ ] 08-02-PLAN.md — Projects list page, create form, sidebar navigation, progress display
+- [ ] 08-03-PLAN.md — Project detail with Kanban board, dnd-kit drag-and-drop, task form with agent assignment
 
 ### Phase 9: Advanced Review
 **Goal**: Users can deeply review and iterate on deliverables with diff comparison, inline editing, and visual review boards
@@ -135,11 +136,11 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 5. Dashboard and Polish | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 6. Infrastructure + Quick Wins | 1/2 | In Progress|  | - |
 | 7. Custom Agents + Session History | 3/3 | Complete   | 2026-03-11 | - |
-| 8. Project Management + Task Kanban | v2.0 | 0/? | Not started | - |
+| 8. Project Management + Task Kanban | v2.0 | 0/3 | Not started | - |
 | 9. Advanced Review | v2.0 | 0/? | Not started | - |
 | 10. Power User UX | v2.0 | 0/? | Not started | - |
 | 11. Production Polish | v2.0 | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-03-10 (v1.0), extended 2026-03-10 (v2.0)*
-*Last updated: 2026-03-10*
+*Last updated: 2026-03-11*
