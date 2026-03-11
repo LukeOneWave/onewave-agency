@@ -47,8 +47,14 @@ export const chatService = {
       orderBy: { updatedAt: "desc" },
       take: limit,
       include: {
-        agent: { select: { name: true, division: true, slug: true } },
+        agent: { select: { name: true, division: true, slug: true, color: true, isCustom: true } },
         _count: { select: { messages: true } },
+        messages: {
+          take: 1,
+          orderBy: { createdAt: "asc" },
+          where: { role: "user" },
+          select: { content: true },
+        },
       },
     });
   },
