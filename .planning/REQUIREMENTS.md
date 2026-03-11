@@ -16,7 +16,7 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 
 ### Review & Deliverables
 
-- [ ] **REVW-01**: User can see a review queue widget on the dashboard showing pending deliverables
+- [x] **REVW-01**: User can see a review queue widget on the dashboard showing pending deliverables
 - [ ] **REVW-02**: User can view a side-by-side diff between deliverable revision versions
 - [ ] **REVW-03**: User can click-to-edit deliverable content directly via textarea
 
@@ -73,7 +73,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGNT-02 | Phase 7 | Pending |
 | AGNT-03 | Phase 7 | Pending |
 | AGNT-04 | Phase 7 | Pending |
-| REVW-01 | Phase 6 | Pending |
+| REVW-01 | Phase 6 | Complete |
 | REVW-02 | Phase 9 | Pending |
 | REVW-03 | Phase 9 | Pending |
 | PROJ-01 | Phase 8 | Pending |
