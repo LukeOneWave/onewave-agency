@@ -17,8 +17,8 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 ### Review & Deliverables
 
 - [x] **REVW-01**: User can see a review queue widget on the dashboard showing pending deliverables
-- [ ] **REVW-02**: User can view a side-by-side diff between deliverable revision versions
-- [ ] **REVW-03**: User can click-to-edit deliverable content directly via textarea
+- [x] **REVW-02**: User can view a side-by-side diff between deliverable revision versions
+- [x] **REVW-03**: User can click-to-edit deliverable content directly via textarea
 
 ### Project Management
 
@@ -27,8 +27,8 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 - [x] **PROJ-03**: User can view project progress and status
 - [x] **PROJ-04**: User can create tasks within a project
 - [x] **PROJ-05**: User can drag tasks between Kanban columns (To Do / In Progress / Review / Done)
-- [ ] **PROJ-06**: User can view a deliverables tab on a project showing all deliverables with review status
-- [ ] **PROJ-07**: User can view mission deliverables in a Kanban board (orchestration review board)
+- [x] **PROJ-06**: User can view a deliverables tab on a project showing all deliverables with review status
+- [x] **PROJ-07**: User can view mission deliverables in a Kanban board (orchestration review board)
 
 ### Navigation & UX
 
@@ -74,15 +74,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGNT-03 | Phase 7 | Complete |
 | AGNT-04 | Phase 7 | Complete |
 | REVW-01 | Phase 6 | Complete |
-| REVW-02 | Phase 9 | Pending |
-| REVW-03 | Phase 9 | Pending |
+| REVW-02 | Phase 9 | Complete |
+| REVW-03 | Phase 9 | Complete |
 | PROJ-01 | Phase 8 | Complete |
 | PROJ-02 | Phase 8 | Complete |
 | PROJ-03 | Phase 8 | Complete |
 | PROJ-04 | Phase 8 | Complete |
 | PROJ-05 | Phase 8 | Complete |
-| PROJ-06 | Phase 9 | Pending |
-| PROJ-07 | Phase 9 | Pending |
+| PROJ-06 | Phase 9 | Complete |
+| PROJ-07 | Phase 9 | Complete |
 | UX-01 | Phase 10 | Pending |
 | UX-02 | Phase 6 | Complete |
 | UX-03 | Phase 7 | Complete |
