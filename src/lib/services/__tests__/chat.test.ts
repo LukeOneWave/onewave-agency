@@ -6,6 +6,7 @@ vi.mock("@/lib/prisma", () => ({
     chatSession: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
     },
     message: {
@@ -157,6 +158,131 @@ describe("chatService", () => {
         })
       );
       expect(result).toEqual(mockMessages);
+    });
+  });
+
+  describe("getRecentSessions", () => {
+    it("returns sessions ordered by updatedAt desc", async () => {
+      const older = new Date("2026-01-01");
+      const newer = new Date("2026-02-01");
+      const mockSessions = [
+        {
+          id: "session-2",
+          agentId: "agent-1",
+          updatedAt: newer,
+          agent: { name: "Agent B", division: "ops", slug: "agent-b", color: "#0000ff", isCustom: false },
+          _count: { messages: 3 },
+          messages: [],
+        },
+        {
+          id: "session-1",
+          agentId: "agent-1",
+          updatedAt: older,
+          agent: { name: "Agent A", division: "sales", slug: "agent-a", color: "#ff0000", isCustom: false },
+          _count: { messages: 1 },
+          messages: [{ content: "Hello from user" }],
+        },
+      ];
+      vi.mocked(prisma.chatSession.findMany).mockResolvedValue(mockSessions as never);
+
+      const result = await chatService.getRecentSessions();
+
+      expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { updatedAt: "desc" },
+        })
+      );
+      expect(result[0].updatedAt).toEqual(newer);
+      expect(result[1].updatedAt).toEqual(older);
+    });
+
+    it("includes agent color and isCustom fields", async () => {
+      const mockSessions = [
+        {
+          id: "session-1",
+          agentId: "agent-1",
+          updatedAt: new Date(),
+          agent: { name: "Custom Agent", division: "ops", slug: "custom-agent", color: "#123456", isCustom: true },
+          _count: { messages: 5 },
+          messages: [{ content: "My first question to this custom agent" }],
+        },
+      ];
+      vi.mocked(prisma.chatSession.findMany).mockResolvedValue(mockSessions as never);
+
+      const result = await chatService.getRecentSessions();
+
+      expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            agent: expect.objectContaining({
+              select: expect.objectContaining({
+                color: true,
+                isCustom: true,
+              }),
+            }),
+          }),
+        })
+      );
+      expect(result[0].agent.color).toBe("#123456");
+      expect(result[0].agent.isCustom).toBe(true);
+    });
+
+    it("includes first user message as preview", async () => {
+      const mockSessions = [
+        {
+          id: "session-1",
+          agentId: "agent-1",
+          updatedAt: new Date(),
+          agent: { name: "Agent", division: "sales", slug: "agent", color: "#fff", isCustom: false },
+          _count: { messages: 2 },
+          messages: [{ content: "This is my first message to the agent" }],
+        },
+      ];
+      vi.mocked(prisma.chatSession.findMany).mockResolvedValue(mockSessions as never);
+
+      const result = await chatService.getRecentSessions();
+
+      expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            messages: expect.objectContaining({
+              take: 1,
+              where: { role: "user" },
+            }),
+          }),
+        })
+      );
+      expect(result[0].messages[0].content).toBe("This is my first message to the agent");
+    });
+
+    it("returns sessions with no messages (empty preview)", async () => {
+      const mockSessions = [
+        {
+          id: "session-1",
+          agentId: "agent-1",
+          updatedAt: new Date(),
+          agent: { name: "Agent", division: "sales", slug: "agent", color: "#fff", isCustom: false },
+          _count: { messages: 0 },
+          messages: [],
+        },
+      ];
+      vi.mocked(prisma.chatSession.findMany).mockResolvedValue(mockSessions as never);
+
+      const result = await chatService.getRecentSessions();
+
+      expect(result[0].messages).toHaveLength(0);
+    });
+
+    it("respects custom limit parameter", async () => {
+      vi.mocked(prisma.chatSession.findMany).mockResolvedValue([] as never);
+
+      await chatService.getRecentSessions(5);
+
+      expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 5,
+        })
+      );
     });
   });
 });
