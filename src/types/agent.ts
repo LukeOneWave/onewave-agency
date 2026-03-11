@@ -18,7 +18,7 @@ export interface Agent {
 
 export type AgentCardData = Pick<
   Agent,
-  "slug" | "name" | "description" | "division" | "color"
+  "slug" | "name" | "description" | "division" | "color" | "isCustom"
 >;
 
 export type AgentCreateInput = z.infer<typeof CreateAgentSchema>;

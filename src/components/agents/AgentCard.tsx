@@ -34,9 +34,19 @@ export function AgentCard({ agent }: { agent: AgentCardData }) {
             <CardTitle className="text-base leading-tight">
               {agent.name}
             </CardTitle>
-            <Badge variant="secondary" className={`shrink-0 text-xs rounded-lg ${colorClass}`}>
-              {agent.division}
-            </Badge>
+            <div className="flex items-center gap-1 shrink-0">
+              {agent.isCustom && (
+                <Badge variant="outline" className="text-xs rounded-lg">
+                  Custom
+                </Badge>
+              )}
+              <Badge
+                variant="secondary"
+                className={`text-xs rounded-lg ${colorClass}`}
+              >
+                {agent.division}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

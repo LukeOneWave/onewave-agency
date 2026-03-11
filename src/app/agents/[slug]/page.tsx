@@ -17,10 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export async function generateStaticParams() {
-  const agents = await agentService.getAll();
-  return agents.map((a) => ({ slug: a.slug }));
-}
+export const dynamicParams = true;
 
 export default async function AgentDetailPage({ params }: Props) {
   const { slug } = await params;
