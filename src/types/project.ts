@@ -1,4 +1,4 @@
-import type { Project, Task, Agent } from "../../generated/prisma";
+import type { Project, Task, Agent } from "../../generated/prisma/client";
 
 export const TASK_STATUSES = ["todo", "in_progress", "review", "done"] as const;
 
