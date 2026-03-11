@@ -104,10 +104,11 @@ Plans:
   1. User can press Cmd+K to open a search overlay from any page in the app
   2. Search results include agents, projects, and past sessions with type-ahead filtering
   3. Selecting a search result navigates directly to that entity's page
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: TBD
+- [ ] 10-01-PLAN.md — Search service + API route: parallel Prisma queries across agents/projects/sessions with unit tests
+- [ ] 10-02-PLAN.md — CommandPalette UI (cmdk) + AppShell Cmd+K integration + human verification
 
 ### Phase 11: Production Polish
 **Goal**: The app feels polished and production-grade with smooth visual transitions throughout
@@ -139,7 +140,7 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 7. Custom Agents + Session History | 3/3 | Complete   | 2026-03-11 | - |
 | 8. Project Management + Task Kanban | 3/3 | Complete   | 2026-03-11 | - |
 | 9. Advanced Review | 3/3 | Complete   | 2026-03-11 | - |
-| 10. Power User UX | v2.0 | 0/? | Not started | - |
+| 10. Power User UX | v2.0 | 0/2 | Not started | - |
 | 11. Production Polish | v2.0 | 0/? | Not started | - |
 
 ---
