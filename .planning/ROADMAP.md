@@ -89,11 +89,12 @@ Plans:
   2. User can click on deliverable content to enter edit mode, modify the text in a textarea, and save changes
   3. User can view a deliverables tab on any project showing all deliverables with their current review status
   4. User can view mission deliverables in a Kanban-style board organized by review status (orchestration review board)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md — Backend: schema migration, deliverable version service, API routes, orchestration query, unit tests
+- [ ] 09-02-PLAN.md — Diff view + inline editing: DiffViewer component, InlineEditor component, MessageBubble integration
+- [ ] 09-03-PLAN.md — Project deliverables tab + orchestration review board Kanban
 
 ### Phase 10: Power User UX
 **Goal**: Users can instantly navigate anywhere in the app through a keyboard-driven command palette
@@ -137,7 +138,7 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 6. Infrastructure + Quick Wins | 1/2 | In Progress|  | - |
 | 7. Custom Agents + Session History | 3/3 | Complete   | 2026-03-11 | - |
 | 8. Project Management + Task Kanban | 3/3 | Complete   | 2026-03-11 | - |
-| 9. Advanced Review | v2.0 | 0/? | Not started | - |
+| 9. Advanced Review | v2.0 | 0/3 | Not started | - |
 | 10. Power User UX | v2.0 | 0/? | Not started | - |
 | 11. Production Polish | v2.0 | 0/? | Not started | - |
 
