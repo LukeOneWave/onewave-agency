@@ -11,6 +11,9 @@ vi.mock("@/lib/prisma", () => ({
     missionLane: {
       update: vi.fn(),
     },
+    deliverable: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -301,6 +304,90 @@ describe("orchestrationService", () => {
         where: { id: "lane-1" },
         data: { status: "done" },
       });
+    });
+  });
+
+  describe("getMissionDeliverables", () => {
+    it("returns deliverables traversing mission > lane > session > message chain", async () => {
+      const mockDeliverables = [
+        {
+          id: "deliv-1",
+          messageId: "msg-1",
+          index: 0,
+          status: "pending",
+          feedback: null,
+          content: "Deliverable content",
+          projectId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          versions: [],
+          message: {
+            id: "msg-1",
+            sessionId: "session-1",
+            role: "assistant",
+            content: "message content",
+            inputTokens: null,
+            outputTokens: null,
+            createdAt: new Date(),
+            session: {
+              id: "session-1",
+              agentId: "agent-1",
+              model: "claude-sonnet-4-6",
+              title: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              missionLane: {
+                id: "lane-1",
+                missionId: "mission-1",
+                agentId: "agent-1",
+                sessionId: "session-1",
+                status: "done",
+                createdAt: new Date(),
+                agent: {
+                  name: "Designer",
+                  color: "#ff0000",
+                  division: "Design",
+                },
+              },
+            },
+          },
+        },
+      ];
+
+      mockPrisma.deliverable.findMany.mockResolvedValue(mockDeliverables as never);
+
+      const result = await orchestrationService.getMissionDeliverables("mission-1");
+
+      expect(mockPrisma.deliverable.findMany).toHaveBeenCalledWith({
+        where: {
+          message: { session: { missionLane: { missionId: "mission-1" } } },
+        },
+        include: {
+          versions: { orderBy: { version: "asc" } },
+          message: {
+            include: {
+              session: {
+                include: {
+                  missionLane: {
+                    include: { agent: { select: { name: true, color: true, division: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      expect(result).toEqual(mockDeliverables);
+    });
+
+    it("returns empty array when mission has no deliverables", async () => {
+      mockPrisma.deliverable.findMany.mockResolvedValue([]);
+
+      const result = await orchestrationService.getMissionDeliverables("mission-empty");
+
+      expect(result).toEqual([]);
     });
   });
 });

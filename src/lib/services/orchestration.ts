@@ -84,4 +84,27 @@ export const orchestrationService = {
       data: { status },
     });
   },
+
+  async getMissionDeliverables(missionId: string) {
+    return prisma.deliverable.findMany({
+      where: {
+        message: { session: { missionLane: { missionId } } },
+      },
+      include: {
+        versions: { orderBy: { version: "asc" } },
+        message: {
+          include: {
+            session: {
+              include: {
+                missionLane: {
+                  include: { agent: { select: { name: true, color: true, division: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  },
 };
