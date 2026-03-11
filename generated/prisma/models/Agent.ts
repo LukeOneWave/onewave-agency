@@ -239,6 +239,8 @@ export type AgentWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Agent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Agent"> | Date | string
   sessions?: Prisma.ChatSessionListRelationFilter
+  missions?: Prisma.MissionLaneListRelationFilter
+  tasks?: Prisma.TaskListRelationFilter
 }
 
 export type AgentOrderByWithRelationInput = {
@@ -255,6 +257,8 @@ export type AgentOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   sessions?: Prisma.ChatSessionOrderByRelationAggregateInput
+  missions?: Prisma.MissionLaneOrderByRelationAggregateInput
+  tasks?: Prisma.TaskOrderByRelationAggregateInput
 }
 
 export type AgentWhereUniqueInput = Prisma.AtLeast<{
@@ -274,6 +278,8 @@ export type AgentWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Agent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Agent"> | Date | string
   sessions?: Prisma.ChatSessionListRelationFilter
+  missions?: Prisma.MissionLaneListRelationFilter
+  tasks?: Prisma.TaskListRelationFilter
 }, "id" | "slug">
 
 export type AgentOrderByWithAggregationInput = {
@@ -326,6 +332,8 @@ export type AgentCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.ChatSessionCreateNestedManyWithoutAgentInput
+  missions?: Prisma.MissionLaneCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskCreateNestedManyWithoutAssignedAgentInput
 }
 
 export type AgentUncheckedCreateInput = {
@@ -342,6 +350,8 @@ export type AgentUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutAgentInput
+  missions?: Prisma.MissionLaneUncheckedCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskUncheckedCreateNestedManyWithoutAssignedAgentInput
 }
 
 export type AgentUpdateInput = {
@@ -358,6 +368,8 @@ export type AgentUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.ChatSessionUpdateManyWithoutAgentNestedInput
+  missions?: Prisma.MissionLaneUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUpdateManyWithoutAssignedAgentNestedInput
 }
 
 export type AgentUncheckedUpdateInput = {
@@ -374,6 +386,8 @@ export type AgentUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutAgentNestedInput
+  missions?: Prisma.MissionLaneUncheckedUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUncheckedUpdateManyWithoutAssignedAgentNestedInput
 }
 
 export type AgentCreateManyInput = {
@@ -471,6 +485,11 @@ export type AgentScalarRelationFilter = {
   isNot?: Prisma.AgentWhereInput
 }
 
+export type AgentNullableScalarRelationFilter = {
+  is?: Prisma.AgentWhereInput | null
+  isNot?: Prisma.AgentWhereInput | null
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -501,6 +520,36 @@ export type AgentUpdateOneRequiredWithoutSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AgentUpdateToOneWithWhereWithoutSessionsInput, Prisma.AgentUpdateWithoutSessionsInput>, Prisma.AgentUncheckedUpdateWithoutSessionsInput>
 }
 
+export type AgentCreateNestedOneWithoutMissionsInput = {
+  create?: Prisma.XOR<Prisma.AgentCreateWithoutMissionsInput, Prisma.AgentUncheckedCreateWithoutMissionsInput>
+  connectOrCreate?: Prisma.AgentCreateOrConnectWithoutMissionsInput
+  connect?: Prisma.AgentWhereUniqueInput
+}
+
+export type AgentUpdateOneRequiredWithoutMissionsNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentCreateWithoutMissionsInput, Prisma.AgentUncheckedCreateWithoutMissionsInput>
+  connectOrCreate?: Prisma.AgentCreateOrConnectWithoutMissionsInput
+  upsert?: Prisma.AgentUpsertWithoutMissionsInput
+  connect?: Prisma.AgentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentUpdateToOneWithWhereWithoutMissionsInput, Prisma.AgentUpdateWithoutMissionsInput>, Prisma.AgentUncheckedUpdateWithoutMissionsInput>
+}
+
+export type AgentCreateNestedOneWithoutTasksInput = {
+  create?: Prisma.XOR<Prisma.AgentCreateWithoutTasksInput, Prisma.AgentUncheckedCreateWithoutTasksInput>
+  connectOrCreate?: Prisma.AgentCreateOrConnectWithoutTasksInput
+  connect?: Prisma.AgentWhereUniqueInput
+}
+
+export type AgentUpdateOneWithoutTasksNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentCreateWithoutTasksInput, Prisma.AgentUncheckedCreateWithoutTasksInput>
+  connectOrCreate?: Prisma.AgentCreateOrConnectWithoutTasksInput
+  upsert?: Prisma.AgentUpsertWithoutTasksInput
+  disconnect?: Prisma.AgentWhereInput | boolean
+  delete?: Prisma.AgentWhereInput | boolean
+  connect?: Prisma.AgentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentUpdateToOneWithWhereWithoutTasksInput, Prisma.AgentUpdateWithoutTasksInput>, Prisma.AgentUncheckedUpdateWithoutTasksInput>
+}
+
 export type AgentCreateWithoutSessionsInput = {
   id?: string
   name: string
@@ -514,6 +563,8 @@ export type AgentCreateWithoutSessionsInput = {
   isCustom?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  missions?: Prisma.MissionLaneCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskCreateNestedManyWithoutAssignedAgentInput
 }
 
 export type AgentUncheckedCreateWithoutSessionsInput = {
@@ -529,6 +580,8 @@ export type AgentUncheckedCreateWithoutSessionsInput = {
   isCustom?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  missions?: Prisma.MissionLaneUncheckedCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskUncheckedCreateNestedManyWithoutAssignedAgentInput
 }
 
 export type AgentCreateOrConnectWithoutSessionsInput = {
@@ -560,6 +613,8 @@ export type AgentUpdateWithoutSessionsInput = {
   isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  missions?: Prisma.MissionLaneUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUpdateManyWithoutAssignedAgentNestedInput
 }
 
 export type AgentUncheckedUpdateWithoutSessionsInput = {
@@ -575,6 +630,176 @@ export type AgentUncheckedUpdateWithoutSessionsInput = {
   isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  missions?: Prisma.MissionLaneUncheckedUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUncheckedUpdateManyWithoutAssignedAgentNestedInput
+}
+
+export type AgentCreateWithoutMissionsInput = {
+  id?: string
+  name: string
+  slug: string
+  division: string
+  description: string
+  color: string
+  tools?: string | null
+  systemPrompt: string
+  rawMarkdown: string
+  isCustom?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.ChatSessionCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskCreateNestedManyWithoutAssignedAgentInput
+}
+
+export type AgentUncheckedCreateWithoutMissionsInput = {
+  id?: string
+  name: string
+  slug: string
+  division: string
+  description: string
+  color: string
+  tools?: string | null
+  systemPrompt: string
+  rawMarkdown: string
+  isCustom?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutAgentInput
+  tasks?: Prisma.TaskUncheckedCreateNestedManyWithoutAssignedAgentInput
+}
+
+export type AgentCreateOrConnectWithoutMissionsInput = {
+  where: Prisma.AgentWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgentCreateWithoutMissionsInput, Prisma.AgentUncheckedCreateWithoutMissionsInput>
+}
+
+export type AgentUpsertWithoutMissionsInput = {
+  update: Prisma.XOR<Prisma.AgentUpdateWithoutMissionsInput, Prisma.AgentUncheckedUpdateWithoutMissionsInput>
+  create: Prisma.XOR<Prisma.AgentCreateWithoutMissionsInput, Prisma.AgentUncheckedCreateWithoutMissionsInput>
+  where?: Prisma.AgentWhereInput
+}
+
+export type AgentUpdateToOneWithWhereWithoutMissionsInput = {
+  where?: Prisma.AgentWhereInput
+  data: Prisma.XOR<Prisma.AgentUpdateWithoutMissionsInput, Prisma.AgentUncheckedUpdateWithoutMissionsInput>
+}
+
+export type AgentUpdateWithoutMissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  color?: Prisma.StringFieldUpdateOperationsInput | string
+  tools?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  rawMarkdown?: Prisma.StringFieldUpdateOperationsInput | string
+  isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.ChatSessionUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUpdateManyWithoutAssignedAgentNestedInput
+}
+
+export type AgentUncheckedUpdateWithoutMissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  color?: Prisma.StringFieldUpdateOperationsInput | string
+  tools?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  rawMarkdown?: Prisma.StringFieldUpdateOperationsInput | string
+  isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutAgentNestedInput
+  tasks?: Prisma.TaskUncheckedUpdateManyWithoutAssignedAgentNestedInput
+}
+
+export type AgentCreateWithoutTasksInput = {
+  id?: string
+  name: string
+  slug: string
+  division: string
+  description: string
+  color: string
+  tools?: string | null
+  systemPrompt: string
+  rawMarkdown: string
+  isCustom?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.ChatSessionCreateNestedManyWithoutAgentInput
+  missions?: Prisma.MissionLaneCreateNestedManyWithoutAgentInput
+}
+
+export type AgentUncheckedCreateWithoutTasksInput = {
+  id?: string
+  name: string
+  slug: string
+  division: string
+  description: string
+  color: string
+  tools?: string | null
+  systemPrompt: string
+  rawMarkdown: string
+  isCustom?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutAgentInput
+  missions?: Prisma.MissionLaneUncheckedCreateNestedManyWithoutAgentInput
+}
+
+export type AgentCreateOrConnectWithoutTasksInput = {
+  where: Prisma.AgentWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgentCreateWithoutTasksInput, Prisma.AgentUncheckedCreateWithoutTasksInput>
+}
+
+export type AgentUpsertWithoutTasksInput = {
+  update: Prisma.XOR<Prisma.AgentUpdateWithoutTasksInput, Prisma.AgentUncheckedUpdateWithoutTasksInput>
+  create: Prisma.XOR<Prisma.AgentCreateWithoutTasksInput, Prisma.AgentUncheckedCreateWithoutTasksInput>
+  where?: Prisma.AgentWhereInput
+}
+
+export type AgentUpdateToOneWithWhereWithoutTasksInput = {
+  where?: Prisma.AgentWhereInput
+  data: Prisma.XOR<Prisma.AgentUpdateWithoutTasksInput, Prisma.AgentUncheckedUpdateWithoutTasksInput>
+}
+
+export type AgentUpdateWithoutTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  color?: Prisma.StringFieldUpdateOperationsInput | string
+  tools?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  rawMarkdown?: Prisma.StringFieldUpdateOperationsInput | string
+  isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.ChatSessionUpdateManyWithoutAgentNestedInput
+  missions?: Prisma.MissionLaneUpdateManyWithoutAgentNestedInput
+}
+
+export type AgentUncheckedUpdateWithoutTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  color?: Prisma.StringFieldUpdateOperationsInput | string
+  tools?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  rawMarkdown?: Prisma.StringFieldUpdateOperationsInput | string
+  isCustom?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutAgentNestedInput
+  missions?: Prisma.MissionLaneUncheckedUpdateManyWithoutAgentNestedInput
 }
 
 
@@ -584,10 +809,14 @@ export type AgentUncheckedUpdateWithoutSessionsInput = {
 
 export type AgentCountOutputType = {
   sessions: number
+  missions: number
+  tasks: number
 }
 
 export type AgentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | AgentCountOutputTypeCountSessionsArgs
+  missions?: boolean | AgentCountOutputTypeCountMissionsArgs
+  tasks?: boolean | AgentCountOutputTypeCountTasksArgs
 }
 
 /**
@@ -607,6 +836,20 @@ export type AgentCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.ChatSessionWhereInput
 }
 
+/**
+ * AgentCountOutputType without action
+ */
+export type AgentCountOutputTypeCountMissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MissionLaneWhereInput
+}
+
+/**
+ * AgentCountOutputType without action
+ */
+export type AgentCountOutputTypeCountTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TaskWhereInput
+}
+
 
 export type AgentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -622,6 +865,8 @@ export type AgentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAt?: boolean
   updatedAt?: boolean
   sessions?: boolean | Prisma.Agent$sessionsArgs<ExtArgs>
+  missions?: boolean | Prisma.Agent$missionsArgs<ExtArgs>
+  tasks?: boolean | Prisma.Agent$tasksArgs<ExtArgs>
   _count?: boolean | Prisma.AgentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["agent"]>
 
@@ -673,6 +918,8 @@ export type AgentSelectScalar = {
 export type AgentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "division" | "description" | "color" | "tools" | "systemPrompt" | "rawMarkdown" | "isCustom" | "createdAt" | "updatedAt", ExtArgs["result"]["agent"]>
 export type AgentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.Agent$sessionsArgs<ExtArgs>
+  missions?: boolean | Prisma.Agent$missionsArgs<ExtArgs>
+  tasks?: boolean | Prisma.Agent$tasksArgs<ExtArgs>
   _count?: boolean | Prisma.AgentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AgentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -682,6 +929,8 @@ export type $AgentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name: "Agent"
   objects: {
     sessions: Prisma.$ChatSessionPayload<ExtArgs>[]
+    missions: Prisma.$MissionLanePayload<ExtArgs>[]
+    tasks: Prisma.$TaskPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1091,6 +1340,8 @@ readonly fields: AgentFieldRefs;
 export interface Prisma__AgentClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sessions<T extends Prisma.Agent$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agent$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  missions<T extends Prisma.Agent$missionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agent$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MissionLanePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tasks<T extends Prisma.Agent$tasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Agent$tasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1539,6 +1790,54 @@ export type Agent$sessionsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.ChatSessionScalarFieldEnum | Prisma.ChatSessionScalarFieldEnum[]
+}
+
+/**
+ * Agent.missions
+ */
+export type Agent$missionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MissionLane
+   */
+  select?: Prisma.MissionLaneSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MissionLane
+   */
+  omit?: Prisma.MissionLaneOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MissionLaneInclude<ExtArgs> | null
+  where?: Prisma.MissionLaneWhereInput
+  orderBy?: Prisma.MissionLaneOrderByWithRelationInput | Prisma.MissionLaneOrderByWithRelationInput[]
+  cursor?: Prisma.MissionLaneWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MissionLaneScalarFieldEnum | Prisma.MissionLaneScalarFieldEnum[]
+}
+
+/**
+ * Agent.tasks
+ */
+export type Agent$tasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Task
+   */
+  select?: Prisma.TaskSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Task
+   */
+  omit?: Prisma.TaskOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TaskInclude<ExtArgs> | null
+  where?: Prisma.TaskWhereInput
+  orderBy?: Prisma.TaskOrderByWithRelationInput | Prisma.TaskOrderByWithRelationInput[]
+  cursor?: Prisma.TaskWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TaskScalarFieldEnum | Prisma.TaskScalarFieldEnum[]
 }
 
 /**

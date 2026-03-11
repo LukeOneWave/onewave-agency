@@ -55,7 +55,12 @@ export const ModelName = {
   ChatSession: 'ChatSession',
   Message: 'Message',
   Deliverable: 'Deliverable',
-  Setting: 'Setting'
+  Setting: 'Setting',
+  Mission: 'Mission',
+  MissionLane: 'MissionLane',
+  Project: 'Project',
+  Task: 'Task',
+  DeliverableVersion: 'DeliverableVersion'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -120,6 +125,7 @@ export const DeliverableScalarFieldEnum = {
   index: 'index',
   status: 'status',
   feedback: 'feedback',
+  content: 'content',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -136,6 +142,68 @@ export const SettingScalarFieldEnum = {
 } as const
 
 export type SettingScalarFieldEnum = (typeof SettingScalarFieldEnum)[keyof typeof SettingScalarFieldEnum]
+
+
+export const MissionScalarFieldEnum = {
+  id: 'id',
+  brief: 'brief',
+  model: 'model',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MissionScalarFieldEnum = (typeof MissionScalarFieldEnum)[keyof typeof MissionScalarFieldEnum]
+
+
+export const MissionLaneScalarFieldEnum = {
+  id: 'id',
+  missionId: 'missionId',
+  agentId: 'agentId',
+  sessionId: 'sessionId',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type MissionLaneScalarFieldEnum = (typeof MissionLaneScalarFieldEnum)[keyof typeof MissionLaneScalarFieldEnum]
+
+
+export const ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
+
+
+export const TaskScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  title: 'title',
+  description: 'description',
+  status: 'status',
+  assignedAgentId: 'assignedAgentId',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TaskScalarFieldEnum = (typeof TaskScalarFieldEnum)[keyof typeof TaskScalarFieldEnum]
+
+
+export const DeliverableVersionScalarFieldEnum = {
+  id: 'id',
+  deliverableId: 'deliverableId',
+  version: 'version',
+  content: 'content',
+  createdAt: 'createdAt'
+} as const
+
+export type DeliverableVersionScalarFieldEnum = (typeof DeliverableVersionScalarFieldEnum)[keyof typeof DeliverableVersionScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -42,3 +42,28 @@ export type Deliverable = Prisma.DeliverableModel
  * 
  */
 export type Setting = Prisma.SettingModel
+/**
+ * Model Mission
+ * 
+ */
+export type Mission = Prisma.MissionModel
+/**
+ * Model MissionLane
+ * 
+ */
+export type MissionLane = Prisma.MissionLaneModel
+/**
+ * Model Project
+ * 
+ */
+export type Project = Prisma.ProjectModel
+/**
+ * Model Task
+ * 
+ */
+export type Task = Prisma.TaskModel
+/**
+ * Model DeliverableVersion
+ * 
+ */
+export type DeliverableVersion = Prisma.DeliverableVersionModel
