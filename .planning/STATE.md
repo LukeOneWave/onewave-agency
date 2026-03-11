@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Power User Platform
 status: completed
-stopped_at: "Checkpoint: 07-03 Task 2 awaiting human verify"
-last_updated: "2026-03-11T05:12:27.138Z"
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-03-11T05:13:26.427Z"
 last_activity: 2026-03-10 -- Phase 6 complete (schema migration, theme/loading skeletons)
 progress:
   total_phases: 6
@@ -54,6 +54,7 @@ Progress: [##########..........] 50% (v1.0 shipped, Phase 6 complete)
 | Phase 06 P02 | 2min | 2 tasks | 6 files |
 | Phase 07 P01 | 10min | 2 tasks | 7 files |
 | Phase 07 P03 | 4min | 1 tasks | 4 files |
+| Phase 07 P02 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 07]: extractSection() helper parses existing systemPrompt to preserve unchanged sections on partial update
 - [Phase 07]: Error message keyword matching drives HTTP status codes in route handlers (keeps error semantics in service layer)
 - [Phase 07]: Used buttonVariants with styled Link instead of Button asChild (base-ui does not support asChild prop)
+- [Phase 07]: Used buttonVariants() + Link instead of Button asChild - base-ui Button does not support asChild prop
+- [Phase 07]: Removed generateStaticParams from [slug]/page.tsx - custom agents are dynamic and would 404 under SSG
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T05:12:20.526Z
-Stopped at: Checkpoint: 07-03 Task 2 awaiting human verify
+Last session: 2026-03-11T05:13:26.425Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
