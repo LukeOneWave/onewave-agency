@@ -34,7 +34,7 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 
 - [ ] **UX-01**: User can search across agents, projects, and sessions via Cmd+K
 - [x] **UX-02**: User can toggle between dark and light mode
-- [ ] **UX-03**: User can browse past chat sessions and resume them
+- [x] **UX-03**: User can browse past chat sessions and resume them
 - [x] **UX-04**: App has loading skeletons on data-fetching pages
 - [ ] **UX-05**: App has smooth page transitions and UI animations
 
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROJ-07 | Phase 9 | Pending |
 | UX-01 | Phase 10 | Pending |
 | UX-02 | Phase 6 | Complete |
-| UX-03 | Phase 7 | Pending |
+| UX-03 | Phase 7 | Complete |
 | UX-04 | Phase 6 | Complete |
 | UX-05 | Phase 11 | Pending |
 
