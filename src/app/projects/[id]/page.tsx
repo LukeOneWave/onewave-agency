@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { projectService } from "@/lib/services/project";
 import { agentService } from "@/lib/services/agent";
-import { KanbanBoard } from "@/components/projects/KanbanBoard";
+import { deliverableService } from "@/lib/services/deliverable";
+import { ProjectDetailTabs } from "@/components/projects/ProjectDetailTabs";
 import { COLUMN_LABELS, TASK_STATUSES } from "@/types/project";
 
 interface ProjectDetailPageProps {
@@ -11,9 +12,10 @@ interface ProjectDetailPageProps {
 export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { id } = await params;
 
-  const [project, agents] = await Promise.all([
+  const [project, agents, deliverables] = await Promise.all([
     projectService.getById(id),
     agentService.getAll(),
+    deliverableService.getByProjectId(id),
   ]);
 
   if (!project) {
@@ -55,10 +57,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
         </div>
       </div>
 
-      <KanbanBoard
-        initialTasks={project.tasks}
+      <ProjectDetailTabs
+        tasks={project.tasks}
         projectId={project.id}
         agents={agentsForForm}
+        deliverables={deliverables}
       />
     </div>
   );
