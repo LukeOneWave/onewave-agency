@@ -56,11 +56,12 @@ Plans:
   3. User can clone any agent (seeded or custom) as a starting point for a new custom agent
   4. User can delete a custom agent (seeded agents cannot be deleted)
   5. User can browse a list of past chat sessions, see which agent was involved, and click to resume any session
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — Agent CRUD backend: Zod validation, service layer, API routes (POST/PATCH/DELETE)
+- [ ] 07-02-PLAN.md — Agent builder UI: create/edit form, clone flow, detail page actions, catalog updates
+- [ ] 07-03-PLAN.md — Enhanced session history page + full phase verification checkpoint
 
 ### Phase 8: Project Management + Task Kanban
 **Goal**: Users can organize work into projects with visual task tracking via drag-and-drop Kanban board
@@ -133,7 +134,7 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 4. Multi-Agent Orchestration | v1.0 | 3/3 | Complete | 2026-03-10 |
 | 5. Dashboard and Polish | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 6. Infrastructure + Quick Wins | 1/2 | In Progress|  | - |
-| 7. Custom Agents + Session History | v2.0 | 0/? | Not started | - |
+| 7. Custom Agents + Session History | v2.0 | 0/3 | Not started | - |
 | 8. Project Management + Task Kanban | v2.0 | 0/? | Not started | - |
 | 9. Advanced Review | v2.0 | 0/? | Not started | - |
 | 10. Power User UX | v2.0 | 0/? | Not started | - |
