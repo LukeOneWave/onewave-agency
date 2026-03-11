@@ -22,11 +22,11 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 
 ### Project Management
 
-- [ ] **PROJ-01**: User can create a project with name and description
-- [ ] **PROJ-02**: User can assign agents to a project
-- [ ] **PROJ-03**: User can view project progress and status
-- [ ] **PROJ-04**: User can create tasks within a project
-- [ ] **PROJ-05**: User can drag tasks between Kanban columns (To Do / In Progress / Review / Done)
+- [x] **PROJ-01**: User can create a project with name and description
+- [x] **PROJ-02**: User can assign agents to a project
+- [x] **PROJ-03**: User can view project progress and status
+- [x] **PROJ-04**: User can create tasks within a project
+- [x] **PROJ-05**: User can drag tasks between Kanban columns (To Do / In Progress / Review / Done)
 - [ ] **PROJ-06**: User can view a deliverables tab on a project showing all deliverables with review status
 - [ ] **PROJ-07**: User can view mission deliverables in a Kanban board (orchestration review board)
 
@@ -76,11 +76,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REVW-01 | Phase 6 | Complete |
 | REVW-02 | Phase 9 | Pending |
 | REVW-03 | Phase 9 | Pending |
-| PROJ-01 | Phase 8 | Pending |
-| PROJ-02 | Phase 8 | Pending |
-| PROJ-03 | Phase 8 | Pending |
-| PROJ-04 | Phase 8 | Pending |
-| PROJ-05 | Phase 8 | Pending |
+| PROJ-01 | Phase 8 | Complete |
+| PROJ-02 | Phase 8 | Complete |
+| PROJ-03 | Phase 8 | Complete |
+| PROJ-04 | Phase 8 | Complete |
+| PROJ-05 | Phase 8 | Complete |
 | PROJ-06 | Phase 9 | Pending |
 | PROJ-07 | Phase 9 | Pending |
 | UX-01 | Phase 10 | Pending |
