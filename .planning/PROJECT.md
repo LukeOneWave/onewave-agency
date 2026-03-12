@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A local web application for managing and working with 61 specialized AI agents. Users can browse agents by division, chat with them via streaming Claude API, review deliverables through an approve/revise workflow, orchestrate multi-agent missions with parallel execution lanes, and monitor agency activity through a dashboard. Named "OneWave AI Digital Agency."
+A local web application for managing and working with 61+ specialized AI agents. Users can browse agents by division, create custom agents, chat via streaming Claude API, review deliverables through an approve/revise workflow with diff comparison and inline editing, orchestrate multi-agent missions, manage projects with Kanban task boards, and navigate everything via a Cmd+K command palette. Named "OneWave AI Digital Agency."
 
 ## Core Value
 
@@ -21,22 +21,23 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 - ✓ Dashboard with stats, activity feed, and utilization charts — v1.0
 - ✓ Settings page with API key management and model selection — v1.0
 - ✓ Dark mode with dark default — v1.0
+- ✓ Create and edit custom agents — v2.0
+- ✓ Clone agents as starting point for new custom agents — v2.0
+- ✓ Review queue widget on dashboard with pending items — v2.0
+- ✓ Inline editing of deliverable content — v2.0
+- ✓ Side-by-side diff view between revision versions — v2.0
+- ✓ Orchestration review board (Kanban for mission deliverables) — v2.0
+- ✓ Project management with agent assignment and task tracking — v2.0
+- ✓ Task Kanban board (To Do / In Progress / Review / Done) — v2.0
+- ✓ Deliverables tab on projects with review status — v2.0
+- ✓ Global search (Cmd+K) across agents, projects, sessions — v2.0
+- ✓ Dark/light mode toggle — v2.0
+- ✓ Past session browsing and resumption — v2.0
+- ✓ Production polish: page transitions, entrance animations, loading skeletons — v2.0
 
 ### Active
 
-- [ ] Create and edit custom agents
-- [ ] Review queue widget on dashboard with pending items
-- [ ] Inline editing and commenting on deliverables
-- [ ] Diff view between revision versions
-- [ ] Orchestration review board (Kanban for mission deliverables)
-- [ ] Project management with agent assignment and task tracking
-- [ ] Task Kanban board (To Do / In Progress / Review / Done)
-- [ ] Deliverables tab on projects with review status
-- [ ] Global search (Cmd+K) across agents, projects, sessions
-- [ ] Dark/light mode toggle
-- [ ] Keyboard shortcuts for review workflow (j/k navigate, a approve, r revise)
-- [ ] Past session browsing and resumption
-- [ ] Production-grade polish: animations, loading skeletons, page transitions
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -46,15 +47,22 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 - Real-time collaboration — single user
 - Agent-to-agent communication — agents work independently on shared briefs
 - AI model marketplace / multi-provider — Anthropic Claude only
+- Inline commenting on deliverables (REVW-04) — deferred from v2.0
+- Keyboard shortcuts for review workflow (REVW-05) — deferred from v2.0
+- Task dependencies/subtasks — keep project management lightweight
+- Due dates on tasks — keep project management lightweight
+- Custom Kanban columns — fixed status categories sufficient
 
 ## Context
 
-- Shipped v1.0 with 6,823 LOC TypeScript across 172 files
-- Tech stack: Next.js 16.1.6, Prisma 7, SQLite, Zustand, Recharts, shadcn/ui, Tailwind v4
-- Source agents from github.com/msitarzewski/agency-agents (61 agents, 9 divisions)
+- Shipped v2.0 with 12,504 LOC TypeScript
+- Tech stack: Next.js 16.1.6, Prisma 7, SQLite, Zustand, Recharts, shadcn/ui, Tailwind v4, dnd-kit, cmdk, react-diff-viewer-continued, tw-animate-css
+- Source agents from github.com/msitarzewski/agency-agents (61 agents, 9 divisions) + custom agent builder
 - Agent files parsed at seed time, stored in SQLite, served via API
 - SSE streaming for both single-agent chat and multi-agent orchestration
 - Deliverable extraction uses XML `<deliverable>` tags parsed with regex
+- Project/task management with drag-and-drop Kanban boards
+- Advanced review: diff viewer, inline editor, version tracking
 
 ## Constraints
 
@@ -75,25 +83,12 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 | XML deliverable markers | Deterministic regex parsing vs LLM-based extraction — reliable and testable | ✓ Good |
 | Multiplexed SSE for orchestration | Single stream endpoint with lane-tagged events vs N separate connections | ✓ Good |
 | Team collaboration context | System prompt amendment gives each agent awareness of team without inter-agent messaging | ✓ Good |
-
-## Current Milestone: v2.0 Power User Platform
-
-**Goal:** Transform OneWave from a chat-and-review tool into a full project management platform with custom agents, advanced review workflows, and production-grade UX.
-
-**Target features:**
-- Create and edit custom agents
-- Review queue widget on dashboard with pending items
-- Inline editing and commenting on deliverables
-- Diff view between revision versions
-- Orchestration review board (Kanban for mission deliverables)
-- Project management with agent assignment and task tracking
-- Task Kanban board (To Do / In Progress / Review / Done)
-- Deliverables tab on projects with review status
-- Global search (Cmd+K) across agents, projects, sessions
-- Dark/light mode toggle
-- Keyboard shortcuts for review workflow (j/k navigate, a approve, r revise)
-- Past session browsing and resumption
-- Production-grade polish: animations, loading skeletons, page transitions
+| dnd-kit for drag-and-drop | Lightweight, accessible, works with React 19 — used for task and review Kanban boards | ✓ Good |
+| cmdk for command palette | Composable, accessible, lightweight — shouldFilter=false for server-filtered results | ✓ Good |
+| textarea for inline editing | Simpler than contentEditable/Tiptap, sufficient for markdown deliverables | ✓ Good |
+| motion-safe: CSS prefix | Accessibility-first animations that respect prefers-reduced-motion | ✓ Good |
+| db push (no migrations) | Single-user local app — no migration history needed, simpler schema changes | ✓ Good |
+| confirmedRef for optimistic UI | useRef tracks server-confirmed state for drag revert-on-error without stale closures | ✓ Good |
 
 ---
-*Last updated: 2026-03-10 after v2.0 milestone started*
+*Last updated: 2026-03-12 after v2.0 milestone*

@@ -1,5 +1,21 @@
 # Milestones
 
+## v2.0 Power User Platform (Shipped: 2026-03-12)
+
+**Phases completed:** 6 phases, 16 plans
+**Timeline:** 3 days (2026-03-10 → 2026-03-12)
+**Stats:** 90 commits, 12,504 LOC TypeScript (up from 6,823)
+
+**Key accomplishments:**
+1. Built custom agent CRUD with form builder, clone flow, and session history browsing
+2. Created project management with drag-and-drop Kanban board (dnd-kit), task assignment, and progress tracking
+3. Implemented advanced review system with side-by-side diff viewer, inline content editing, and orchestration review board
+4. Added global Cmd+K command palette (cmdk) searching across agents, projects, and sessions
+5. Production polish: page transitions, hover/press feedback, staggered entrance animations with motion-safe accessibility
+6. Infrastructure: schema migrations, loading skeletons, dark/light theme toggle, review queue dashboard widget
+
+---
+
 ## v1.0 MVP (Shipped: 2026-03-10)
 
 **Phases completed:** 5 phases, 14 plans
