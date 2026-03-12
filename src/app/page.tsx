@@ -19,9 +19,17 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground mt-1">Here's what your agents have been up to.</p>
       </div>
 
-      <StatCards stats={stats} />
+      <div
+        className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 fill-mode-both"
+        style={{ animationDelay: "0ms" }}
+      >
+        <StatCards stats={stats} />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+      <div
+        className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 fill-mode-both grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6"
+        style={{ animationDelay: "60ms" }}
+      >
         <div className="lg:col-span-2 space-y-6">
           <ActivityFeed activities={activities} />
           <UtilizationChart data={utilization} />

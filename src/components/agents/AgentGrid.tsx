@@ -17,8 +17,14 @@ export function AgentGrid({ agents }: { agents: AgentCardData[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {agents.map((agent) => (
-        <AgentCard key={agent.slug} agent={agent} />
+      {agents.map((agent, i) => (
+        <div
+          key={agent.slug}
+          className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 fill-mode-both"
+          style={{ animationDelay: `${Math.min(i * 30, 240)}ms` }}
+        >
+          <AgentCard agent={agent} />
+        </div>
       ))}
     </div>
   );

@@ -50,7 +50,7 @@ export default async function ChatIndexPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {sessions.map((session) => {
+          {sessions.map((session, i) => {
             const preview = session.title
               ? session.title
               : session.messages[0]?.content
@@ -60,8 +60,12 @@ export default async function ChatIndexPage() {
               : null;
 
             return (
-              <Link
+              <div
                 key={session.id}
+                className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 fill-mode-both"
+                style={{ animationDelay: `${Math.min(i * 40, 240)}ms` }}
+              >
+              <Link
                 href={`/chat/${session.id}`}
                 className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
               >
@@ -96,6 +100,7 @@ export default async function ChatIndexPage() {
                   </p>
                 </div>
               </Link>
+              </div>
             );
           })}
         </div>

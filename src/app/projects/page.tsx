@@ -30,8 +30,14 @@ export default async function ProjectsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+          {projects.map((project, i) => (
+            <div
+              key={project.id}
+              className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 fill-mode-both"
+              style={{ animationDelay: `${Math.min(i * 40, 240)}ms` }}
+            >
+              <ProjectCard project={project} />
+            </div>
           ))}
         </div>
       )}
