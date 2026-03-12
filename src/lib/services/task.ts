@@ -26,6 +26,11 @@ export const taskService = {
         ...(data.description !== undefined ? { description: data.description } : {}),
         ...(data.assignedAgentId !== undefined ? { assignedAgentId: data.assignedAgentId } : {}),
       },
+      include: {
+        assignedAgent: {
+          select: { id: true, name: true, color: true, slug: true },
+        },
+      },
     });
   },
 
