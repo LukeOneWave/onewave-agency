@@ -4,7 +4,7 @@ import { chatService } from "@/lib/services/chat";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agentId, model } = body;
+    const { agentId, model, projectId } = body;
 
     if (!agentId || typeof agentId !== "string") {
       return NextResponse.json(
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
 
     const session = await chatService.createSession(
       agentId,
-      model || "claude-sonnet-4-6"
+      model || "claude-sonnet-4-6",
+      projectId || undefined
     );
 
     return NextResponse.json({ sessionId: session.id });

@@ -7,10 +7,18 @@ import type {
 export type ChatSession = PrismaChatSession;
 export type Message = PrismaMessage;
 
+// File attachment for chat messages
+export interface ChatAttachment {
+  name: string;
+  type: string; // MIME type
+  data: string; // base64
+}
+
 // API payload type
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  attachments?: ChatAttachment[];
 }
 
 // Claude model definitions

@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 
 export const chatService = {
-  async createSession(agentId: string, model: string) {
+  async createSession(agentId: string, model: string, projectId?: string) {
     return prisma.chatSession.create({
-      data: { agentId, model },
+      data: { agentId, model, ...(projectId ? { projectId } : {}) },
       include: { agent: true },
     });
   },
@@ -13,6 +13,7 @@ export const chatService = {
       where: { id },
       include: {
         agent: true,
+        project: { select: { id: true, name: true } },
         messages: { orderBy: { createdAt: "asc" } },
       },
     });
@@ -64,5 +65,23 @@ export const chatService = {
       where: { id },
       data: { title },
     });
+  },
+
+  async updateSessionProject(id: string, projectId: string | null) {
+    // Update the session
+    const session = await prisma.chatSession.update({
+      where: { id },
+      data: { projectId },
+    });
+
+    // Bulk-update all existing deliverables in this session
+    await prisma.deliverable.updateMany({
+      where: {
+        message: { sessionId: id },
+      },
+      data: { projectId },
+    });
+
+    return session;
   },
 };

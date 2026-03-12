@@ -7,6 +7,7 @@ import { useChatStore } from "@/store/chat";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
 import { ModelSelector } from "./ModelSelector";
+import { ProjectSelector } from "./ProjectSelector";
 
 interface ChatSession {
   id: string;
@@ -15,6 +16,7 @@ interface ChatSession {
     name: string;
     division: string;
   };
+  project: { id: string; name: string } | null;
   messages: Array<{
     id: string;
     role: string;
@@ -59,6 +61,7 @@ export function ChatPage({ session }: ChatPageProps) {
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">{session.agent.name}</h1>
           <Badge variant="secondary" className="rounded-lg">{session.agent.division}</Badge>
+          <ProjectSelector sessionId={session.id} initialProject={session.project} />
         </div>
         <ModelSelector />
       </div>

@@ -5,7 +5,8 @@ import type { ParsedContent } from "@/types/chat";
  * Returns segments of text and deliverable content with stable indices.
  */
 export function parseDeliverables(content: string): ParsedContent {
-  const regex = /<deliverable>([\s\S]*?)<\/deliverable>/g;
+  // Match both closed and unclosed deliverable tags
+  const regex = /<deliverable>([\s\S]*?)(<\/deliverable>|$)/g;
   const segments: ParsedContent["segments"] = [];
   let lastIndex = 0;
   let deliverableIndex = 0;
@@ -16,10 +17,10 @@ export function parseDeliverables(content: string): ParsedContent {
     if (match.index > lastIndex) {
       segments.push({ type: "text", content: content.slice(lastIndex, match.index) });
     }
-    // The deliverable itself
+    // The deliverable itself (trim trailing whitespace from unclosed tags)
     segments.push({
       type: "deliverable",
-      content: match[1],
+      content: match[1].trim(),
       index: deliverableIndex++,
     });
     lastIndex = regex.lastIndex;

@@ -97,6 +97,7 @@ export type AgentScalarFieldEnum = (typeof AgentScalarFieldEnum)[keyof typeof Ag
 export const ChatSessionScalarFieldEnum = {
   id: 'id',
   agentId: 'agentId',
+  projectId: 'projectId',
   model: 'model',
   title: 'title',
   createdAt: 'createdAt',

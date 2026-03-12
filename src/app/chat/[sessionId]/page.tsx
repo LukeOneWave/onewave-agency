@@ -33,6 +33,7 @@ export default async function ChatSessionPage({ params }: Props) {
           name: session.agent.name,
           division: session.agent.division,
         },
+        project: session.project ?? null,
         messages: session.messages.map((m) => ({
           id: m.id,
           role: m.role,

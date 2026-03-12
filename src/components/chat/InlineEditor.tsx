@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface InlineEditorProps {
-  deliverableId: string;
+  deliverableId: string | null;
   messageId: string;
   deliverableIndex: number;
   initialContent: string;
@@ -20,7 +20,7 @@ interface InlineEditorProps {
 export function InlineEditor({
   deliverableId,
   messageId,
-  deliverableIndex: _deliverableIndex,
+  deliverableIndex,
   initialContent,
   onSaved,
 }: InlineEditorProps) {
@@ -44,30 +44,46 @@ export function InlineEditor({
     setSaving(true);
 
     try {
-      // PATCH to update Deliverable.content
-      const patchRes = await fetch(`/api/deliverables/${messageId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliverableId, content: draft }),
-      });
+      let recordId = deliverableId;
 
-      if (!patchRes.ok) {
-        throw new Error("Failed to update deliverable");
+      if (recordId) {
+        // PATCH to update existing Deliverable.content
+        const patchRes = await fetch(`/api/deliverables/${messageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deliverableId: recordId, content: draft }),
+        });
+        if (!patchRes.ok) throw new Error("Failed to update deliverable");
+      } else {
+        // Upsert via status endpoint to create the record first
+        const upsertRes = await fetch(`/api/deliverables/${messageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ index: deliverableIndex, status: "pending" }),
+        });
+        if (!upsertRes.ok) throw new Error("Failed to create deliverable record");
+        const record = await upsertRes.json();
+        recordId = record.id;
+
+        // Now update content
+        const patchRes = await fetch(`/api/deliverables/${messageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deliverableId: recordId, content: draft }),
+        });
+        if (!patchRes.ok) throw new Error("Failed to update deliverable");
       }
 
       // POST to create a version snapshot
       const versionRes = await fetch(
-        `/api/deliverables/${deliverableId}/versions`,
+        `/api/deliverables/${recordId}/versions`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content: draft }),
         }
       );
-
-      if (!versionRes.ok) {
-        throw new Error("Failed to create version");
-      }
+      if (!versionRes.ok) throw new Error("Failed to create version");
 
       setContent(draft);
       onSaved(draft);

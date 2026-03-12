@@ -10,6 +10,7 @@ import { parseDeliverables } from "@/lib/deliverable-parser";
 import { ReviewPanel } from "./ReviewPanel";
 import { InlineEditor } from "./InlineEditor";
 import { DiffViewer } from "./DiffViewer";
+import { DeliverableProjectLink } from "./DeliverableProjectLink";
 import { useChatStore } from "@/store/chat";
 
 interface MessageBubbleProps {
@@ -24,6 +25,7 @@ interface DeliverableRecord {
   index: number;
   content: string;
   status: string;
+  projectId?: string | null;
 }
 
 export function MessageBubble({
@@ -148,24 +150,13 @@ function AssistantContent({
             key={i}
             className="rounded-lg border border-primary/20 p-4 bg-muted/30"
           >
-            {deliverableRecord ? (
-              <InlineEditor
-                deliverableId={deliverableRecord.id}
-                messageId={messageId}
-                deliverableIndex={segment.index}
-                initialContent={segment.content}
-                onSaved={() => {}}
-              />
-            ) : (
-              <div className="prose dark:prose-invert max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeHighlight]}
-                >
-                  {segment.content}
-                </ReactMarkdown>
-              </div>
-            )}
+            <InlineEditor
+              deliverableId={deliverableRecord?.id ?? null}
+              messageId={messageId}
+              deliverableIndex={segment.index}
+              initialContent={segment.content}
+              onSaved={() => {}}
+            />
             <ReviewPanel
               messageId={messageId}
               deliverableIndex={segment.index}
@@ -175,6 +166,15 @@ function AssistantContent({
                 requestRevision(messageId, segment.index, feedback)
               }
             />
+            {deliverableRecord && (
+              <div className="mt-2 flex justify-end">
+                <DeliverableProjectLink
+                  deliverableId={deliverableRecord.id}
+                  messageId={messageId}
+                  currentProjectId={deliverableRecord.projectId}
+                />
+              </div>
+            )}
             {deliverableRecord && (
               <DiffViewer
                 deliverableId={deliverableRecord.id}

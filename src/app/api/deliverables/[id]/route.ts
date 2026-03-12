@@ -11,6 +11,16 @@ export async function PATCH(
     const { id: messageId } = await params;
     const body = await request.json();
 
+    // Project assignment path: { deliverableId, projectId }
+    if ("deliverableId" in body && "projectId" in body) {
+      const { deliverableId, projectId } = body as {
+        deliverableId: string;
+        projectId: string | null;
+      };
+      const updated = await deliverableService.assignProject(deliverableId, projectId);
+      return Response.json(updated);
+    }
+
     // Content update path: { deliverableId, content } (no status field)
     if ("deliverableId" in body && "content" in body && !("status" in body)) {
       const { deliverableId, content } = body as {

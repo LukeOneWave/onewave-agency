@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatMessage, SSEEvent, DeliverableState } from "@/types/chat";
+import type { ChatMessage, ChatAttachment, SSEEvent, DeliverableState } from "@/types/chat";
 
 interface ChatMessageUI {
   id?: string;
@@ -25,7 +25,7 @@ interface ChatState {
     existingMessages?: ChatMessageUI[]
   ) => void;
   setModel: (model: string) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, attachments?: ChatAttachment[]) => Promise<void>;
   clearChat: () => void;
   stopStreaming: () => void;
   approveDeliverable: (messageId: string, deliverableIndex: number) => Promise<void>;
@@ -68,12 +68,17 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ selectedModel: model });
   },
 
-  sendMessage: async (content) => {
+  sendMessage: async (content, attachments) => {
     const state = get();
     const abortController = new AbortController();
 
+    // Show attachment names in the user message display
+    const displayContent = attachments?.length
+      ? `${content}\n\n📎 ${attachments.map((a) => a.name).join(", ")}`
+      : content;
+
     // Add user message and empty assistant placeholder
-    const userMessage: ChatMessageUI = { id: crypto.randomUUID(), role: "user", content };
+    const userMessage: ChatMessageUI = { id: crypto.randomUUID(), role: "user", content: displayContent };
     const assistantMessage: ChatMessageUI = { id: crypto.randomUUID(), role: "assistant", content: "" };
     const updatedMessages = [...state.messages, userMessage, assistantMessage];
 
@@ -88,6 +93,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const apiMessages: ChatMessage[] = updatedMessages
       .filter((m) => m.content.length > 0)
       .map((m) => ({ role: m.role, content: m.content }));
+
+    // Attach files to the last user message
+    if (attachments?.length && apiMessages.length > 0) {
+      const lastUserIdx = apiMessages.findLastIndex((m) => m.role === "user");
+      if (lastUserIdx >= 0) {
+        apiMessages[lastUserIdx] = { ...apiMessages[lastUserIdx], attachments };
+      }
+    }
 
     try {
       const response = await fetch("/api/chat", {

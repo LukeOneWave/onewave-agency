@@ -29,6 +29,8 @@ model ChatSession {
   id        String    @id @default(cuid())
   agentId   String
   agent     Agent     @relation(fields: [agentId], references: [id])
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id])
   model     String    @default("claude-sonnet-4-6")
   title     String?
   createdAt   DateTime     @default(now())
@@ -107,6 +109,7 @@ model Project {
   updatedAt    DateTime      @updatedAt
   tasks        Task[]
   deliverables Deliverable[]
+  sessions     ChatSession[]
 }
 
 model Task {
