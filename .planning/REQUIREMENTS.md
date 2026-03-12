@@ -36,7 +36,7 @@ Requirements for v2.0 Power User Platform. Each maps to roadmap phases.
 - [x] **UX-02**: User can toggle between dark and light mode
 - [x] **UX-03**: User can browse past chat sessions and resume them
 - [x] **UX-04**: App has loading skeletons on data-fetching pages
-- [ ] **UX-05**: App has smooth page transitions and UI animations
+- [x] **UX-05**: App has smooth page transitions and UI animations
 
 ## Future Requirements
 
@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-02 | Phase 6 | Complete |
 | UX-03 | Phase 7 | Complete |
 | UX-04 | Phase 6 | Complete |
-| UX-05 | Phase 11 | Pending |
+| UX-05 | Phase 11 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 19 total
