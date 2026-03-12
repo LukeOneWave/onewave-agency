@@ -24,18 +24,18 @@ describe("PageTransition", () => {
       </PageTransition>
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass("animate-in");
-    expect(wrapper).toHaveClass("fade-in");
+    expect(wrapper).toHaveClass("motion-safe:animate-in");
+    expect(wrapper).toHaveClass("motion-safe:fade-in");
   });
 
-  it("wrapper div has duration-300 and ease-out classes", () => {
+  it("wrapper div has duration and fill-mode classes", () => {
     const { container } = render(
       <PageTransition>
         <span>Content</span>
       </PageTransition>
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass("duration-300");
-    expect(wrapper).toHaveClass("ease-out");
+    expect(wrapper).toHaveClass("motion-safe:duration-300");
+    expect(wrapper).toHaveClass("motion-safe:fill-mode-both");
   });
 });
