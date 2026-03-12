@@ -26,7 +26,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="block rounded-xl border bg-card p-4 hover:shadow-md transition-shadow"
+      className="block rounded-xl border bg-card p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] active:shadow-sm"
     >
       <div className="mb-2">
         <h3 className="font-semibold text-base">{project.name}</h3>

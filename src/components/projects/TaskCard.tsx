@@ -30,7 +30,7 @@ export function TaskCard({ task }: TaskCardProps) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="rounded-lg border bg-card p-3 select-none"
+      className="rounded-lg border bg-card p-3 select-none transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]"
     >
       <div className="flex items-start gap-2">
         <button
