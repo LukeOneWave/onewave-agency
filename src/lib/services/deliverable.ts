@@ -23,6 +23,13 @@ export const deliverableService = {
     status: string,
     feedback?: string
   ) {
+    // Auto-link to session's project if available
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { session: { select: { projectId: true } } },
+    });
+    const projectId = message?.session?.projectId ?? undefined;
+
     return prisma.deliverable.upsert({
       where: {
         messageId_index: { messageId, index },
@@ -36,6 +43,7 @@ export const deliverableService = {
         index,
         status,
         feedback: feedback ?? null,
+        ...(projectId ? { projectId } : {}),
       },
     });
   },
@@ -69,10 +77,20 @@ export const deliverableService = {
     });
   },
 
+  async assignProject(deliverableId: string, projectId: string | null) {
+    return prisma.deliverable.update({
+      where: { id: deliverableId },
+      data: { projectId },
+    });
+  },
+
   async getByProjectId(projectId: string) {
     return prisma.deliverable.findMany({
       where: { projectId },
-      include: { versions: { orderBy: { version: "asc" } } },
+      include: {
+        versions: { orderBy: { version: "asc" } },
+        message: { select: { sessionId: true } },
+      },
       orderBy: { createdAt: "asc" },
     });
   },

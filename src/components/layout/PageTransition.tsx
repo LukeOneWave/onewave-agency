@@ -12,7 +12,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   return (
     <div
       key={pathname}
-      className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-300 ease-out animate-in fade-in slide-in-from-bottom-4"
+      className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
     >
       {children}
     </div>

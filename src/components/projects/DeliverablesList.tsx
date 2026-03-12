@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 interface DeliverableVersion {
   id: string;
   version: number;
@@ -12,6 +14,7 @@ interface DeliverableWithVersions {
   status: string;
   createdAt: string | Date;
   versions: DeliverableVersion[];
+  message?: { sessionId: string };
 }
 
 interface DeliverablesListProps {
@@ -71,10 +74,12 @@ export function DeliverablesList({ deliverables }: DeliverablesListProps) {
             ? `v${deliverable.versions[deliverable.versions.length - 1].version}`
             : "No versions";
 
-        return (
+        const sessionId = deliverable.message?.sessionId;
+
+        const card = (
           <div
             key={deliverable.id}
-            className="rounded-xl border border-foreground/10 bg-card p-4 flex flex-col gap-3"
+            className={`rounded-xl border border-foreground/10 bg-card p-4 flex flex-col gap-3 transition-all duration-200${sessionId ? " hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}`}
           >
             <p className="text-sm text-card-foreground leading-relaxed">
               {preview}
@@ -90,6 +95,16 @@ export function DeliverablesList({ deliverables }: DeliverablesListProps) {
             </div>
           </div>
         );
+
+        if (sessionId) {
+          return (
+            <Link key={deliverable.id} href={`/chat/${sessionId}`} className="no-underline">
+              {card}
+            </Link>
+          );
+        }
+
+        return card;
       })}
     </div>
   );
