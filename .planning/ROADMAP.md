@@ -118,10 +118,11 @@ Plans:
   1. Page transitions animate smoothly when navigating between routes
   2. Interactive elements have visible hover/press feedback animations
   3. Lists and cards have entrance animations when they first appear on screen
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
+- [ ] 11-01-PLAN.md — PageTransition wrapper component + hover/press feedback standardization across all cards
+- [ ] 11-02-PLAN.md — Staggered entrance animations on all list/card views + visual verification checkpoint
 
 ## Progress
 
@@ -141,8 +142,8 @@ Phases execute in numeric order: 6 > 7 > 8 > 9 > 10 > 11
 | 8. Project Management + Task Kanban | 3/3 | Complete   | 2026-03-11 | - |
 | 9. Advanced Review | 3/3 | Complete   | 2026-03-11 | - |
 | 10. Power User UX | 2/2 | Complete    | 2026-03-12 | - |
-| 11. Production Polish | v2.0 | 0/? | Not started | - |
+| 11. Production Polish | v2.0 | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-03-10 (v1.0), extended 2026-03-10 (v2.0)*
-*Last updated: 2026-03-11*
+*Last updated: 2026-03-12*
