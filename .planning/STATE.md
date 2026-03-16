@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Document Workspace
 status: planning
-stopped_at: Completed 12-02-PLAN.md — Phase 12 fully complete, checkpoint approved, ready to plan Phase 13
-last_updated: "2026-03-16T22:10:00.000Z"
-last_activity: 2026-03-16 — Phase 12 complete (2/2 plans), split-panel ChatPage with keyboard shortcuts shipped
+stopped_at: Completed 12-03-PLAN.md — Gap closure complete, ] shortcut now visually collapses/expands panel
+last_updated: "2026-03-16T23:25:00.000Z"
+last_activity: 2026-03-16 — Phase 12 gap plan 12-03 complete, ] shortcut visual sync shipped
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
   percent: 40
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Current Position
 
-Phase: 12 of 16 (Layout, Shell, and Unified State) — COMPLETE
-Plan: All 2/2 plans complete
-Status: Phase 12 complete — ready to plan Phase 13 (Live Preview and Type Detection)
-Last activity: 2026-03-16 — Phase 12 complete, split-panel ChatPage with keyboard shortcuts and SSE-safe panel collapse shipped
+Phase: 12 of 16 (Layout, Shell, and Unified State) — COMPLETE (including gap closure 12-03)
+Plan: All 3/3 plans complete (including gap closure)
+Status: Phase 12 fully closed — ready to plan Phase 13 (Live Preview and Type Detection)
+Last activity: 2026-03-16 — Phase 12 gap closure complete, ] shortcut now visually collapses/expands artifacts panel
 
 Progress: [██░░░░░░░░] 40% (v3.0 milestone, 2/5 phases complete)
 
@@ -49,6 +49,7 @@ Recent decisions affecting current work:
 - [Phase 12-layout-shell-unified-state]: Use onLayoutChanged (not onLayoutChange) for localStorage persistence — fires after drag completes, not on every pixel move
 - [Phase 12-layout-shell-unified-state]: ] shortcut calls togglePanel() on store directly — simpler and testable; store is source of truth
 - [Phase 12-layout-shell-unified-state]: Panel sizes stored as {chat, artifacts} object using stable panel ids — robust vs array index storage
+- [Phase 12-layout-shell-unified-state gap 12-03]: Store-to-panel sync pattern: subscribe via selector, drive imperative ref in useEffect with isCollapsed() guard — prevents no-op calls and avoids onResize feedback loops
 
 ### Pending Todos
 
@@ -61,6 +62,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T22:10:00.000Z
-Stopped at: Completed 12-02-PLAN.md — Phase 12 fully complete, human-verify checkpoint approved
+Last session: 2026-03-16T23:25:00.000Z
+Stopped at: Completed 12-03-PLAN.md — Gap closure complete, ] shortcut visual sync shipped
 Resume file: None
