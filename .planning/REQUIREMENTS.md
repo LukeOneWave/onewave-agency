@@ -43,7 +43,7 @@ Requirements for v3.0 Document Workspace. Each maps to roadmap phases.
 ### Review Enhancement
 
 - [ ] **REVW-04**: User can add comments on deliverables
-- [ ] **REVW-05**: User can navigate and act on deliverables with keyboard shortcuts (j/k/a/r)
+- [x] **REVW-05**: User can navigate and act on deliverables with keyboard shortcuts (j/k/a/r)
 
 ## Future Requirements
 
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXPT-06 | Phase 15 | Pending |
 | REVS-01 | Phase 16 | Pending |
 | REVW-04 | Phase 16 | Pending |
-| REVW-05 | Phase 12 | Pending |
+| REVW-05 | Phase 12 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 23 total

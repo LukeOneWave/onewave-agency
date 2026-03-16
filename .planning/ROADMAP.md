@@ -123,7 +123,7 @@ Plans:
 | 9. Advanced Review | v2.0 | 3/3 | Complete | 2026-03-11 |
 | 10. Power User UX | v2.0 | 2/2 | Complete | 2026-03-12 |
 | 11. Production Polish | v2.0 | 2/2 | Complete | 2026-03-12 |
-| 12. Layout, Shell, and Unified State | 3/3 | Complete   | 2026-03-16 | - |
+| 12. Layout, Shell, and Unified State | 3/3 | Complete    | 2026-03-16 | - |
 | 13. Live Preview and Type Detection | v3.0 | 0/TBD | Not started | - |
 | 14. Type-Aware Renderers and Version Navigation | v3.0 | 0/TBD | Not started | - |
 | 15. Multi-Format Export | v3.0 | 0/TBD | Not started | - |

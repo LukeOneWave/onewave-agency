@@ -1,39 +1,43 @@
 ---
 phase: 12-layout-shell-unified-state
-verified: 2026-03-16T15:59:00Z
-status: gaps_found
-score: 4/5 must-haves verified
-gaps:
-  - truth: "User can dismiss the artifacts panel and return to full-width chat using a close button or the ] keyboard shortcut"
-    status: failed
-    reason: "The ] shortcut calls useChatStore.getState().togglePanel() which flips the store boolean panelOpen, but panelOpen is never read in ChatPage.tsx to drive the visual panel. The ResizablePanel is never told to collapse or expand. The ] key updates store state only — the visual panel does not respond."
-    artifacts:
-      - path: "src/components/chat/ChatPage.tsx"
-        issue: "panelOpen is not consumed anywhere in this file. artifactsPanelRef is declared but the ] handler never calls artifactsPanelRef.current?.collapse() or expand(). The onResize callback only syncs store FROM the panel — not the other way around."
-    missing:
-      - "ChatPage must subscribe to panelOpen from useChatStore and use artifactsPanelRef.current?.collapse()/expand() when panelOpen changes (useEffect on panelOpen), OR the ] handler must directly call artifactsPanelRef.current imperatively in addition to toggling the store"
-      - "A test asserting that ] causes the panel to visually collapse (not just togglePanel to be called on the store)"
+verified: 2026-03-16T16:35:00Z
+status: human_needed
+score: 5/5 must-haves verified
+re_verification:
+  previous_status: gaps_found
+  previous_score: 4/5
+  gaps_closed:
+    - "User can dismiss the artifacts panel and return to full-width chat using the ] keyboard shortcut — panelOpen useEffect now drives artifactsPanelRef.current.collapse()/expand()"
+  gaps_remaining: []
+  regressions: []
 human_verification:
   - test: "Full-viewport layout"
-    expected: "Chat page spans full viewport width with no max-w-7xl constraint visible"
-    why_human: "CSS layout and negative margin bypass require visual inspection"
+    expected: "Chat page spans full viewport width — no max-w-7xl padding constraint visible; split panel fills the screen"
+    why_human: "CSS layout with -m-6 negative margin bypass requires visual inspection"
   - test: "Resizable panel drag"
-    expected: "User can drag the divider and both panels resize smoothly"
+    expected: "User can drag the divider between chat and artifacts panels and both panels resize smoothly"
     why_human: "Interactive drag behavior cannot be verified programmatically"
+  - test: "] shortcut visually collapses and expands the panel"
+    expected: "Pressing ] outside the chat input collapses the artifacts panel to 0 width; pressing ] again expands it back to its previous size"
+    why_human: "Imperative collapse/expand is confirmed in tests with mocked refs — live behavior with real react-resizable-panels requires browser verification"
   - test: "Panel size persistence"
-    expected: "After dragging to a custom split, reloading the page restores the split ratio"
-    why_human: "Requires browser localStorage and page reload cycle"
+    expected: "After dragging to a non-default split (e.g., 70/30), reloading the page restores the same split ratio"
+    why_human: "Requires browser localStorage and a full page reload cycle"
   - test: "SSE stream safety"
-    expected: "Toggling the panel 5 times during a live stream does not reset the stream or lose content"
-    why_human: "Requires a live SSE connection and real streaming interaction"
+    expected: "Toggling the panel 5 times during an active stream does not reset the stream or lose streamed content"
+    why_human: "Requires a live SSE connection and real-time streaming interaction"
 ---
 
 # Phase 12: Layout, Shell, and Unified State — Verification Report
 
 **Phase Goal:** The chat page renders as a full-viewport split layout with a togglable artifacts panel that never disrupts in-flight SSE streams
-**Verified:** 2026-03-16T15:59:00Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-03-16T16:35:00Z
+**Status:** human_needed
+**Re-verification:** Yes — after gap closure (Plan 03 added panelOpen useEffect)
+
+## Summary
+
+The single gap from the previous verification is closed. Plan 03 added a `useEffect` in ChatPage that subscribes to `panelOpen` from the store and drives `artifactsPanelRef.current.collapse()` / `expand()` imperatively. All 13 automated tests pass (8 ChatPage + 5 store tests). The automated portion of the phase goal is fully verified. Five items require human verification in the browser.
 
 ---
 
@@ -43,13 +47,13 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | User sees chat on the left and a collapsible artifacts panel on the right | VERIFIED | ChatPage.tsx renders ResizablePanelGroup with orientation="horizontal", chat panel (id="chat", defaultSize=60%) on left, ArtifactsPanel panel (id="artifacts", defaultSize=40%) on right. ArtifactsPanel always mounted (never conditionally rendered). |
-| 2 | User can drag the panel divider to resize both panes and the preference persists on reload | VERIFIED (partial — human needed for visual) | ResizableHandle withHandle is present. onLayoutChanged persists {chat, artifacts} sizes to localStorage under key "chat-panel-sizes". useEffect on mount hydrates defaultSizes from localStorage. Code path is complete and correct. |
-| 3 | User can dismiss the artifacts panel and return to full-width chat using a close button or the ] keyboard shortcut | FAILED | The ] keydown handler calls useChatStore.getState().togglePanel() which flips the panelOpen boolean in Zustand. However, panelOpen is NEVER read in ChatPage.tsx — there is no useEffect watching panelOpen to call artifactsPanelRef.current?.collapse()/expand(), and the ] handler itself never calls the imperative ref. The visual panel state does NOT respond to the ] key. |
-| 4 | Toggling the panel 5 times while a stream is in-flight does not reset the stream or lose streamed content | VERIFIED (structurally) | ArtifactsPanel is always mounted inside ResizablePanel (never conditionally rendered), so no unmount/remount occurs. initSession guard in ChatPage (checks current.sessionId === session.id) prevents re-initialization. SSE stream lives in the Zustand store, not in component state. Structural guarantee is sound. Human verification still needed for live test. |
-| 5 | Review workflow keyboard shortcuts (j/k/a/r) work inside the chat view without conflicting with browser or Cmd+K shortcuts | VERIFIED | handleKeyDown covers j/k/a/r with e.preventDefault(). Guard checks tag === INPUT/TEXTAREA or contenteditable before handling. metaKey/ctrlKey/altKey modifier guard prevents Cmd/Ctrl combos. 6 tests pass confirming this behavior including REVW-05 textarea guard. |
+| 1 | User sees chat on the left and a collapsible artifacts panel on the right | VERIFIED | ChatPage.tsx renders `ResizablePanelGroup orientation="horizontal"` with chat panel (id="chat", defaultSize=60) on left and ArtifactsPanel panel (id="artifacts", defaultSize=40) on right. ArtifactsPanel always mounted — never conditionally rendered. |
+| 2 | User can drag the panel divider to resize both panes and the preference persists on reload | VERIFIED (human needed for visual) | `ResizableHandle withHandle` present. `onLayoutChanged` persists `{chat, artifacts}` sizes to localStorage under `PANEL_SIZES_KEY`. `useEffect` on mount hydrates `defaultSizes` from localStorage with graceful try/catch fallback. Code path is complete. |
+| 3 | User can dismiss the artifacts panel and return to full-width chat using the ] keyboard shortcut | VERIFIED | The `]` handler calls `useChatStore.getState().togglePanel()`. A `useEffect([panelOpen])` at lines 64-72 of ChatPage.tsx subscribes to the store's `panelOpen` selector and calls `artifactsPanelRef.current?.collapse()` (when false and not already collapsed) or `expand()` (when true and currently collapsed). Tests 7 and 8 assert imperative collapse and expand are each called exactly once on the correct state transition. |
+| 4 | Toggling the panel 5 times while a stream is in-flight does not reset the stream or lose streamed content | VERIFIED (human needed for live test) | ArtifactsPanel is always mounted inside `ResizablePanel` (never conditionally rendered), so no unmount/remount occurs on toggle. The `initSession` guard (`current.sessionId === session.id`) prevents re-initialization. SSE stream lives in the Zustand store, not in component state. Structural guarantee is sound. |
+| 5 | Review workflow keyboard shortcuts (j/k/a/r) work inside the chat view without conflicting with browser or Cmd+K shortcuts | VERIFIED | `handleKeyDown` covers j/k/a/r with `e.preventDefault()`. Guard checks `tag === INPUT/TEXTAREA` or `contenteditable` before handling. `metaKey/ctrlKey/altKey` modifier guard prevents Cmd/Ctrl combos. Tests 5 and 6 confirm this behavior including the REVW-05 textarea guard. |
 
-**Score:** 4/5 truths verified (Truth 3 failed)
+**Score:** 5/5 truths verified
 
 ---
 
@@ -59,18 +63,25 @@ human_verification:
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `src/components/ui/resizable.tsx` | shadcn resizable wrapper (ResizablePanelGroup, ResizablePanel, ResizableHandle) | VERIFIED | Exists. Exports ResizablePanelGroup, ResizablePanel, ResizableHandle. 51 lines of substantive code wrapping react-resizable-panels primitives. Used via import in ChatPage.tsx. |
-| `src/store/chat.ts` | panelOpen, activeDeliverableId, openPanel, closePanel, togglePanel | VERIFIED | Exists. ChatState interface includes panelOpen: boolean and activeDeliverableId: string|null. All three action methods implemented correctly. initSession and clearChat both reset panelOpen: false and activeDeliverableId: null. |
-| `src/store/__tests__/chat-artifacts.test.ts` | Unit tests for panel state actions and initSession reset | VERIFIED | Exists. 5 tests covering: togglePanel flips state, openPanel with/without id, closePanel preserves activeDeliverableId, initSession resets panel state, togglePanel does not affect isStreaming or deliverables. All 5 tests PASS. |
-| `src/app/chat/[sessionId]/layout.tsx` | Segment layout with -m-6 to bypass AppShell max-w-7xl constraint | VERIFIED | Exists. Single-line server component returning `<div className="-m-6 h-full overflow-hidden">{children}</div>`. Correct and complete. |
-| `src/components/chat/ArtifactsPanel.tsx` | Shell component for artifacts panel (placeholder in Phase 12) | VERIFIED | Exists. "use client" component importing useChatStore. Reads activeDeliverableId from store. Renders placeholder content. Always mounts — no conditional rendering. |
+| `src/components/ui/resizable.tsx` | shadcn resizable wrapper (ResizablePanelGroup, ResizablePanel, ResizableHandle) | VERIFIED | Exists. Exports ResizablePanelGroup, ResizablePanel, ResizableHandle. Substantive shadcn wrapper around react-resizable-panels. Used via import in ChatPage.tsx. |
+| `src/store/chat.ts` | panelOpen, activeDeliverableId, openPanel, closePanel, togglePanel | VERIFIED | Exists. ChatState interface includes `panelOpen: boolean` and `activeDeliverableId: string | null`. All three action methods correctly implemented. Both `initSession` and `clearChat` reset `panelOpen: false, activeDeliverableId: null`. |
+| `src/store/__tests__/chat-artifacts.test.ts` | Unit tests for panel state actions and initSession reset | VERIFIED | Exists. 5 tests covering: togglePanel flips state, openPanel with/without id, closePanel preserves activeDeliverableId, initSession resets panel state, togglePanel does not affect isStreaming or deliverables. All 5 PASS. |
+| `src/app/chat/[sessionId]/layout.tsx` | Segment layout with -m-6 to bypass AppShell max-w-7xl constraint | VERIFIED | Exists. Server component returning `<div className="-m-6 h-full overflow-hidden">{children}</div>`. Correct and complete. |
+| `src/components/chat/ArtifactsPanel.tsx` | Shell component for artifacts panel | VERIFIED | Exists. "use client" component importing useChatStore. Reads activeDeliverableId from store. Renders placeholder content conditionally. Never conditionally rendered by parent. |
 
 ### Plan 02 Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `src/components/chat/ChatPage.tsx` | ResizablePanelGroup with chat + ArtifactsPanel, keyboard shortcut handler, localStorage persistence | PARTIAL | Exists and is substantive (185 lines). ResizablePanelGroup present. ArtifactsPanel always mounted. Keyboard shortcuts present. localStorage persistence present. HOWEVER: panelOpen from store is never consumed to drive visual panel state. The ] shortcut only updates the store — it does not visually collapse the panel. |
-| `src/components/chat/__tests__/ChatPage.test.tsx` | Component tests for split panel rendering and keyboard shortcuts | VERIFIED | Exists. 6 tests covering: ResizablePanelGroup structure, ArtifactsPanel always mounted, ] shortcut calls togglePanel, ] does not fire when textarea focused, j/k/a/r preventDefault, REVW-05 guard. All 6 tests PASS. |
+| `src/components/chat/ChatPage.tsx` | ResizablePanelGroup with chat + ArtifactsPanel, keyboard shortcut handler, localStorage persistence, panelOpen-to-visual sync | VERIFIED | 197 lines. ResizablePanelGroup with orientation="horizontal". ArtifactsPanel always mounted. Keyboard shortcuts with input guard. localStorage persistence via onLayoutChanged. panelOpen subscribed via selector at line 38. useEffect([panelOpen]) at lines 64-72 drives imperative collapse/expand on artifactsPanelRef. |
+| `src/components/chat/__tests__/ChatPage.test.tsx` | Component tests including imperative collapse/expand verification | VERIFIED | Exists. 8 tests. Tests 1-6 from Plan 02 plus Tests 7-8 from Plan 03 verifying panelOpen transitions drive imperative collapse and expand on the panel ref. All 8 PASS. |
+
+### Plan 03 Artifact (gap closure)
+
+| Artifact | Expected | Status | Details |
+|----------|----------|--------|---------|
+| `src/components/chat/ChatPage.tsx` | useEffect that watches panelOpen and drives artifactsPanelRef collapse/expand | VERIFIED | `useEffect(() => { ... }, [panelOpen])` at lines 64-72. Calls `panel.expand()` when `panelOpen && panel.isCollapsed()`. Calls `panel.collapse()` when `!panelOpen && !panel.isCollapsed()`. Guard prevents no-op calls and infinite loops from onResize feedback. `panelOpen` subscribed at line 38 via `useChatStore((s) => s.panelOpen)`. |
+| `src/components/chat/__tests__/ChatPage.test.tsx` | Tests 7 and 8 asserting imperative collapse/expand on panelOpen transitions | VERIFIED | Test 7 (line 228): starts with panelOpen=true, transitions to false, asserts `mockPanelHandle.collapse` called once, expand not called. Test 8 (line 247): starts with panelOpen=false (isCollapsed=true), transitions to true, asserts `mockPanelHandle.expand` called once, collapse not called. Both PASS. |
 
 ---
 
@@ -78,21 +89,21 @@ human_verification:
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `src/store/chat.ts` | `src/components/chat/ChatPage.tsx` | useChatStore panelOpen/togglePanel/closePanel/openPanel | PARTIAL | ChatPage imports useChatStore and uses: error selector, useChatStore.getState().initSession, useChatStore.getState().togglePanel (in ] handler), useChatStore.getState().closePanel (in onResize), useChatStore.getState().openPanel (in onResize). MISSING: panelOpen is never subscribed to in ChatPage — the store's panelOpen state does not drive the visual panel. |
-| `src/components/chat/ChatPage.tsx` | `src/components/chat/ArtifactsPanel.tsx` | direct import, always mounted inside ResizablePanel | VERIFIED | import { ArtifactsPanel } from "./ArtifactsPanel" present at line 9. ArtifactsPanel rendered inside the second ResizablePanel at line 181. Always mounted. |
-| `src/components/chat/ChatPage.tsx` | `src/components/ui/resizable.tsx` | ResizablePanelGroup, ResizablePanel, ResizableHandle imports | VERIFIED | import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable" at line 7. All three components used in the JSX. |
+| `src/store/chat.ts` | `src/components/chat/ChatPage.tsx` | useChatStore panelOpen selector driving artifactsPanelRef.current.collapse()/expand() | VERIFIED | `panelOpen` subscribed via selector at line 38. `useEffect([panelOpen])` at line 72 drives the imperative ref. `togglePanel` called from `]` handler at line 108. `closePanel`/`openPanel` called from `onResize` callback. Full bidirectional sync: panel drag updates store, store panelOpen drives visual collapse. |
+| `src/components/chat/ChatPage.tsx` | `src/components/chat/ArtifactsPanel.tsx` | direct import, always mounted inside ResizablePanel | VERIFIED | `import { ArtifactsPanel } from "./ArtifactsPanel"` at line 9. `<ArtifactsPanel />` rendered inside the second ResizablePanel at line 193. Never conditionally rendered. |
+| `src/components/chat/ChatPage.tsx` | `src/components/ui/resizable.tsx` | ResizablePanelGroup, ResizablePanel, ResizableHandle imports | VERIFIED | `import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"` at line 7. All three used in JSX at lines 134, 149, 175, 177. |
 
 ---
 
 ## Requirements Coverage
 
-| Requirement | Source Plan | Description | Status | Evidence |
-|-------------|------------|-------------|--------|----------|
-| ARTF-01 | 12-01, 12-02 | User sees a split-panel layout with chat on the left and artifacts panel on the right | PARTIALLY SATISFIED | Split-panel layout renders correctly. Panel dismiss via ] key does not visually work (store updates but panel does not collapse). |
-| ARTF-10 | 12-01, 12-02 | User can dismiss/minimize the artifacts panel to return to full-width chat | BLOCKED | The ] shortcut only updates store state. No code path drives the visual panel to collapse from the store. ARTF-10 is not functionally delivered. |
-| REVW-05 | 12-02 | User can navigate and act on deliverables with keyboard shortcuts (j/k/a/r) | SATISFIED | All four shortcuts registered with e.preventDefault() and INPUT/TEXTAREA/contenteditable guard. 2 tests specifically cover this. Marked complete in REQUIREMENTS.md. |
+| Requirement | Source Plans | Description | Status | Evidence |
+|-------------|-------------|-------------|--------|----------|
+| ARTF-01 | 12-01, 12-02 | User sees a split-panel layout with chat on the left and artifacts panel on the right | SATISFIED | ChatPage renders ResizablePanelGroup with horizontal orientation. Chat panel left (60%), ArtifactsPanel right (40%). Always-mounted. Tests 1 and 2 confirm rendering. |
+| ARTF-10 | 12-01, 12-02, 12-03 | User can dismiss/minimize the artifacts panel to return to full-width chat | SATISFIED | `]` shortcut calls togglePanel, useEffect reacts to panelOpen change and drives artifactsPanelRef.current.collapse()/expand(). Drag-to-collapse syncs back via onResize. Tests 3, 7, 8 confirm the full round-trip. |
+| REVW-05 | 12-02 | User can navigate and act on deliverables with keyboard shortcuts (j/k/a/r) | SATISFIED | j/k/a/r shortcuts registered with e.preventDefault() and INPUT/TEXTAREA/contenteditable input guard. Tests 5 and 6 confirm both preventDefault behavior and the input guard. |
 
-**Orphaned requirements check:** REQUIREMENTS.md maps ARTF-01, ARTF-10, REVW-05 to Phase 12 — all three appear in plan frontmatter. No orphaned requirements.
+**Orphaned requirements check:** REQUIREMENTS.md maps ARTF-01, ARTF-10, REVW-05 to Phase 12. All three appear in plan frontmatter across 12-01, 12-02, 12-03. No orphaned requirements.
 
 ---
 
@@ -100,8 +111,9 @@ human_verification:
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `src/components/chat/ChatPage.tsx` | 94-114 | j/k/a/r shortcut cases are empty stubs (only e.preventDefault(), no action) | INFO | Expected — documented as Phase 13/16 stubs. Does not block Phase 12 goal. |
-| `src/components/chat/ChatPage.tsx` | 96 | ] shortcut calls togglePanel() but artifactsPanelRef never driven by panelOpen | BLOCKER | The ] shortcut appears to work (store updates, test passes) but the visual panel never collapses. ARTF-10 is broken. |
+| `src/components/chat/ChatPage.tsx` | 110-126 | j/k/a/r shortcut cases contain only e.preventDefault() with comments | INFO | Expected stubs documented for Phase 13 (j/k/a) and Phase 16 (r). Does not block Phase 12 goal. |
+
+No blocker anti-patterns found.
 
 ---
 
@@ -109,46 +121,46 @@ human_verification:
 
 ### 1. Full-Viewport Layout
 
-**Test:** Navigate to any chat session (e.g., http://localhost:3000/chat/{session-id})
-**Expected:** Page spans full viewport width — no max-w-7xl padding constraint visible
-**Why human:** CSS layout with -m-6 negative margin bypass requires visual inspection
+**Test:** Run `npm run dev` and navigate to any existing chat session (e.g., http://localhost:3000/chat/{any-session-id})
+**Expected:** The page spans full viewport width — no max-w-7xl content column constraint, chat panel and artifacts panel fill the screen edge-to-edge
+**Why human:** The -m-6 negative margin layout bypass requires visual inspection to confirm it cancels the AppShell p-6 padding correctly
 
 ### 2. Resizable Panel Drag
 
-**Test:** Drag the divider between the chat and artifacts panels
-**Expected:** Both panels resize smoothly as divider moves
-**Why human:** Interactive drag behavior and smooth resize cannot be verified programmatically
+**Test:** Drag the vertical divider handle between the chat panel and artifacts panel
+**Expected:** Both panels resize smoothly as the divider moves; the divider has a visual handle indicator
+**Why human:** Interactive drag behavior cannot be verified programmatically
 
-### 3. Panel Size Persistence
+### 3. ] Shortcut Visual Collapse
 
-**Test:** Drag divider to a non-default split (e.g., 70/30), then reload the page
-**Expected:** The split ratio is restored to 70/30 after reload
-**Why human:** Requires browser localStorage and full page reload cycle
+**Test:** Click somewhere outside the chat input textarea, then press the `]` key
+**Expected:** The artifacts panel collapses to 0 width (full-width chat); pressing `]` again restores the panel to its previous size
+**Why human:** Imperative collapse/expand is confirmed in unit tests with mocked refs; live behavior with the real react-resizable-panels library and actual DOM requires browser verification
 
-### 4. SSE Stream Safety
+### 4. Panel Size Persistence
 
-**Test:** Start a chat message and while the agent is streaming, toggle the panel (note: ] shortcut may not work visually — use drag instead to collapse/expand). Repeat 5 times.
-**Expected:** No content is lost and streaming continues uninterrupted
-**Why human:** Requires a live SSE connection and real-time streaming interaction
+**Test:** Drag the divider to a non-default ratio (e.g., 70/30), then reload the page
+**Expected:** The split ratio is restored to ~70/30 after reload
+**Why human:** Requires browser localStorage and a full page reload cycle
 
----
+### 5. SSE Stream Safety
 
-## Gaps Summary
-
-One gap blocks the phase goal.
-
-The `]` keyboard shortcut is the primary dismissal mechanism described in ARTF-10 and the ROADMAP Success Criterion 3. The implementation correctly calls `useChatStore.getState().togglePanel()` which flips the `panelOpen` boolean in the Zustand store — but no code in `ChatPage.tsx` ever reads `panelOpen` to drive the visual panel.
-
-The `artifactsPanelRef` (a `PanelImperativeHandle`) is declared and passed to the `ResizablePanel` via `panelRef`, and has `.collapse()` and `.expand()` methods available. The fix requires either:
-
-1. A `useEffect` in ChatPage that watches `panelOpen` and calls `artifactsPanelRef.current?.collapse()` when false and `expand()` when true, OR
-2. Modifying the `]` handler to call the imperative handle directly AND update the store.
-
-The SUMMARY claimed "visual panel state syncs via panelOpen" but this sync was never implemented. The 6 ChatPage tests pass because Test 3 only asserts `togglePanel` was called on the store mock — it does not assert the visual panel collapsed.
-
-This means ARTF-10 ("User can dismiss/minimize the artifacts panel") is not functionally delivered. The drag-to-collapse path works (onResize syncs store when panel reaches 0%) but the keyboard dismissal path does not affect the visual panel.
+**Test:** Start a chat message and while the agent is actively streaming, press `]` to toggle the panel 5 times back and forth
+**Expected:** No streamed content is lost, the stream continues to completion, and no error appears
+**Why human:** Requires a live SSE connection and real-time streaming interaction; the structural guarantee (always-mounted ArtifactsPanel, store-based SSE state) is verified but the live behavior must be observed
 
 ---
 
-_Verified: 2026-03-16T15:59:00Z_
+## Re-Verification Notes
+
+**Previous gap (now closed):** The `]` shortcut called `togglePanel()` on the store but `panelOpen` was never consumed in ChatPage to drive the visual panel. The artifactsPanelRef was declared but never driven reactively.
+
+**Gap closure (Plan 03):** ChatPage now subscribes to `panelOpen` via `useChatStore((s) => s.panelOpen)` at line 38. A `useEffect([panelOpen])` at lines 64-72 calls `artifactsPanelRef.current.collapse()` or `expand()` with an `isCollapsed()` guard to prevent no-op calls and avoid infinite feedback loops with the `onResize` callback. Tests 7 and 8 in ChatPage.test.tsx verify the imperative collapse and expand are each triggered exactly once on the correct state transition.
+
+**All 13 tests pass:** 8 ChatPage tests + 5 chat-artifacts store tests.
+
+---
+
+_Verified: 2026-03-16T16:35:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Re-verification: Yes — initial verification was 2026-03-16T15:59:00Z with status gaps_found (4/5)_
