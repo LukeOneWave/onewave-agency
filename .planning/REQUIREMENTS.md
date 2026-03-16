@@ -73,35 +73,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARTF-01 | - | Pending |
-| ARTF-02 | - | Pending |
-| ARTF-03 | - | Pending |
-| ARTF-04 | - | Pending |
-| ARTF-05 | - | Pending |
-| ARTF-06 | - | Pending |
-| ARTF-07 | - | Pending |
-| ARTF-08 | - | Pending |
-| ARTF-09 | - | Pending |
-| ARTF-10 | - | Pending |
-| DOCR-01 | - | Pending |
-| DOCR-02 | - | Pending |
-| DOCR-03 | - | Pending |
-| DOCR-04 | - | Pending |
-| EXPT-01 | - | Pending |
-| EXPT-02 | - | Pending |
-| EXPT-03 | - | Pending |
-| EXPT-04 | - | Pending |
-| EXPT-05 | - | Pending |
-| EXPT-06 | - | Pending |
-| REVS-01 | - | Pending |
-| REVW-04 | - | Pending |
-| REVW-05 | - | Pending |
+| ARTF-01 | Phase 12 | Pending |
+| ARTF-02 | Phase 13 | Pending |
+| ARTF-03 | Phase 13 | Pending |
+| ARTF-04 | Phase 13 | Pending |
+| ARTF-05 | Phase 13 | Pending |
+| ARTF-06 | Phase 13 | Pending |
+| ARTF-07 | Phase 14 | Pending |
+| ARTF-08 | Phase 14 | Pending |
+| ARTF-09 | Phase 14 | Pending |
+| ARTF-10 | Phase 12 | Pending |
+| DOCR-01 | Phase 14 | Pending |
+| DOCR-02 | Phase 14 | Pending |
+| DOCR-03 | Phase 14 | Pending |
+| DOCR-04 | Phase 13 | Pending |
+| EXPT-01 | Phase 15 | Pending |
+| EXPT-02 | Phase 15 | Pending |
+| EXPT-03 | Phase 15 | Pending |
+| EXPT-04 | Phase 15 | Pending |
+| EXPT-05 | Phase 15 | Pending |
+| EXPT-06 | Phase 15 | Pending |
+| REVS-01 | Phase 16 | Pending |
+| REVW-04 | Phase 16 | Pending |
+| REVW-05 | Phase 12 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 after initial definition*
+*Last updated: 2026-03-16 after roadmap creation — all 23 requirements mapped*

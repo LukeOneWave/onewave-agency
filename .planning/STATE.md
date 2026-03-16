@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Document Workspace
-status: defining_requirements
-stopped_at: Gathering requirements
+status: ready_to_plan
+stopped_at: Roadmap created — ready to plan Phase 12
 last_updated: "2026-03-16"
-last_activity: 2026-03-16 -- Milestone v3.0 started
+last_activity: 2026-03-16 -- v3.0 roadmap created (5 phases, 23 requirements mapped)
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,22 +21,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-16)
 
 **Core value:** The ability to review, approve, and iterate on agent-produced deliverables
-**Current focus:** Defining v3.0 requirements — Document Workspace
+**Current focus:** Phase 12 — Layout, Shell, and Unified State
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-16 — Milestone v3.0 started
+Phase: 12 of 16 (Layout, Shell, and Unified State)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-03-16 — v3.0 roadmap created, 23/23 requirements mapped across 5 phases
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (v3.0 milestone)
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- Research: All binary export generation (Word, Excel, PDF) must run in API routes only — never in client components (Node.js `fs`/`stream` references break webpack 5 client bundle)
+- Research: AppShell `max-w-7xl p-6` bypass requires route segment layout at `app/chat/[sessionId]/layout.tsx` — validate exact technique before restructuring ChatPage
+- Research: PDF strategy unresolved — `@react-pdf/renderer` vs Puppeteer requires proof-of-concept with code blocks + tables before Phase 15 planning begins
+- Research: Use `visibility: hidden` / `width: 0` for panel collapse (never remove from DOM) to protect `initSession` SSE guard from re-mount
 
 ### Pending Todos
 
@@ -44,10 +50,11 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+- [Phase 12 pre-work]: AppShell bypass technique needs isolated validation — may require `-m-6` negative margin workaround if segment layout doesn't fully escape `PageTransition` wrapper
+- [Phase 15 pre-work]: PDF approach (react-pdf vs Puppeteer) must be decided via POC before Phase 15 planning — affects API route structure
 
 ## Session Continuity
 
 Last session: 2026-03-16
-Stopped at: Defining v3.0 requirements
+Stopped at: Roadmap created — v3.0 phases 12-16 defined, all files written
 Resume file: None
