@@ -1,197 +1,218 @@
 # Project Research Summary
 
-**Project:** OneWave AI Digital Agency v2.0
-**Domain:** AI agent management platform -- v2.0 power-user features added to existing local Next.js app
-**Researched:** 2026-03-10
+**Project:** OneWave AI Digital Agency v3.0 — Document Workspace
+**Domain:** AI chat document workspace / artifacts panel with live preview, type-aware rendering, and multi-format export
+**Researched:** 2026-03-16
 **Confidence:** HIGH
 
 ## Executive Summary
 
-OneWave v1.0 is a shipped, working local application (172 files, 6,823 LOC) for managing 61 AI agents with streaming chat, deliverable review, multi-agent orchestration, and a dashboard. The v2.0 research focused exclusively on NEW features: custom agent creation, Kanban boards (task + orchestration), diff view between deliverable revisions, inline editing and commenting, global search (Cmd+K), keyboard shortcuts, session history, project management, and production polish. The existing stack (Next.js 16, React 19, Prisma 7, SQLite, Zustand, shadcn/ui, Tailwind v4) is validated and unchanged. Only 6 new npm packages are needed (~60kb gzipped total): motion, @dnd-kit/core + sortable + utilities, diff, and react-diff-viewer-continued. Nine new shadcn/ui components are added via CLI (no npm deps).
+OneWave AI Agency v3.0 is an incremental feature expansion on a shipped product — not a greenfield build. The foundation is solid: SSE streaming, `<deliverable>` XML extraction, `DeliverableVersion` model, inline editing via textarea, `react-hotkeys-hook`, and a Zustand-managed chat store are all in place from v2.0. The v3.0 milestone transforms the existing deliverable review flow into a full document workspace by adding a side-by-side artifacts panel with live streaming preview, document-type-aware rendering, and multi-format export. The architecture pattern is well-established — Claude.ai Artifacts and ChatGPT Canvas have proven the resizable split-panel model — and the required libraries are all npm-verified and React 19 compatible.
 
-The recommended approach is incremental: start with schema migration and infrastructure (new Prisma models, store conventions, shortcut registry), then build independent quick-win features (theme toggle, review queue, session history, custom agents), then tackle the complex interactive features (Kanban boards with dnd-kit, diff view, inline editing), and finish with power-user UX (Cmd+K, keyboard shortcuts) and production polish (animations, skeletons, transitions). This order is driven by three factors: schema dependencies (Project/Task/DeliverableVersion/Comment models must exist before features that use them), shared component reuse (Kanban primitives built once, used by both task board and orchestration review board), and risk sequencing (the hardest problems -- drag-and-drop, inline editing cursor management, text range commenting -- come after simpler features validate the patterns).
+The recommended approach is strict dependency-order execution: layout restructuring must come first (before any panel content is built), followed by the unified state model, then preview components, then exports, then commenting. The biggest implementation risk is not new technology — it is protecting the existing SSE streaming infrastructure from disruption during the layout refactor. The `ChatPage` component currently uses a fragile `initSession` guard tied to session ID; any layout re-mount caused by panel toggling will reset the streaming store and kill in-flight streams. This must be solved architecturally in Phase 1 before a single export button is built. The `AppShell max-w-7xl p-6` constraint also must be bypassed for the chat route before the split panel can use available horizontal space.
 
-The top risks are: SQLite migration destroying existing data (all new foreign keys on existing tables MUST be optional), monolithic Zustand stores becoming unmaintainable (enforce one store per feature domain from day one), keyboard shortcuts firing inside text inputs (build centralized registry before any individual shortcuts), and contentEditable cursor jumping making inline editing unusable (use click-to-edit with textarea, not raw contentEditable). All four are preventable with upfront architectural decisions.
+The export story is clearly scoped: Markdown and HTML need zero new dependencies; Word and Excel generation must run server-side only (never in client components due to Node.js built-in references); PDF has two viable paths — `@react-pdf/renderer` (lighter, requires custom layout components) vs Puppeteer (heavier, highest fidelity) — with a proof-of-concept recommended before committing. SheetJS via npm is explicitly off the table due to documented prototype-pollution and ReDoS CVEs. The `exceljs` maintenance concern is real but acceptable for a write-only local tool.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing stack is fully validated. New additions are minimal and targeted. See `.planning/research/STACK.md` for full rationale, alternatives considered, and installation commands.
+The v3.0 stack requires only 3 new required npm packages and 2 shadcn components. The existing stack already covers markdown rendering, diff viewing, chart rendering, and keyboard shortcut management. Export formats divide cleanly into client-safe (Markdown, HTML, CSV — native JS) and server-only (Word, Excel, PDF — must run in API routes). Dynamic imports are required for `docx` and `@react-pdf/renderer` to avoid adding 600KB+ to the initial bundle on page load.
 
-**New dependencies (6 packages, ~60kb gzipped):**
-- **motion (v12.35):** Page transitions, layout animations, drag feedback -- CSS cannot animate unmounting components or layout reflows
-- **@dnd-kit/core + sortable + utilities:** Kanban drag-and-drop -- lightweight (~10kb), accessible, proven with shadcn/ui + Tailwind
-- **diff + react-diff-viewer-continued:** Deliverable revision diffing -- GitHub-style split/unified diff view from string comparison
+**Core new technologies:**
+- `docx` ^9.6.1: Word (.docx) generation — pure JS, works in API routes, declarative structural API (headings, tables, code blocks)
+- `@react-pdf/renderer` ^4.3.2: PDF generation — React 19 compatible; requires `'use client'` + `ssr: false` or server-side `renderToBuffer()`; Puppeteer is the higher-fidelity alternative worth evaluating
+- `exceljs` ^4.4.0: Excel (.xlsx) generation — server-side only (Node.js streams); maintenance stalled but stable and CVE-clean for write-only usage
+- `react-hotkeys-hook` ^5.2.4 (conditional): add only if v2.0 custom hook proves insufficient for split-panel scope isolation
+- `shadcn resizable` + `shadcn tooltip`: split-panel layout and shortcut tooltips; `resizable` installs `react-resizable-panels` as a dep with documented SSR hydration workarounds
 
-**Explicitly NOT adding:** Tiptap/Slate (overkill for markdown editing), react-hotkeys-hook (custom 50-line hook suffices), @tanstack/react-query (would create two state management patterns), any auth library (single-user local app), any search engine (SQLite LIKE is sub-millisecond at this scale).
-
-**New shadcn/ui components (9, via CLI):** command, dialog, skeleton, switch, select, popover, context-menu, progress, collapsible.
+**What NOT to add:** SheetJS `xlsx` from npm (CVE-ridden), Puppeteer unless react-pdf fidelity is unacceptable after testing, Tiptap/Slate/ProseMirror (WYSIWYG is an anti-feature — textarea-based editing is the correct model), papaparse (write-only CSV needs no library), marked (existing remark/rehype pipeline can output HTML strings).
 
 ### Expected Features
 
-See `.planning/research/FEATURES.md` for full feature landscape with complexity estimates and dependency mapping.
+The v3.0 feature set is validated against Claude.ai Artifacts (official docs), ChatGPT Canvas (official announcement), and the AWS Cloudscape design system. Missing any table-stakes item makes the feature feel like a stub, not a workspace.
 
-**Must have (table stakes for v2.0):**
-- Dark/light mode toggle -- next-themes already installed, just needs a button
-- Review queue on dashboard -- aggregation query over existing Deliverable model
-- Session history and resumption -- existing ChatSession/Message models, needs sidebar UI
-- Keyboard shortcuts for review (j/k/a/r) -- standard Gmail/GitHub pattern
-- Loading skeletons -- baseline UX in 2026
-- Global search (Cmd+K) -- every modern productivity tool has this
+**Must have (table stakes — v3.0 Core):**
+- Side-panel split layout (resizable, collapsible) — established pattern set by Claude.ai and ChatGPT Canvas; users will be confused if artifacts appear elsewhere
+- Artifact card in chat stream (clickable, opens panel) — entry point for all artifact interaction
+- Live streaming preview (markdown updates during SSE stream) — the defining characteristic of the feature
+- Document type detection (heuristic on content, stored on `Deliverable.docType`) — gates type-aware rendering; add optional `type` XML attribute for agent-explicit classification
+- Type-aware rendering: `MarkdownDocument`, `SpreadsheetDocument`, `TechnicalSpec` viewer components
+- Version navigation within panel (leverages existing `DeliverableVersion` model — zero new schema)
+- Show diff in panel (leverages existing `react-diff-viewer-continued` — zero new deps)
+- Export: Markdown (.md), HTML, PDF, Word (.docx), Excel (.xlsx), CSV
+- Copy to clipboard, panel collapse/dismiss, `]` keyboard shortcut toggle
 
-**Should have (differentiators):**
-- Custom agent builder -- transforms fixed toolkit into configurable platform
-- Diff view between deliverable revisions -- makes iterative review genuinely useful
-- Inline editing on deliverables -- edit without re-prompting
-- Orchestration review board (Kanban) -- visual multi-agent output review
-- Task Kanban with project management -- visual project workflow with agent assignment
-- Page transitions and micro-interactions -- production polish
+**Should have (differentiators — v3.1):**
+- In-place agent revision: highlight text in preview, send targeted revision prompt; 3-4x faster than full regeneration; defer until panel UX is proven
+- Inline commenting with text-selection anchoring: `Comment` model already exists; defer until panel layout is stable and the UX conflict with in-place revision text selection is resolved
 
-**Defer to v3+:**
-- Inline commenting with text range anchoring -- highest complexity for lowest single-user value
-- Full project management suite (Gantt, timelines, dependencies) -- scope creep, this is an AI tool not Monday.com
-- AI-powered semantic search -- SQLite is fast enough, no vector DB needed
-- Agent marketplace/sharing -- single user, no network
+**Defer (v4+):**
+- Document outline / table of contents (useful for long docs but not blocking launch)
+- Agent-specific document templates (requires prompt engineering per agent type)
+- Export to PowerPoint (slide layout from linear document structure is an unsolved quality problem)
+
+**Anti-features to avoid:** Full WYSIWYG editor (200KB+ dep, fights markdown-as-source-of-truth), real-time collaboration (single-user app), embedded spreadsheet editor (Handsontable licensing), AI-powered doc type classification (latency + cost without meaningful accuracy gain over heuristics), streaming preview for all message types (only trigger on `<deliverable>` XML detection).
 
 ### Architecture Approach
 
-v2.0 extends the established 4-layer architecture (Presentation > State > API > Service > Data) without changing patterns. New features follow existing conventions: server components fetch initial data, client components handle mutations with optimistic Zustand updates, API routes stay thin with business logic in services. See `.planning/research/ARCHITECTURE.md` for full system diagram, data flows, and ~40 new files breakdown.
+The architecture is an evolution of the existing `ChatPage` single-column layout. The core change converts the flex column to a `ResizablePanelGroup` with a chat panel (55% default) and an artifacts panel (45%). A new route segment layout at `app/chat/[sessionId]/layout.tsx` bypasses the global `max-w-7xl p-6` AppShell constraint — this is the critical infrastructure unlock for full-viewport split layout. A dedicated `store/artifacts.ts` Zustand store owns panel state, active deliverable ID, content snapshot, and doc type. All export logic lives in `lib/export/` as pure functions (invoked via API routes for binary formats). Schema changes are minimal: `docType String?` column on `Deliverable` and a new `DeliverableComment` model.
 
-**Major new components:**
-1. **KanbanBoard/KanbanColumn/TaskCard** -- Shared primitives used by both task Kanban AND orchestration review board
-2. **AgentEditor** -- Form for custom agent CRUD, reuses Agent detail layout
-3. **DiffViewer** -- Side-by-side/unified diff between DeliverableVersion records
-4. **CommandPalette** -- Cmd+K overlay using shadcn Command, searches agents/projects/sessions
-5. **InlineEditor** -- Click-to-edit textarea toggle on deliverable content (NOT contentEditable)
+**Major components:**
+1. `app/chat/[sessionId]/layout.tsx` — segment layout bypassing global padding; full-viewport chat surface
+2. `ArtifactsPanel` — right panel shell with tabs (Preview / Comments), deliverable selector, export bar
+3. `DocumentPreview` — dispatches to type-specific viewer based on `docType`; throttled at 4fps during streaming
+4. `store/artifacts.ts` — Zustand store for active deliverable ID, content snapshot, panel open state, comment visibility
+5. `lib/document-type.ts` — heuristic classifier (table row density, heading count, code fence count); runs at `upsertStatus()` time on deliverable creation
+6. `lib/export/` — `exportDocx.ts`, `exportXlsx.ts`, `exportMarkdown.ts`, `exportPdf.ts` (client wrapper calling server API)
+7. `app/api/export/pdf/route.ts` — server-side PDF generation; text-selectable output
+8. `app/api/deliverables/[id]/comments/route.ts` — full CRUD for `DeliverableComment` model
 
-**New Prisma models (4):** Project, Task, DeliverableVersion, Comment
-**Modified models (3):** Agent (+tasks relation), ChatSession (+task relation), Deliverable (+content field, +versions, +comments)
-**New Zustand stores (3):** useProjectStore, useCommandStore, useReviewStore
-**New service files (3):** projectService, searchService, commentService
-**New API routes (~12):** agents CRUD, projects CRUD, tasks CRUD + reorder, search, review/pending, deliverable versions, comments
+**Key data flow patterns:**
+- Artifact content is passed from `MessageBubble`'s already-fetched `deliverableRecords` directly into the artifacts store — no second network call on panel open
+- `InlineEditor.handleSave()` calls `artifacts.updateContent(draft)` to keep preview in sync without a refetch
+- Document type is inferred at `done` SSE event time (deliverable creation) and stored on the `Deliverable` record — not re-calculated on every render
+- Comment anchors stored as character offsets in the raw markdown string (not DOM positions) — stable across re-renders; start with general (non-anchored) comments for v3.0
 
 ### Critical Pitfalls
 
-See `.planning/research/PITFALLS.md` for all 14 pitfalls with detailed prevention strategies.
+1. **Artifacts panel layout breaks SSE streaming** — The `ChatPage` `initSession` guard fires on re-mount, resetting the Zustand store and losing in-flight stream state. Prevention: use segment layout + `react-resizable-panels` with `visibility: hidden` / `width: 0` for collapse (never remove from DOM via React state toggling). Verify by toggling panel 5 times during an active stream.
 
-1. **SQLite migration destroys existing data** -- Adding required foreign keys to populated tables causes Prisma to suggest `migrate reset`. Prevention: all new FKs on existing tables MUST be optional, use `--create-only` to review SQL first, back up dev.db before every migration.
-2. **Monolithic Zustand store** -- Adding Kanban/search/review state to existing 300-line chat store creates cascading re-renders. Prevention: dedicated stores per domain, Zustand selectors everywhere, never mix server-cache and UI state.
-3. **Keyboard shortcuts fire in text inputs** -- Pressing "a" to type "and" triggers "approve deliverable." Prevention: centralized shortcut registry with ONE document listener, always check event.target for input/textarea/contenteditable.
-4. **ContentEditable cursor jumping** -- React reconciliation resets browser Selection API on re-render, making inline editing unusable. Prevention: use click-to-edit with textarea toggle, NOT raw contentEditable with React state.
-5. **Cmd+K search feels laggy** -- Prisma `contains` on SQLite is unindexed substring scan. Prevention: client-side fuzzy search (or simple LIKE) is fine for <1000 items at single-user scale; debounce at 150ms minimum.
+2. **Export libraries break the client bundle** — `docx` and `exceljs` reference Node.js built-ins (`fs`, `stream`) that webpack 5 cannot polyfill in client components, producing `Module not found: Can't resolve 'fs'` errors. Prevention: ALL binary export generation in API routes only. Dynamic `import()` for any library used client-side.
+
+3. **SSE state and artifacts panel state desynchronize** — The `done` SSE event may fire before a newly-mounted panel subscribes. Prevention: keep `activeArtifactId` and `panelOpen` in `useChatStore` alongside streaming state; dispatch a single action on `done` that marks streaming complete AND sets the active artifact. Do NOT reset `deliverables: {}` on `initSession` when the panel is open.
+
+4. **react-resizable-panels hydration mismatch** — Library reads `localStorage` for persisted panel sizes at mount; server renders defaults, causing hydration mismatch or hard error. Prevention: wrap `PanelGroup` in `dynamic(() => import(...), { ssr: false })` or use the library's `storage` prop with a null-on-server custom storage implementation.
+
+5. **PDF output quality is unacceptable from client-side libraries** — `jsPDF` html() produces rasterized (non-selectable) text. `@react-pdf/renderer` requires rewriting all content in its own component primitives. Prevention: server-side rendering via API route is mandatory; evaluate Puppeteer vs `@react-pdf/renderer` with a code-block + table proof-of-concept before Phase 4 implementation begins.
+
+6. **Inline comment anchors break on content edit** — Character offsets reference the markdown string at comment creation time; any subsequent edit shifts anchors. Prevention: start v3.0 with deliverable-level (non-anchored) comments only; defer text-selection anchoring to v3.1; if anchors are built, store a content hash alongside and invalidate when hash changes post-edit.
+
+---
 
 ## Implications for Roadmap
 
-Based on combined research, suggested 6-phase structure driven by schema dependencies, shared component reuse, and risk sequencing.
+Based on the dependency graph in ARCHITECTURE.md Build Order (Steps 1-8) and the pitfall-to-phase mapping in PITFALLS.md, the roadmap must follow strict dependency order. Every downstream feature depends on the layout being correct and the state model being unified. Rushing any phase risks breaking the existing streaming functionality that the entire app depends on.
 
-### Phase 1: Schema Migration + Infrastructure + Quick Wins
-**Rationale:** Every feature depends on schema. Store conventions and shortcut registry must be established before building features. Quick wins (theme toggle, review queue, skeletons) ship immediately to validate the upgrade path.
-**Delivers:** Prisma migration (4 new models + 3 model modifications), 3 new Zustand stores (empty shells with conventions), keyboard shortcut registry, theme toggle, review queue dashboard widget, loading skeletons.
-**Features addressed:** Dark/light toggle, review queue widget, loading skeletons.
-**Avoids:** Data loss from careless migration (Pitfall 1), monolithic store (Pitfall 2), shortcuts in inputs (Pitfall 3).
-**Stack:** No new npm deps needed -- uses existing next-themes, shadcn skeleton/switch, Zustand.
+### Phase 1: Layout, Shell, and Unified State
 
-### Phase 2: Custom Agents + Session History
-**Rationale:** Independent features with no cross-dependencies. Both extend existing patterns (Agent CRUD, ChatSession queries). Quick wins that are immediately visible and useful. Custom agents unlocks platform extensibility.
-**Delivers:** AgentEditor form, /agents/new and /agents/[slug]/edit pages, agent API CRUD routes, enhanced /chat page with session search/filter/auto-titles, session sidebar.
-**Features addressed:** Custom agent builder, session history and resumption.
-**Avoids:** Broken agents from missing validation (Pitfall 8 -- Zod validation, auto-slug, protect seeded agents), session list loading all message content (Pitfall 14 -- metadata-only endpoint).
-**Stack:** No new npm deps.
+**Rationale:** All v3.0 features depend on the split layout existing and being safe to toggle. The `max-w-7xl` AppShell constraint must be resolved before any panel content is built. The unified state model (artifacts store + `useChatStore` coordination) must be established before streaming and panel state interact. This is the highest-risk phase — it directly touches the existing SSE infrastructure.
 
-### Phase 3: Project Management + Task Kanban
-**Rationale:** Establishes the Kanban interaction pattern (dnd-kit + shadcn Card + optimistic Zustand) that is reused in Phase 4. New Project/Task models are the organizational backbone.
-**Delivers:** Project pages + API routes, KanbanBoard + KanbanColumn + TaskCard shared components, useProjectStore with optimistic drag-and-drop, agent assignment to tasks.
-**Features addressed:** Task Kanban board, project management with agent assignment.
-**Avoids:** Server Component hydration mismatch (Pitfall 6 -- "use client" boundary on entire board), scope creep (Pitfall 9 -- strict 2-model limit, 4 statuses only, no due dates/dependencies/subtasks).
-**Stack:** @dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities (install at phase start).
+**Delivers:** Route segment layout at `app/chat/[sessionId]/layout.tsx`, `ResizablePanelGroup` in `ChatPage` with placeholder right panel, `store/artifacts.ts` Zustand store with all actions stubbed, SSR-safe `react-resizable-panels` integration, shortcut context scoping update to existing keyboard registry.
 
-### Phase 4: Advanced Review Features
-**Rationale:** Depends on DeliverableVersion schema (Phase 1) AND Kanban patterns (Phase 3). Groups all deliverable-enhancement features together since they share the version model and review UX.
-**Delivers:** DeliverableVersion content snapshots on revision, DiffViewer component (split/unified), InlineEditor (click-to-edit textarea), comment system with character anchoring, MissionKanban (reuses Phase 3 Kanban primitives), orchestration review board tab.
-**Features addressed:** Diff view between revisions, inline editing, inline commenting, orchestration review board.
-**Avoids:** ContentEditable cursor jumping (Pitfall 4 -- textarea toggle, not contentEditable), diff performance on large deliverables (Pitfall 7 -- virtualization, cache diffs), N+1 review queue queries (Pitfall 10 -- single Prisma include with nested relations).
-**Stack:** diff + react-diff-viewer-continued (install at phase start).
+**Addresses:** Side-panel split layout (table stakes), panel collapse/dismiss, `]` keyboard shortcut toggle.
 
-### Phase 5: Power User UX
-**Rationale:** Search needs routes from Phases 2-4 to have navigation targets. Shortcuts need reviewable content from Phase 4 to act on. These are cross-cutting features that span all surfaces.
-**Delivers:** CommandPalette (Cmd+K) with grouped results, useCommandStore, keyboard navigation (j/k/a/r) for review queue, shortcut help overlay (?), keyboard-first review workflow.
-**Features addressed:** Global search (Cmd+K), keyboard shortcuts for review.
-**Avoids:** Search lag (Pitfall 5 -- client-side filtering sufficient at this scale, debounce 150ms).
-**Stack:** shadcn command component (install via CLI at phase start).
+**Avoids:** Pitfall 1 (layout breaks streaming), Pitfall 3 (SSE/artifacts state desync), Pitfall 7 (keyboard shortcut conflicts with `Cmd+K` and browser shortcuts), Pitfall 9 (react-resizable-panels hydration mismatch), Pitfall 12 (AppShell `max-w-7xl` clips panel).
 
-### Phase 6: Production Polish
-**Rationale:** Polish is cosmetic. Apply once functionality is stable across all routes. Animations added last avoid jank during rapid feature development.
-**Delivers:** Page transitions (AnimatePresence), entrance animations, micro-interactions (hover/press), empty states for all new pages, refined loading states.
-**Features addressed:** Page transitions and animations, micro-interactions.
-**Avoids:** Animation jank in lists (Pitfall 13 -- CSS transitions first, motion sparingly, virtualize before animating).
-**Stack:** motion (install at phase start).
+### Phase 2: Live Preview and Document Type Detection
+
+**Rationale:** The artifact card in chat and the live streaming preview are the next foundational layer — all visible panel content depends on these. Document type must be classified at deliverable creation time and cannot be added later. Streaming preview must be throttled (4fps via `useDeferredValue`) to avoid visible lag.
+
+**Delivers:** Artifact card component in chat stream, `DocumentPreview` with streaming markdown renderer (throttled), `lib/document-type.ts` heuristic classifier, `docType String?` column on `Deliverable` schema via `prisma db push`, `DocumentTypeIcon` component in panel header, `MessageBubble` onClick wiring to artifacts store.
+
+**Addresses:** Artifact card in chat (table stakes), live streaming preview (table stakes), document type detection (table stakes).
+
+**Avoids:** Pitfall 8 (preview re-render lag during streaming — use `useDeferredValue` + 4fps throttle), Pitfall 10 (doc type detection agent coordination — use optional `type` XML attribute with heuristic fallback for backward compatibility).
+
+### Phase 3: Type-Aware Renderers and Version Navigation
+
+**Rationale:** With preview infrastructure in place, the three viewer components can be built independently. Version navigation and diff toggle are low-effort because both `DeliverableVersion` and `react-diff-viewer-continued` are already present from v2.0. This phase turns the panel from a plain markdown view into a rich document workspace.
+
+**Delivers:** `MarkdownDocument` viewer (with optional document outline for long docs), `SpreadsheetDocument` viewer (interactive grid for tabular data), `TechnicalSpec` viewer (syntax-highlighted code), version selector in panel header, diff toggle in panel header reusing `react-diff-viewer-continued`.
+
+**Addresses:** Type-aware rendering (table stakes), version navigation in panel (table stakes), show diff in panel (table stakes).
+
+**Avoids:** Pitfall 5 (SQLite binary storage — `docType` is a string enum only; never store binary export data in the DB).
+
+### Phase 4: Multi-Format Export
+
+**Rationale:** Export is the highest-value deliverable feature for professional use cases. All export logic is independent of commenting. The server-only pattern for binary formats must be established as the first act of this phase before writing any format-specific code, to prevent the client bundle breakage pitfall.
+
+**Delivers:** `lib/export/exportMarkdown.ts` (zero deps), `lib/export/exportDocx.ts` (server-side via API route), `lib/export/exportXlsx.ts` (server-side via API route using remark-gfm AST parsing for tables), `app/api/export/pdf/route.ts` (server-side, approach selected from POC), `ExportBar` component with format buttons + tooltips, copy-to-clipboard.
+
+**Addresses:** Export to Markdown, HTML, PDF, Word, Excel, CSV (all table stakes), copy to clipboard (table stakes).
+
+**Uses:** `docx` ^9.6.1, `exceljs` ^4.4.0, `@react-pdf/renderer` ^4.3.2 (or Puppeteer pending POC result), dynamic imports for bundle efficiency.
+
+**Avoids:** Pitfall 2 (export libraries break client bundle — all binary generation in API routes, dynamic imports everywhere), Pitfall 4 (PDF layout quality — server-side rendering only), Pitfall 6 in PITFALLS.md (Excel table parsing — use remark-gfm AST, not naive `|` string splitting). Always set `Content-Disposition: attachment` header on binary responses.
+
+### Phase 5: Inline Commenting
+
+**Rationale:** The `DeliverableComment` model and comment API routes are new infrastructure. v3.0 starts with deliverable-level (general) comments only to avoid the anchor-management complexity. The Comment model from v2.0 schema already exists as a `Comment` model on `Deliverable`; this phase adds the panel UI surface and general-comment CRUD. Text-selection anchoring is deferred to v3.1.
+
+**Delivers:** `DeliverableComment` Prisma model (with `anchor String?` field for future use), `app/api/deliverables/[id]/comments/route.ts`, `deliverableService` comment methods, `CommentThread` component (general comments only, no text-selection anchoring in v3.0).
+
+**Addresses:** Inline commenting (differentiator/P2 feature) — delivered at general-comment scope.
+
+**Avoids:** Pitfall 6 (inline comment anchors break on resize — general comments only in v3.0; defer text-selection anchoring).
 
 ### Phase Ordering Rationale
 
-- Schema first because Project, Task, DeliverableVersion, and Comment models are referenced by features in every subsequent phase.
-- Quick wins (toggle, queue, skeletons) in Phase 1 to ship immediate visible progress.
-- Custom agents and session history are independent, zero cross-dependencies -- parallel-friendly.
-- Task Kanban before advanced review because the Kanban interaction pattern (dnd-kit wiring, optimistic store updates, column reordering) is reused by the orchestration review board.
-- All deliverable-enhancement features (diff, inline edit, comments) grouped together because they share the DeliverableVersion model and review UX context.
-- Power user UX (search, shortcuts) last among functional features because they are cross-cutting and need navigation targets from all prior phases.
-- Polish last because it spans every surface and benefits from stable foundations.
+- Phases 1 and 2 are strictly sequential — layout and state model must be proven safe before live preview components are built on top of them.
+- Phases 3 and 4 can overlap once Phase 2 preview infrastructure is confirmed working.
+- Phase 5 is independent of Phase 4 but requires the stable preview panel from Phase 3 to provide the surface for comment display.
+- In-place agent revision (highlight + targeted revision prompt) is intentionally deferred to v3.1 — it conflicts with text-selection commenting UX and requires both features to be designed together.
 
 ### Research Flags
 
-**Phases likely needing `/gsd:research-phase` during planning:**
-- **Phase 3 (Kanban):** dnd-kit cross-container sorting with optimistic reordering has nuances. The Georgegriff reference implementation should be studied closely. Moderate complexity.
-- **Phase 4 (Advanced Review):** Deliverable content snapshotting (extracting content from Message.content using parseDeliverables) is the most impactful schema change. The inline comment anchoring strategy (character offset vs text snippet) needs a firm design decision.
+Phases likely needing deeper validation during planning:
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Infrastructure):** Standard Prisma migration, Zustand store setup, shadcn component installation. Well-documented.
-- **Phase 2 (Custom Agents + Sessions):** CRUD forms, API routes, session list queries. Extends existing patterns exactly.
-- **Phase 5 (Power User UX):** shadcn Command component is purpose-built for Cmd+K. Keyboard shortcut hook is ~50 lines.
-- **Phase 6 (Polish):** Motion library has extensive documentation and examples.
+- **Phase 1 (AppShell bypass):** ARCHITECTURE.md flags that the segment layout approach may require a negative margin (`-m-6`) workaround because `max-w-7xl p-6` is inside `PageTransition`, not directly overridable from segment layouts. Validate the exact technique in an isolated branch before restructuring `ChatPage`.
+- **Phase 4 (PDF strategy):** `@react-pdf/renderer` requires custom layout components and is lower-fidelity for mixed content (code blocks + tables). Puppeteer requires a print-optimized route (`/app/print/[deliverableId]`) but uses the real browser engine. Build a proof-of-concept with a deliverable containing code blocks, tables, and headings before committing to either approach.
+
+Phases with standard patterns (skip deeper research):
+
+- **Phase 3 (Type-aware renderers):** Straightforward component composition reusing existing `react-markdown`, `recharts`, and `highlight.js`. Well-documented patterns with no novel integrations.
+- **Phase 5 (Commenting API):** Standard Prisma CRUD + Next.js REST route pattern already established in the codebase. No new infrastructure needed.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Only 6 new packages, all actively maintained with recent releases. Existing stack validated at current versions. Zero speculative choices. |
-| Features | MEDIUM-HIGH | Table stakes are clear from competitive analysis. Priority ordering is well-reasoned. Inline commenting complexity may be underestimated -- consider deferring to v3. |
-| Architecture | HIGH | Direct codebase analysis of 172 existing files. New features follow established patterns exactly. ~40 new files, ~12 modified files -- scope is well-defined. |
-| Pitfalls | HIGH | 14 pitfalls identified across critical/moderate/minor. Top 5 are verified with authoritative sources. Phase-specific warnings mapped to mitigation strategies. |
+| Stack | HIGH | All new npm packages verified (docx 9.6.1, @react-pdf/renderer 4.3.2, exceljs 4.4.0, react-hotkeys-hook 5.2.4). React 19 compatibility confirmed for react-pdf. Single MEDIUM caveat: exceljs maintenance stall is real but acceptable for write-only local use. |
+| Features | HIGH | Validated against Claude.ai Artifacts (official docs), ChatGPT Canvas (official announcement), and Cloudscape Design System. Feature boundaries are clear. Differentiator vs table-stakes distinction is well-grounded. |
+| Architecture | HIGH | Based on direct codebase analysis of 12,504 LOC. Component boundaries, data flows, build order, and schema changes are fully specified. One caveat: the exact AppShell `max-w-7xl` bypass technique requires implementation validation. |
+| Pitfalls | HIGH | 12 pitfalls documented with direct codebase code references (ChatPage.tsx, AppShell.tsx, chat.ts store, InlineEditor.tsx, schema.prisma). Top 6 are confirmed risks based on actual code paths reviewed, not hypothetical scenarios. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **DeliverableVersion content extraction:** The existing `parseDeliverables()` regex extracts deliverable content at render time from `Message.content`. For versioning, this content must be snapshotted into `Deliverable.content`. The exact trigger point (on message save? on first review action?) needs a design decision during Phase 1 migration planning.
-- **Comment anchoring strategy:** STACK.md recommends character offset (`anchorStart`/`anchorEnd`), FEATURES.md recommends text snippet (`anchorText`). These break differently when content is edited. Need to pick one strategy before Phase 4. Recommendation: text snippet is more resilient to edits but harder to highlight precisely.
-- **Kanban card ordering algorithm:** When a task is dropped between two existing cards, how are `order` values recalculated? Fractional indexing, gap-based integers, or full reorder? Needs decision during Phase 3 planning.
-- **Search scope:** Does Cmd+K search message content or just entity names/titles? Message content search at scale needs FTS5 raw queries. Entity-only search is trivially fast with LIKE. Recommendation: entity-only for v2.0, defer message search.
-- **Minor STACK.md vs FEATURES.md disagreement:** FEATURES.md recommends react-hotkeys-hook; STACK.md recommends a custom hook. Recommendation: custom hook (STACK.md rationale is stronger -- <10 shortcuts does not justify a dependency).
+- **PDF strategy decision (Phase 4):** `@react-pdf/renderer` is lighter but requires custom layout components and produces lower-fidelity output for code-heavy documents. Puppeteer is heavier but uses the real browser engine. PITFALLS.md and STACK.md give conflicting recommendations. Resolve with a proof-of-concept before Phase 4 planning begins. See `.planning/research/PITFALLS.md` Pitfall 4 vs `.planning/research/STACK.md` Section 2.
+- **AppShell bypass technique (Phase 1):** ARCHITECTURE.md Pattern 1 notes the segment layout approach may not fully escape the `max-w-7xl p-6` wrapper if it is rendered inside `PageTransition`. The `-m-6` negative margin override or a `fullWidth` AppShell prop are fallback approaches. Validate in isolation before restructuring the full ChatPage. See `.planning/research/ARCHITECTURE.md` Pattern 1 caveat.
+- **In-place revision + commenting UX conflict (v3.1 planning):** Both features use text selection in the preview pane. The commenting UX design in Phase 5 should document the selection interaction model explicitly so v3.1 in-place revision can be designed around it rather than requiring a redesign.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Direct codebase analysis: 172 files, 6,823 LOC TypeScript
-- [Motion v12.35 docs](https://motion.dev/docs/react) -- animation library
-- [dnd-kit official docs](https://dndkit.com/) -- drag-and-drop
-- [dnd-kit + shadcn/ui Kanban reference](https://github.com/Georgegriff/react-dnd-kit-tailwind-shadcn-ui)
-- [react-diff-viewer-continued v4.1.2](https://www.npmjs.com/package/react-diff-viewer-continued) -- diff rendering
-- [diff (jsdiff) v8.0.3](https://www.npmjs.com/package/diff) -- text diffing engine
-- [shadcn/ui Command component](https://ui.shadcn.com/docs/components/radix/command) -- Cmd+K
-- [shadcn/ui dark mode + next-themes](https://ui.shadcn.com/docs/dark-mode/next) -- theme integration
-- Prisma schema analysis: 7 existing models, Agent.isCustom already present
+- Direct codebase analysis: `/Users/luke/onewave-agency/src/` (12,504 LOC TypeScript, Prisma schema, Zustand stores, API routes)
+- [Claude Artifacts Help Center](https://support.claude.ai/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them) — artifact panel UX patterns
+- [ChatGPT Canvas OpenAI announcement](https://openai.com/index/introducing-canvas/) — Canvas split-panel UX patterns
+- [Cloudscape artifact previews pattern](https://cloudscape.design/patterns/genai/artifact-previews/) — AWS design system artifact display guidance
+- [docx npm v9.6.1](https://www.npmjs.com/package/docx) — verified version, official docs at docx.js.org
+- [@react-pdf/renderer npm v4.3.2](https://www.npmjs.com/package/@react-pdf/renderer) — verified, React 19 compat confirmed at react-pdf.org/compatibility
+- [exceljs npm v4.4.0](https://www.npmjs.com/package/exceljs) — verified, maintenance status reviewed
+- [react-hotkeys-hook npm v5.2.4](https://www.npmjs.com/package/react-hotkeys-hook) — verified, React 19 compatible
+- [shadcn resizable](https://ui.shadcn.com/docs/components/resizable) — wraps react-resizable-panels v4
+- [Next.js App Router nested layouts](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates)
 
 ### Secondary (MEDIUM confidence)
-- [Marmelab Kanban tutorial (Jan 2026)](https://marmelab.com/blog/2026/01/15/building-a-kanban-board-with-shadcn.html)
-- [React ContentEditable caret issue #2047](https://github.com/facebook/react/issues/2047) -- cursor jumping bug
-- [Prisma FTS5 SQLite issue #9414](https://github.com/prisma/prisma/issues/9414) -- search limitations
-- [PatternFly chatbot conversation history](https://www.patternfly.org/patternfly-ai/chatbot/chatbot-conversation-history/) -- session history UX
-- [Atlassian Inline Edit pattern](https://developer.atlassian.com/platform/forge/ui-kit/components/inline-edit/) -- editing UX
+- [react-resizable-panels SSR issue #144](https://github.com/bvaughn/react-resizable-panels/issues/144) — localStorage hydration mismatch pattern and workaround
+- [Claude inline edits (Oct 2025)](https://hyperdev.matsuoka.com/p/claudeais-quiet-revolution-in-artifact) — 3-4x faster inline section replacement vs full regeneration
+- [ChatGPT Canvas review 2025](https://skywork.ai/blog/chatgpt-canvas-review-2025-features-coding-pros-cons/) — inline editing and revision UX patterns
+- [AI chat layout patterns (Jan 2026)](https://medium.com/@anastasiawalia/ai-chat-layout-patterns-when-to-use-them-real-examples-d03f04a19194) — layout pattern survey
+- [SheetJS security CVEs (Snyk)](https://snyk.io/vuln/npm:xlsx) — prototype pollution and ReDoS, reason to avoid npm xlsx
+- [Top JS PDF libraries 2026 (Nutrient)](https://www.nutrient.io/blog/top-js-pdf-libraries/) — puppeteer vs react-pdf tradeoffs
 
 ### Tertiary (needs validation)
-- Inline comment text-snippet anchoring resilience -- described in concept, no production reference for single-user review tool
-- Kanban fractional indexing for card ordering -- multiple approaches exist, no consensus on best for SQLite
+- PDF fidelity comparison: PITFALLS.md Pitfall 4 recommends Puppeteer; STACK.md Section 2 recommends `@react-pdf/renderer`. Needs empirical proof-of-concept with actual deliverable content (code blocks + tables) before Phase 4 planning.
 
 ---
-*Research completed: 2026-03-10*
+*Research completed: 2026-03-16*
 *Ready for roadmap: yes*

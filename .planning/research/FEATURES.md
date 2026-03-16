@@ -1,319 +1,217 @@
-# Feature Landscape
+# Feature Research
 
-**Domain:** AI agent management platform -- v2.0 power-user capabilities
-**Researched:** 2026-03-10
-**Focus:** NEW features only (v1.0 features already shipped, see PROJECT.md)
-**Overall confidence:** MEDIUM-HIGH
+**Domain:** AI chat document workspace / artifacts panel
+**Researched:** 2026-03-16
+**Milestone:** v3.0 — Document Workspace
+**Confidence:** HIGH (primary patterns verified against Claude, ChatGPT Canvas, Cloudscape Design System)
 
-## Existing v1.0 Features (Already Built)
+## Context: What Is Already Built (v1.0 + v2.0)
 
-For reference -- these are shipped and working:
-- Agent browsing/search/filter across 9 divisions
-- Agent detail pages with personality/process/metrics
-- Streaming chat with Claude API (SSE)
-- Rich markdown/code rendering with syntax highlighting
-- Deliverable review panel (approve/revise with feedback loop)
-- Multi-agent orchestration with parallel lanes
-- Dashboard with stats, activity feed, utilization charts
-- Settings with API key management and model selection
-- Dark mode (dark default)
+These features are SHIPPED and must not be rebuilt — only extended:
+
+- XML `<deliverable>` tag extraction from chat messages
+- Review panel: approve / revise with feedback, inline textarea editing, diff viewer
+- `DeliverableVersion` model for content snapshots (exists from v2.0)
+- `Comment` model for inline commenting (exists from v2.0)
+- Keyboard shortcuts via `react-hotkeys-hook` (j/k/a/r/? pattern exists)
+- Project management, Kanban boards, Orchestration review
+- Global search (Cmd+K), session history, custom agent builder
+
+The v3.0 milestone transforms the existing deliverable system from a plain-text review flow into a rich document workspace.
 
 ---
 
-## Table Stakes
+## Feature Landscape
 
-Features v2.0 users expect. Missing these and the upgrade feels incomplete.
+### Table Stakes (Users Expect These)
 
-| Feature | Why Expected | Complexity | Dependencies on Existing |
-|---------|--------------|------------|--------------------------|
-| Dark/light mode toggle | v1.0 has dark-only; users expect a toggle, especially for daytime. Every modern app has this. | Low | Tailwind v4 dark mode classes already in place; add `next-themes` provider + toggle button |
-| Review queue on dashboard | Users need one place to see ALL pending deliverables across sessions and missions. Without it, they hunt through individual chats. | Low | Existing `Deliverable` model with `status` field; aggregation query + dashboard widget |
-| Session history and resumption | 96% of chatbot users report frustration restarting from zero. ChatGPT/Claude.ai both have sidebar session lists. `ChatSession` + `Message` already persist. | Medium | Existing `ChatSession` + `Message` models; needs sidebar UI, session list API, date grouping |
-| Keyboard shortcuts for review | Power users expect j/k navigation, a/approve, r/revise. Standard Gmail/GitHub pattern. | Low | Existing review panel; add hotkey listener with `react-hotkeys-hook` |
-| Loading skeletons | Baseline UX in 2026. Bare spinners feel like a prototype. | Low | shadcn/ui `Skeleton` component; apply per-page where data loads |
-| Global search (Cmd+K) | Every modern productivity tool has Cmd+K. Users will try it instinctively. Linear, Vercel, Notion, VS Code all have it. | Medium | shadcn/ui `Command` component (built on cmdk); search across agents, sessions, projects |
+Features users assume exist once you describe "an artifacts panel." Missing any of these and the feature feels like a stub.
 
-## Differentiators
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Side-panel layout: chat left, artifact right | Established pattern set by Claude.ai and ChatGPT Canvas. Users will be confused if artifact appears elsewhere. | MEDIUM | Resizable split with collapsible panel. Claude uses right-side panel; Canvas uses full-width right pane. |
+| Artifact card in chat stream | Generated artifact needs a clickable card in the chat (not nested in a chat bubble) that opens the side panel. | LOW | Cloudscape: "artifacts should not be nested into chat bubbles." Card shows doc type icon, title, byte count. |
+| Live preview while agent streams | Document appears and updates in the preview panel AS the agent generates it, not only after completion. | MEDIUM | SSE stream already exists. Preview re-renders on each chunk. Streaming markdown renderer needed. |
+| Rendered document preview (not raw text) | Users expect to see styled output — formatted headings, bold, tables — not raw markdown. | LOW | `react-markdown` + `remark-gfm` already present in the codebase for chat rendering. Reuse. |
+| Document type detection and labeling | User needs to know what kind of artifact they're viewing: "Business Doc," "Technical Spec," "Table/Spreadsheet." | LOW | Heuristic from content structure (presence of table rows, code blocks, front-matter). No ML needed. |
+| Artifact persistence across session | Artifact stays in the panel when user sends follow-up messages. Does not collapse on new chat turn. | LOW | Store active artifact ID in Zustand chat store. Panel only closes on explicit dismiss. |
+| Version navigation within artifact panel | When agent revises, user can navigate artifact versions (v1 / v2 / v3) from inside the panel. | MEDIUM | `DeliverableVersion` model already exists. Add version selector to panel header. |
+| Export to Markdown | Minimum viable export — download raw `.md` file. Every comparable tool offers this. | LOW | `Blob` + `URL.createObjectURL` in browser. No library needed. |
+| Export to PDF | Standard output format for business deliverables. Users will ask for this before any other export. | MEDIUM | `@react-pdf/renderer` (server-side via API route) or `html2canvas` + `jsPDF` (client-side). Server-side preferred — cleaner output, no layout hacks. |
+| Copy to clipboard | One-click copy of full document content. Present alongside export options. | LOW | `navigator.clipboard.writeText`. Already used elsewhere in app. |
+| Dismiss / minimize artifact panel | User wants to return to full-width chat. Clear close button. Panel state remembered per session. | LOW | Zustand boolean; CSS transition. |
 
-Features that transform OneWave from a chat-and-review tool into a genuine agency platform. Not expected, but provide significant value.
+### Differentiators (Competitive Advantage)
 
-| Feature | Value Proposition | Complexity | Dependencies on Existing |
-|---------|-------------------|------------|--------------------------|
-| Custom agent builder | Users define their own specialized agents -- persona, system prompt, tools, division. Transforms OneWave from fixed toolkit to configurable platform. | Medium | `Agent.isCustom` field already exists; needs create/edit form, system prompt editor, live preview |
-| Diff view between revisions | See exactly what changed between deliverable revision rounds. Makes review-centric workflow genuinely useful for iterative content. | Medium | Needs new `DeliverableVersion` model; existing `Deliverable` model for association |
-| Inline editing on deliverables | Edit agent-generated content directly rather than re-prompting. Click to switch from rendered markdown to editable raw content. | Medium | Existing deliverable rendering pipeline; toggle between view/edit modes |
-| Inline commenting on deliverables | Select text, add annotation. Comment anchored to specific text range. Google Docs-style but for single-user review notes. | High | New `Comment` model; text range anchoring logic; highlight overlay on rendered content |
-| Orchestration review board (Kanban) | Visual board showing mission deliverables by status across agent lanes. Review multi-agent output at a glance instead of drilling into each lane. | Medium | Existing `Mission` + `MissionLane` + `Deliverable` models; new Kanban UI components |
-| Task Kanban board | Drag-and-drop task management (To Do / In Progress / Review / Done). Visual project workflow. | High | New `Project` + `Task` models; dnd-kit for drag-and-drop; shared Kanban components |
-| Project management with agent assignment | Group tasks into projects, assign agents, track progress across deliverables. | High | New `Project` + `Task` + `ProjectAgent` models; multiple new routes and UIs |
-| Deliverables tab on projects | Aggregated view of all agent outputs for a project with review status. | Medium | Depends on Project model existing; queries existing `Deliverable` through project->task->session chain |
-| Page transitions and animations | Smooth route transitions, entrance animations, micro-interactions. Feels polished and intentional. | Medium | New dependency: Motion (Framer Motion) library |
+Features that transform OneWave's artifact experience from "also has preview" to genuinely better than generic AI chat tools. Align with core value: making agent output actionable.
 
-## Anti-Features
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| In-place agent revision from panel | Highlight text in preview, click "Ask agent to revise this section" — sends targeted prompt with context. The agent updates ONLY the selected section inline (3-4x faster than full regeneration, per Claude's Oct 2025 inline edit approach). | HIGH | Requires selection API + targeted revision prompt format. Most valuable differentiator. |
+| Document type-aware rendering | Tabular/spreadsheet data renders as an interactive grid, not a markdown table. Business doc renders with section hierarchy. Code doc renders with syntax highlighting. Each type has its own viewer component. | HIGH | Separate renderer per type: `MarkdownDocument`, `SpreadsheetDocument`, `TechnicalSpec`. Type detected at extraction time. |
+| Export to Word (.docx) | Professional deliverables can be dropped directly into client documents. One-click. | MEDIUM | `docx` npm library (pure JS, no native deps). Server-side API route. Heading styles, paragraphs, tables mapped from parsed AST. |
+| Export to Excel (.xlsx) / CSV | Tabular agent output (reports, trackers, research data) goes straight to spreadsheet tools. | MEDIUM | `xlsx` (SheetJS) library. Only available when artifact type is "spreadsheet." |
+| Export to HTML | Self-contained HTML file with embedded CSS. Shareable without importing into any app. | LOW | Template literal with inline Tailwind-equivalent CSS. Rendered client-side. |
+| Inline commenting on deliverables | Select text, add anchored annotation. Deferred from v2.0 — now surfaces here in context of document workspace. | HIGH | `Comment` model already exists. Text-range anchor stored as snippet, not offset. Popover trigger on selection. |
+| Keyboard shortcut: open/close panel | `]` to toggle artifact panel (Figma-style panel toggle). Fits existing j/k/a/r/? pattern. | LOW | One additional binding in existing `react-hotkeys-hook` setup. |
+| Show diff in artifact panel | When agent revises, panel can toggle "show changes" mode — red/green highlighting of what changed between artifact versions. | MEDIUM | `react-diff-viewer-continued` already installed. Toggle in panel header. |
+| Document outline / table of contents | For long business docs, sidebar within the preview panel showing heading hierarchy for navigation. | MEDIUM | Parse heading AST from markdown. Scroll-spy to highlight active section. |
 
-Features to explicitly NOT build for v2.0.
+### Anti-Features (Commonly Requested, Often Problematic)
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Real-time collaboration / multi-cursor | Single-user local app. Collaboration SDK adds massive complexity for zero users. | Inline commenting is single-user: review notes on own deliverables |
-| WYSIWYG rich text editor for deliverables | Agent output is markdown/code. Full editor (Slate, TipTap) fights the markdown rendering pipeline and adds huge dependency weight. | Inline editing = toggle raw content textarea; re-render markdown on save |
-| Full project management suite (Gantt, time tracking, resource allocation) | Scope creep. This is an AI agent tool, not Monday.com. | Lightweight: Kanban + task list + agent assignment. No timelines or calendaring |
-| AI-powered semantic search | Adds vector DB dependency and embedding pipeline for Cmd+K. SQLite queries are plenty fast for local data. | Simple text matching for Cmd+K search. 61 agents + sessions = trivially fast client-side filtering |
-| Agent marketplace / sharing / export | Single user, no network. Serialization adds complexity with no immediate payoff. | Custom agents live in local SQLite. Export can come later |
-| Notification / toast system for everything | Single user already looking at the app. Over-notifying is noise. | Toast only for destructive actions (delete confirmation) and async completions (mission done). Review queue surfaces pending items passively |
-| Undo/redo for Kanban drag-and-drop | Complex state management for minimal value at single-user scale. | Drag commits immediately; user drags back if needed |
-| Automated approval rules | Defeats the purpose. The review workflow IS the product. Automating it removes the core value. | Surface smart defaults but always require human decision |
-
-## Feature Details: Expected UX Patterns
-
-### Custom Agent Builder
-
-**What users expect:** A form where they define name, division, description, color, system prompt (the core), and tools/capabilities. Preview how the agent appears in the directory.
-
-**UX pattern:** Single-page form with sections -- NOT a multi-step wizard (too many steps for 5-6 fields). Live preview panel on the right showing the agent card. Large textarea or code editor for system prompt. "Test Chat" button to try before saving.
-
-**Implementation notes:**
-- Routes: `/agents/new` and `/agents/[slug]/edit`
-- Reuse Agent detail page layout
-- `Agent.isCustom = true` distinguishes from seeded agents
-- Custom agents visually distinguished in directory (badge or card border treatment)
-- Protect seeded agents from editing (or allow "clone to custom")
-
-### Kanban Boards (Task + Orchestration)
-
-**What users expect:** Columns for fixed status categories. Cards with title, assignee (agent), status indicator. Drag-and-drop between columns. Click card opens detail panel (sheet/drawer, not full page navigation).
-
-**Industry-standard UX:**
-- Column headers show card count
-- Cards show: title, agent avatar, brief preview, priority indicator
-- Smooth drag animation with drop placeholder
-- Column scroll when many cards
-- Empty column shows helpful "drop here" state
-
-**Library decision:** Use **dnd-kit** -- ~10KB, zero dependencies, proven with shadcn/ui + Tailwind. Mature open-source Kanban examples exist (Georgegriff/react-dnd-kit-tailwind-shadcn-ui). Do NOT use react-beautiful-dnd (deprecated) or hello-pangea/dnd (heavier than needed).
-
-**Shared components:** Both task Kanban and orchestration review board use the same `KanbanBoard`, `KanbanColumn`, `KanbanCard` primitives. Orchestration board reads existing Mission/Deliverable data; task board reads new Project/Task data.
-
-### Diff View Between Revisions
-
-**What users expect:** Side-by-side or unified diff showing what changed. Red for removed, green for added. Word-level highlighting within lines. Similar to GitHub's diff view.
-
-**UX pattern:**
-- Toggle between split (side-by-side) and unified (inline) view
-- Word-level diff highlighting within changed lines
-- Collapsible unchanged sections
-- Version selector: "v1 vs v2" dropdown
-
-**Critical prerequisite:** Current `Deliverable` model stores status and feedback but NOT content per revision. Content lives in `Message.content`. To support diff:
-- **Recommended:** New `DeliverableVersion` model storing content snapshots per revision
-- **Not recommended:** Parsing content from sequential messages -- fragile, depends on agent reproducing full content
-
-**Library:** Use **react-diff-viewer** -- mature, GitHub-style UI, supports split/unified, word diff, syntax highlighting. Lightweight. Alternative: diff-match-patch for algorithm + custom rendering.
-
-### Global Search (Cmd+K)
-
-**What users expect:** Press Cmd+K, type anything, see results grouped by type (Agents, Sessions, Projects). Arrow keys navigate, Enter goes. Recent searches shown before typing. Escape closes.
-
-**Established pattern (Linear, Vercel, Raycast):**
-- Modal overlay with autofocused search input
-- Results grouped: "Agents", "Recent Sessions", "Projects", "Actions"
-- Fuzzy matching on names/titles
-- Actions group: "Go to Dashboard", "New Chat", "Go to Settings"
-- Keyboard-only navigable
-- Recent/frequent items pre-populated
-
-**Implementation:** shadcn/ui `CommandDialog` component -- near-zero effort since the project already uses shadcn/ui. Add `CommandDialog` wrapper triggered by Cmd+K global listener. For 61 agents + modest session count, client-side filtering is sufficient. No server-side search or FTS5 needed.
-
-### Inline Editing and Commenting
-
-**Inline editing (Medium complexity):**
-- "Edit" button on deliverable toggles from rendered markdown to textarea/code editor with raw content
-- User edits, clicks "Save" -- creates new `DeliverableVersion`
-- Rendered view updates immediately
-- No WYSIWYG needed; editing raw markdown/text is appropriate for this audience
-
-**Inline commenting (High complexity):**
-- Select text in rendered deliverable, click "Comment" from popover
-- Comment anchored to text range (stored as text snippet, not character offset -- more resilient to content changes)
-- Comments appear as yellow highlights in rendered view
-- Comment thread sidebar shows all comments for current deliverable
-- Resolve/unresolve comments
-
-**New models:**
-- `Comment` (id, deliverableId, content, anchorText, resolved, createdAt)
-- `DeliverableVersion` (id, deliverableId, version, content, createdAt) -- shared with diff view
-
-### Keyboard Shortcuts
-
-**Expected shortcuts (Gmail/GitHub convention):**
-- `j` / `k` -- next/previous deliverable in review queue
-- `a` -- approve current deliverable
-- `r` -- open revise dialog for current deliverable
-- `Escape` -- close dialogs/panels
-- `Cmd+K` -- open global search
-- `?` -- show keyboard shortcut help overlay
-
-**Library:** Use **react-hotkeys-hook** -- most popular, well-maintained, integrates cleanly with hooks and Zustand. Must disable shortcuts when user is typing in input/textarea (`enableOnFormTags: false`).
-
-**Discoverability:** Shortcut hints shown in tooltips (e.g., approve button shows "a" hint). Help overlay accessible via `?` key.
-
-### Session History and Resumption
-
-**Established pattern (ChatGPT, Claude.ai):**
-- Collapsible sidebar in chat layout
-- Sessions grouped by date: "Today", "Yesterday", "Last 7 days", "Older"
-- Each entry: agent avatar, session title, last message preview, timestamp
-- Click to load full conversation and resume
-- Rename session (inline edit on title)
-- Delete session with confirmation
-- Current session highlighted
-
-**Implementation:**
-- Session list API with pagination and date grouping
-- Sidebar component in chat layout
-- Auto-title: use first user message truncated, or ask Claude to generate title
-- Session switching updates Zustand chat store without full page reload
-
-### Production Polish
-
-| Polish Item | Implementation | Complexity |
-|-------------|---------------|------------|
-| Loading skeletons | shadcn/ui `Skeleton` component per page; match layout shape | Low |
-| Page transitions | Motion `AnimatePresence` + `motion.div` wrapping route content | Medium |
-| Micro-interactions | Hover scale on cards, button press feedback, list item entrance stagger | Low |
-| Toast notifications | shadcn/ui `Sonner` for approve/revise/save confirmations | Low |
-| Empty states | Helpful text + illustration for no sessions, no projects, no results | Low |
-| Focus management | Visible focus rings, focus trap in modals (shadcn/ui handles via Radix) | Already handled |
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Full WYSIWYG editor (Tiptap, Slate, ProseMirror) | Users want "Word-like" editing in the panel | Adds 200KB+ dependency, fights the markdown-as-source-of-truth model, complex serialization back to markdown, version tracking becomes complicated | In-place editing stays as textarea (existing pattern from v2.0) + agent-assisted revision for targeted changes |
+| Real-time collaboration / multi-cursor | Looks impressive in demos | Single-user local app — zero users benefit from this; Velt/Liveblocks add significant overhead | Inline commenting covers the annotation use case for single-user review |
+| Embedded spreadsheet editor (Handsontable, SpreadJS) | "Edit the table live in the panel" | Heavy libraries (Handsontable licensing is per-developer, SpreadJS is paid). Editing AI-generated tables in a grid is rarely what users actually need. | Export to Excel for editing; CSV download for data manipulation. Read-only grid view is sufficient. |
+| AI-powered doc type classification (LLM call) | Reliable detection | Adds latency and cost per deliverable. Accuracy is not meaningfully better than heuristics for structured agent output. | Simple heuristic: if >2 table rows → spreadsheet; if has H1/H2 + multiple sections → business doc; if has code blocks → technical spec |
+| Export to PowerPoint (.pptx) | "I want to present this" | Slide layout generation from linear document structure is unsolved without significant prompt engineering. Output would be poor quality. | Export to HTML (presentable in browser fullscreen). Defer pptx if explicitly requested. |
+| Artifact "publish" / share link | "Share this with a client" | Single-user local app with no server hosting. A "share" link would be localhost which is meaningless to anyone else. | Export to file formats achieves the same goal (share the file, not a link) |
+| Auto-save every keystroke to DB | Feels modern | SQLite write on every keystroke = performance degradation in long documents. Diff overhead on each save. | Debounced save (500ms idle) + explicit Save button. |
+| Streaming preview for ALL message types | "Show preview for every response" | Most chat responses are short prose — showing a panel for "Sure, I'll revise section 2" creates noise and confusion. | Only trigger artifact panel when XML `<deliverable>` tag is detected in stream. |
 
 ## Feature Dependencies
 
 ```
-Independent (no new models):
-  Dark/light toggle --------> next-themes provider
-  Loading skeletons --------> shadcn/ui Skeleton
-  Keyboard shortcuts -------> react-hotkeys-hook + existing review panel
-  Page transitions ---------> Motion library
+Artifact Panel Layout
+    └──requires──> Side-panel split layout (CSS/Zustand)
+    └──requires──> Artifact card component in chat stream
+    └──requires──> Existing <deliverable> XML extraction (ALREADY BUILT)
 
-Existing data only:
-  Review queue widget ------> Deliverable.status queries
-  Session history ----------> ChatSession + Message queries + new sidebar UI
-  Cmd+K search -------------> Agent + ChatSession queries + shadcn/ui Command
-  Orchestration board ------> Mission + MissionLane + Deliverable + new Kanban UI
+Live Preview While Streaming
+    └──requires──> Side-panel layout
+    └──requires──> Streaming markdown renderer (partial content renders)
+    └──requires──> SSE stream (ALREADY BUILT)
 
-New models required:
-  Custom agent builder -----> Agent.isCustom (exists) + form UI
-  Diff view ----------------> DeliverableVersion model (NEW)
-  Inline editing -----------> DeliverableVersion model (NEW, shared with diff)
-  Inline commenting --------> Comment model (NEW) + DeliverableVersion (NEW)
-  Task Kanban + Projects ---> Project + Task + ProjectAgent models (ALL NEW)
-  Deliverables tab ---------> Project model (NEW) + existing Deliverable queries
+Document Type-Aware Rendering
+    └──requires──> Live preview (must know type before rendering)
+    └──requires──> Type detection heuristic (new logic)
+    └──enhances──> In-place agent revision (contextual prompts per type)
 
-Shared UI components:
-  Kanban primitives --------> Used by BOTH orchestration board AND task board
-  DeliverableVersion -------> Used by BOTH diff view AND inline editing
+Version Navigation in Panel
+    └──requires──> Side-panel layout
+    └──requires──> DeliverableVersion model (ALREADY BUILT in v2.0)
+
+Show Diff in Panel
+    └──requires──> Version navigation
+    └──requires──> react-diff-viewer-continued (ALREADY INSTALLED)
+
+In-Place Agent Revision (Highlight + Revise)
+    └──requires──> Live preview
+    └──requires──> Text selection API
+    └──enhances──> Version navigation (each revision creates new version)
+
+Export (all formats)
+    └──requires──> Artifact content accessible (live preview working)
+    └──Export .docx──> docx npm library (NEW dependency)
+    └──Export .xlsx/.csv──> xlsx/SheetJS (NEW dependency)
+    └──Export .pdf──> @react-pdf/renderer API route (NEW dependency)
+    └──Export .md/.html──> No new dependency
+
+Inline Commenting
+    └──requires──> Live preview (need rendered content to select)
+    └──requires──> Comment model (ALREADY BUILT in v2.0)
+    └──conflicts──> In-place agent revision (both use text selection — need UX disambiguation)
+
+Keyboard Shortcuts (panel toggle)
+    └──requires──> react-hotkeys-hook (ALREADY INSTALLED)
+    └──enhances──> Existing j/k/a/r/? shortcuts
+
+Document Outline / TOC
+    └──requires──> Live preview
+    └──requires──> MarkdownDocument renderer (new)
+    └──enhances──> Long document navigation only (conditional render)
 ```
 
-## MVP Recommendation
+### Dependency Notes
 
-**Priority 1 -- Quick wins, immediate value (build first):**
+- **Live preview requires streaming partial render:** The existing SSE stream sends chunks. The preview panel needs to re-render on each `onChunk` event, not only `onComplete`. This is the primary new integration point.
+- **In-place revision conflicts with inline commenting:** Both use text selection in the preview pane. Must be mode-based (default: revision mode; toggle to comment mode) or use different trigger gestures (right-click vs toolbar button).
+- **Export formats are independent of each other:** Can ship Markdown and HTML first (zero new deps), then add docx/xlsx/PDF in later sub-phases.
+- **Document type detection gates type-aware rendering:** Detection must happen at stream-completion time (not mid-stream), stored on the `Deliverable` record. All downstream type-specific rendering depends on this field.
 
-1. **Dark/light toggle** -- Low complexity, expected, infrastructure exists
-2. **Review queue widget** -- Low complexity, immediate value, existing data
-3. **Loading skeletons** -- Low complexity, instant production feel
-4. **Keyboard shortcuts** -- Low complexity, power-user delight
-5. **Session history and resumption** -- Medium complexity, huge UX uplift, data already persists
+## MVP Definition
 
-**Priority 2 -- Medium effort, high impact:**
+This is a subsequent milestone on an existing shipped product — "MVP" here means the minimum needed for v3.0 to feel like a real document workspace, not a prototype.
 
-6. **Cmd+K global search** -- shadcn/ui Command makes it near-free
-7. **Custom agent builder** -- `isCustom` field ready, unlocks platform extensibility
-8. **Orchestration review board (Kanban)** -- Reads existing mission data, builds reusable Kanban primitives
+### Launch With (v3.0 Core)
 
-**Priority 3 -- Higher complexity, new schemas:**
+- [ ] Side-panel layout with resizable split (chat + artifact panel) — foundational to all other features
+- [ ] Artifact card in chat stream (clickable, opens panel) — entry point for the feature
+- [ ] Live streaming preview (markdown renderer updates during SSE) — the "live" in live preview
+- [ ] Document type detection (heuristic, stored on Deliverable) — gates type-aware rendering
+- [ ] Type-aware rendering: MarkdownDocument, SpreadsheetDocument, TechnicalSpec viewers — delivers the rich preview
+- [ ] Version navigation within panel (v1/v2/v3 selector using DeliverableVersion) — leverages existing v2.0 investment
+- [ ] Show diff in panel (react-diff-viewer-continued toggle) — leverages existing v2.0 investment
+- [ ] Export: Markdown (.md), HTML, PDF — covers most common needs
+- [ ] Export: Word (.docx) — professional deliverable use case
+- [ ] Export: Excel (.xlsx) + CSV — tabular data use case
+- [ ] Keyboard shortcut: `]` to toggle panel — low-effort, high power-user value
+- [ ] Copy to clipboard — expected baseline
 
-9. **Diff view** -- Needs DeliverableVersion model; build after version tracking exists
-10. **Inline editing** -- Shares DeliverableVersion model with diff; build together
-11. **Page transitions** -- New dependency (Motion), applies polish across all routes
+### Add After Core Is Working (v3.1)
 
-**Priority 4 -- Highest complexity, most new code:**
+- [ ] In-place agent revision (highlight + revise) — highest complexity, highest value; add once panel UX is stable
+- [ ] Inline commenting in panel — Comment model exists; add UI once panel layout is proven
+- [ ] Document outline / TOC — useful for long docs; defer until long docs are common in practice
 
-12. **Project management + Task Kanban** -- New Project/Task/ProjectAgent models, multiple new routes, most net-new code
-13. **Deliverables tab on projects** -- Depends on Project model existing
-14. **Inline commenting** -- Text anchor complexity is disproportionate to single-user value
+### Future Consideration (v4+)
 
-**Defer if time-constrained:**
-- **Inline commenting** -- Text range anchoring is the hardest problem in the entire feature set for relatively low single-user value. Simple feedback textarea (already exists) covers 80% of the need.
-- **Full project management** -- Can ship orchestration Kanban as the "board view" without the full project/task system. Add projects later as a follow-up.
+- [ ] Keyboard shortcut cheatsheet updated with new panel shortcuts — minor documentation task
+- [ ] Agent-specific document templates (Business Plan format, Technical Spec format) — requires prompt engineering per agent type
 
-## Schema Changes Required for v2.0
+## Feature Prioritization Matrix
 
-```prisma
-model DeliverableVersion {
-  id            String      @id @default(cuid())
-  deliverableId String
-  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  version       Int
-  content       String      // Full content snapshot
-  createdAt     DateTime    @default(now())
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Side-panel layout | HIGH | MEDIUM | P1 |
+| Artifact card in chat | HIGH | LOW | P1 |
+| Live streaming preview | HIGH | MEDIUM | P1 |
+| Document type detection | HIGH | LOW | P1 |
+| Type-aware rendering (3 viewers) | HIGH | HIGH | P1 |
+| Version navigation in panel | MEDIUM | LOW | P1 (model exists) |
+| Show diff in panel | MEDIUM | LOW | P1 (library exists) |
+| Export to Markdown / HTML | HIGH | LOW | P1 |
+| Export to PDF | HIGH | MEDIUM | P1 |
+| Export to Word (.docx) | HIGH | MEDIUM | P1 |
+| Export to Excel / CSV | MEDIUM | LOW | P1 (conditional on type) |
+| Copy to clipboard | HIGH | LOW | P1 |
+| Panel collapse / dismiss | MEDIUM | LOW | P1 |
+| In-place agent revision | HIGH | HIGH | P2 |
+| Inline commenting | MEDIUM | HIGH | P2 (model exists) |
+| Document outline / TOC | LOW | MEDIUM | P3 |
+| Export to HTML | MEDIUM | LOW | P1 (simple) |
 
-  @@unique([deliverableId, version])
-}
+## Reference: Comparable Feature Sets
 
-model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  status      String   @default("active") // active | archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tasks       Task[]
-  agents      ProjectAgent[]
-}
-
-model Task {
-  id             String   @id @default(cuid())
-  projectId      String
-  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title          String
-  description    String?
-  status         String   @default("todo") // todo | in_progress | review | done
-  assignedAgentId String?
-  assignedAgent  Agent?   @relation(fields: [assignedAgentId], references: [id])
-  sessionId      String?  // Links to chat session when agent works on task
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-model ProjectAgent {
-  id        String  @id @default(cuid())
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  agentId   String
-  agent     Agent   @relation(fields: [agentId], references: [id])
-
-  @@unique([projectId, agentId])
-}
-
-model Comment {
-  id            String      @id @default(cuid())
-  deliverableId String
-  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  content       String
-  anchorText    String      // The selected text this comment is anchored to
-  resolved      Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-}
-```
+| Feature | Claude.ai Artifacts | ChatGPT Canvas | Our Approach |
+|---------|---------------------|----------------|--------------|
+| Panel location | Right sidebar | Full-width right pane | Right sidebar (resizable) |
+| Trigger | Any substantial output | Writing/code prompts | XML `<deliverable>` tag |
+| Live streaming | Yes | Yes | Yes (via existing SSE) |
+| Inline editing | Yes (direct in panel) | Yes (direct in panel) | Textarea (existing pattern), agent-assisted revision |
+| Version history | Yes (back button) | Yes (back button) | Version selector (DeliverableVersion model) |
+| Show changes | No | Yes (highlight mode) | Yes (diff panel toggle) |
+| Export | Download button | PDF, Markdown, Word, code files | All 6 formats |
+| Inline commenting | No | No | Yes (differentiator) |
+| Document types | Code, Markdown, React, SVG | Writing docs, code | Business doc, creative, tech spec, spreadsheet |
+| Type-aware rendering | Basic | Basic | Dedicated viewers per type |
 
 ## Sources
 
-- [shadcn/ui Command component](https://ui.shadcn.com/docs/components/radix/command) -- built on cmdk, already in design system (HIGH confidence)
-- [dnd-kit Kanban + shadcn/ui example](https://github.com/Georgegriff/react-dnd-kit-tailwind-shadcn-ui) -- proven pattern (HIGH confidence)
-- [Marmelab: Kanban with shadcn (Jan 2026)](https://marmelab.com/blog/2026/01/15/building-a-kanban-board-with-shadcn.html) -- recent tutorial (MEDIUM confidence)
-- [react-diff-viewer](https://github.com/praneshr/react-diff-viewer) -- GitHub-style diff component (HIGH confidence)
-- [Motion (Framer Motion)](https://motion.dev/) -- 18M+ monthly npm downloads (HIGH confidence)
-- [react-hotkeys-hook](https://react-hotkeys-hook.vercel.app/) -- keyboard shortcuts for React (HIGH confidence)
-- [TanStack Hotkeys](https://tanstack.com/hotkeys/latest) -- type-safe hotkey alternative (MEDIUM confidence)
-- [PatternFly Chatbot conversation history](https://www.patternfly.org/patternfly-ai/chatbot/chatbot-conversation-history/) -- session history UX patterns (MEDIUM confidence)
-- [Atlassian Inline Edit pattern](https://developer.atlassian.com/platform/forge/ui-kit/components/inline-edit/) -- inline editing UX reference (HIGH confidence)
-- [LogRocket: Inline editable UI in React](https://blog.logrocket.com/build-inline-editable-ui-react/) -- implementation patterns (MEDIUM confidence)
+- [Claude Artifacts Help Center](https://support.claude.ai/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them) — artifact panel UX (HIGH confidence)
+- [Claude: Visualize with Artifacts](https://support.claude.ai/en/articles/11649427-use-artifacts-to-visualize-and-create-ai-apps-without-ever-writing-a-line-of-code) — artifact types and patterns (HIGH confidence)
+- [ChatGPT Canvas OpenAI announcement](https://openai.com/index/introducing-canvas/) — Canvas UX patterns (HIGH confidence)
+- [ChatGPT Canvas review 2025](https://skywork.ai/blog/chatgpt-canvas-review-2025-features-coding-pros-cons/) — inline editing and revision patterns (MEDIUM confidence)
+- [Claude artifact inline edits (Oct 2025)](https://hyperdev.matsuoka.com/p/claudeais-quiet-revolution-in-artifact) — 3-4x faster inline replacement vs full regen (MEDIUM confidence)
+- [Cloudscape artifact previews pattern](https://cloudscape.design/patterns/genai/artifact-previews/) — AWS design system guidance on artifact display (HIGH confidence)
+- [LibreChat artifacts feature](https://www.librechat.ai/docs/features/artifacts) — open-source implementation reference (MEDIUM confidence)
+- [AI chat layout patterns (Jan 2026)](https://medium.com/@anastasiawalia/ai-chat-layout-patterns-when-to-use-them-real-examples-d03f04a19194) — layout pattern survey (MEDIUM confidence)
+- [@react-pdf/renderer npm](https://www.npmjs.com/package/@react-pdf/renderer) — v4.3.2, server-side PDF generation (HIGH confidence)
+- [docx library for Word generation](https://dev.to/golam_mostafa/pdf-excel-docx-generate-on-react-and-node-js-2keh) — pure JS DOCX generation (MEDIUM confidence)
+- [SheetJS/xlsx for Excel](https://dev.to/golam_mostafa/pdf-excel-docx-generate-on-react-and-node-js-2keh) — pure JS Excel generation (MEDIUM confidence)
+- [Velt inline commenting patterns](https://velt.dev/blog/build-google-docs-comments-react) — text-range anchoring (MEDIUM confidence)
+
+---
+*Feature research for: OneWave AI Agency v3.0 Document Workspace*
+*Researched: 2026-03-16*

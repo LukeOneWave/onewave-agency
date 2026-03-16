@@ -1,85 +1,82 @@
 # Architecture Research
 
-**Domain:** AI agent management platform -- v2.0 feature integration into existing codebase
-**Researched:** 2026-03-10
-**Confidence:** HIGH (direct codebase analysis of 172 existing files, 6,823 LOC)
+**Domain:** Document Workspace — artifacts panel + rich preview + multi-format export integration into existing Next.js AI agency app (v3.0)
+**Researched:** 2026-03-16
+**Confidence:** HIGH (direct codebase analysis + verified library sources)
+
+---
 
 ## System Overview
 
-v2.0 adds new features to an established architecture. The diagram shows existing (solid) and new (dashed) components:
+### Current Chat Layout (v2.0 Baseline)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Presentation Layer                           │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │  EXISTING: ChatPage, AgentGrid, Dashboard, Orchestration, │  │
-│  │  ReviewPanel, MessageBubble, Sidebar, Header, AppShell    │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│    NEW: AgentEditor, KanbanBoard, DiffViewer, InlineEditor,    │
-│  │ CommandPalette, ReviewQueue, MissionKanban, ThemeToggle,  │  │
-│    KeyboardShortcutsProvider, ProjectPage, SessionBrowser       │
-│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                      State Layer (Zustand)                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│  │ chatStore│ │ appStore │ │ orchStore│   NEW:               │  │
-│  │(existing)│ │(existing)│ │(existing)│ │ useProjectStore  │  │
-│  │          │ │          │ │          │   useCommandStore     │  │
-│  │          │ │          │ │          │ │ useReviewStore   │  │
-│  └──────────┘ └──────────┘ └──────────┘ └ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                     API Layer (Next.js Routes)                   │
-│  EXISTING: /api/chat, /api/agents, /api/deliverables/[id],      │
-│            /api/orchestration, /api/settings                     │
-│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│    NEW: /api/agents/[slug] (PUT/DEL), /api/projects,             │
-│  │ /api/tasks, /api/search, /api/review/pending,             │  │
-│    /api/deliverables/[id]/versions, /api/deliverables/[id]/      │
-│  │ comments, /api/comments/[id]                              │  │
-│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                     Service Layer (lib/services/)                │
-│  EXISTING: agentService, chatService, deliverableService,        │
-│            dashboardService, orchestrationService                │
-│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│    NEW: projectService, searchService, commentService            │
-│  │ EXTENDED: agentService (+CRUD), deliverableService        │  │
-│    (+versioning), chatService (+search), dashboardService        │
-│  │ (+review count)                                           │  │
-│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                     Data Layer (Prisma 7 + SQLite)               │
-│  EXISTING: Agent, ChatSession, Message, Deliverable,             │
-│            Setting, Mission, MissionLane                         │
-│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│    NEW: Project, Task, DeliverableVersion, Comment               │
-│  │ MODIFIED: Agent (+tasks), ChatSession (+task),            │  │
-│    Deliverable (+content, +versions, +comments)                  │
-│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
-└─────────────────────────────────────────────────────────────────┘
+AppShell (Sidebar + Header + max-w-7xl p-6 main wrapper)
+  └── ChatPage (flex col, h-full)
+        ├── TopBar (agent name, ProjectSelector, ModelSelector)
+        ├── MessageList (flex-1, overflow)
+        │    └── MessageBubble
+        │         └── AssistantContent
+        │              ├── ReactMarkdown (plain text segments)
+        │              └── Deliverable block (per <deliverable> tag)
+        │                   ├── InlineEditor
+        │                   ├── ReviewPanel (approve/revise)
+        │                   ├── DeliverableProjectLink
+        │                   └── DiffViewer
+        └── ChatInput
 ```
 
-### Component Responsibilities
+The critical issue for v3.0: `AppShell` wraps all pages in `max-w-7xl p-6` via `<main className="flex-1 overflow-y-auto"><div className="mx-auto max-w-7xl p-6">`. The artifacts panel needs full viewport width. A per-route segment layout bypasses that wrapper for the chat route only.
 
-| Component | Responsibility | New/Modified |
-|-----------|---------------|--------------|
-| **AgentEditor** | Form for creating/editing custom agents (name, division, systemPrompt, tools) | NEW client component |
-| **ReviewQueue** | Dashboard widget listing all pending deliverables across all sessions | NEW server component |
-| **InlineEditor** | Contenteditable deliverable editing with line-level comment gutter | NEW client component |
-| **DiffViewer** | Side-by-side or unified diff between deliverable versions | NEW client component |
-| **KanbanBoard** | Drag-and-drop task board (todo / in_progress / review / done) | NEW client component |
-| **MissionKanban** | Kanban view of mission deliverables grouped by approval status | NEW client component |
-| **CommandPalette** | Cmd+K overlay for global search across agents, projects, sessions | NEW client component |
-| **ThemeToggle** | Sun/moon button using existing next-themes | NEW client component |
-| **KeyboardShortcutsProvider** | Global keyboard event handler for review shortcuts (j/k/a/r) | NEW client component (provider) |
-| **Sidebar** | Add "Projects" nav item to navItems array | MODIFIED |
-| **Header** | Add ThemeToggle and Cmd+K trigger button | MODIFIED |
-| **Dashboard page** | Add ReviewQueue widget to existing grid | MODIFIED |
-| **ChatIndexPage** | Enhance with search/filter for session history | MODIFIED |
-| **MessageBubble** | Add InlineEditor integration for deliverable segments | MODIFIED |
-| **Orchestration page** | Add Kanban tab alongside existing lane view | MODIFIED |
+### Target Chat Layout (v3.0)
+
+```
+AppShell (Sidebar + Header — unchanged)
+  └── Chat segment layout (h-full overflow-hidden — bypasses global padding)
+        └── ChatPage (ResizablePanelGroup horizontal)
+              ┌─────────────────────────────┬──────────────────────────┐
+              │  Chat Panel (55% default)    │  Artifacts Panel (45%)   │
+              │                             │                           │
+              │  TopBar                     │  Panel header + tabs      │
+              │  MessageList                │  Deliverable list/tabs    │
+              │    └── MessageBubble        │  DocumentPreview          │
+              │         (click → activate   │  ExportBar                │
+              │          artifact)          │  CommentThread            │
+              │  ChatInput                  │  (collapsible)            │
+              └─────────────────────────────┴──────────────────────────┘
+                         ResizableHandle (draggable divider)
+```
+
+---
+
+## Component Responsibilities
+
+| Component | Responsibility | New or Modified |
+|-----------|----------------|-----------------|
+| `ChatPage` | Wraps chat + artifacts panels in ResizablePanelGroup | **Modified** |
+| `app/chat/[sessionId]/layout.tsx` | Bypasses global `max-w-7xl p-6` wrapper for chat route | **New** |
+| `ArtifactsPanel` | Right panel shell: tabs, deliverable selector, preview area, export bar | **New** |
+| `DocumentPreview` | Renders active deliverable as rich preview (markdown, table, code) | **New** |
+| `DocumentTypeIcon` | Icon + label badge showing inferred document type | **New** |
+| `ExportBar` | Export format buttons triggering download functions | **New** |
+| `CommentThread` | Comment list + add comment form in artifacts panel | **New** |
+| `KeyboardShortcutHandler` | Keydown listener for review workflow shortcuts (A/R/N/P) | **New** |
+| `store/artifacts.ts` | Zustand store: active deliverable, panel state, comment visibility | **New** |
+| `lib/document-type.ts` | Heuristic content classifier returning DocumentType | **New** |
+| `lib/export/exportDocx.ts` | Markdown → .docx Blob using `docx` library | **New** |
+| `lib/export/exportXlsx.ts` | Markdown tables → .xlsx Blob using SheetJS | **New** |
+| `lib/export/exportMarkdown.ts` | Markdown → .md file and Markdown → HTML string | **New** |
+| `app/api/export/pdf/route.ts` | Server-side PDF generation using jsPDF | **New** |
+| `app/api/deliverables/[id]/comments/route.ts` | GET/POST comments for a deliverable | **New** |
+| `deliverableService` | Add `createComment`, `getComments`, `updateComment`, `deleteComment` | **Modified** |
+| `app/api/deliverables/[id]/route.ts` | Add `docType` update PATCH path | **Modified** |
+| `MessageBubble` | Add onClick to deliverable blocks to activate artifact panel | **Modified** |
+| `InlineEditor` | Sync saved content to artifacts store (no second network call) | **Modified** |
+| `prisma/schema.prisma` | Add `docType` to Deliverable; add `DeliverableComment` model | **Modified** |
+| `types/chat.ts` | Add `DocumentType`, `DeliverableComment` types | **Modified** |
+| `components/ui/resizable.tsx` | shadcn resizable wrapper (install via `shadcn add resizable`) | **New** |
+
+---
 
 ## Recommended Project Structure
 
@@ -88,612 +85,459 @@ New files only (existing structure unchanged):
 ```
 src/
 ├── app/
-│   ├── projects/                  # NEW: project management
-│   │   ├── page.tsx               # Project list (server component)
-│   │   └── [id]/
-│   │       └── page.tsx           # Project detail with Kanban (server component)
-│   ├── agents/
-│   │   ├── new/
-│   │   │   └── page.tsx           # NEW: custom agent creation
-│   │   └── [slug]/
-│   │       └── edit/
-│   │           └── page.tsx       # NEW: custom agent editing
+│   ├── chat/
+│   │   └── [sessionId]/
+│   │       ├── layout.tsx             # NEW: bypasses global padding
+│   │       └── page.tsx               # Unchanged
 │   └── api/
-│       ├── agents/[slug]/
-│       │   └── route.ts           # NEW: PUT/DELETE for custom agents
-│       ├── projects/
-│       │   ├── route.ts           # NEW: GET/POST
+│       ├── deliverables/
 │       │   └── [id]/
-│       │       ├── route.ts       # NEW: GET/PUT/DELETE
-│       │       └── tasks/
-│       │           └── route.ts   # NEW: GET/POST
-│       ├── tasks/
-│       │   ├── [id]/route.ts      # NEW: PATCH/DELETE
-│       │   └── reorder/route.ts   # NEW: batch reorder
-│       ├── search/route.ts        # NEW: global search
-│       ├── review/pending/route.ts # NEW: pending deliverables
-│       ├── deliverables/[id]/
-│       │   ├── versions/route.ts  # NEW: version history
-│       │   └── comments/route.ts  # NEW: deliverable comments
-│       └── comments/[id]/route.ts # NEW: comment CRUD
+│       │       ├── route.ts            # Modified: add docType PATCH path
+│       │       ├── versions/route.ts   # Existing (unchanged)
+│       │       └── comments/
+│       │           └── route.ts        # NEW: GET/POST/PATCH/DELETE comments
+│       └── export/
+│           └── pdf/
+│               └── route.ts            # NEW: server-side PDF generation
+│
 ├── components/
-│   ├── agents/AgentEditor.tsx     # NEW
-│   ├── chat/InlineEditor.tsx      # NEW
-│   ├── dashboard/ReviewQueue.tsx  # NEW
-│   ├── layout/ThemeToggle.tsx     # NEW
-│   ├── projects/                  # NEW folder
-│   │   ├── KanbanBoard.tsx
-│   │   ├── KanbanColumn.tsx
-│   │   ├── TaskCard.tsx
-│   │   └── ProjectList.tsx
-│   ├── review/                    # NEW folder
-│   │   ├── DiffViewer.tsx
-│   │   └── MissionKanban.tsx
-│   └── search/CommandPalette.tsx  # NEW
+│   ├── chat/
+│   │   ├── ArtifactsPanel.tsx          # NEW: right panel shell
+│   │   ├── DocumentPreview.tsx         # NEW: rich preview renderer
+│   │   ├── DocumentTypeIcon.tsx        # NEW: icon + badge
+│   │   ├── ExportBar.tsx               # NEW: export buttons
+│   │   ├── CommentThread.tsx           # NEW: comment list + form
+│   │   └── KeyboardShortcutHandler.tsx # NEW: A/R/N/P shortcuts
+│   └── ui/
+│       └── resizable.tsx               # NEW: shadcn resizable component
+│
+├── lib/
+│   ├── document-type.ts                # NEW: content heuristic classifier
+│   └── export/
+│       ├── exportDocx.ts               # NEW: .docx via `docx` library
+│       ├── exportXlsx.ts               # NEW: .xlsx via SheetJS
+│       ├── exportMarkdown.ts           # NEW: .md and .html output
+│       └── exportPdf.ts               # NEW: client wrapper for /api/export/pdf
+│
 ├── store/
-│   ├── project.ts                 # NEW
-│   ├── command.ts                 # NEW
-│   └── review.ts                  # NEW
-└── lib/services/
-    ├── project.ts                 # NEW
-    ├── search.ts                  # NEW
-    └── comment.ts                 # NEW
+│   └── artifacts.ts                    # NEW: active artifact + panel state
+│
+└── types/
+    └── chat.ts                         # Modified: add DocumentType, DeliverableComment
 ```
 
 ### Structure Rationale
 
-- **Components grouped by feature domain:** Matches existing pattern (`components/chat/`, `components/agents/`, `components/orchestration/`). New features get new folders (`components/projects/`, `components/review/`, `components/search/`).
-- **API routes mirror resource structure:** RESTful nesting (`/api/projects/[id]/tasks`) is consistent with existing `/api/deliverables/[id]` pattern.
-- **One store per feature:** Matches `chat.ts` / `app.ts` / `orchestration.ts` separation. Prevents coupling between unrelated features.
+- **`lib/export/`** — Export logic is pure computation (no React), belongs in lib not components. Each format is a separate module so they tree-shake independently and can be tested without HTTP.
+- **`store/artifacts.ts`** — Separate Zustand store keeps `chat.ts` focused on streaming/messages. The artifacts panel has its own concerns (active deliverable, panel state, comment visibility) that have no business in the chat store.
+- **`app/api/export/pdf/route.ts`** — PDF runs server-side because client-side html2canvas produces image-only (non-searchable) PDFs. A server API route with jsPDF produces proper text-selectable PDFs from the markdown AST.
+- **`app/chat/[sessionId]/layout.tsx`** — Next.js App Router segment layouts receive `children` inside the parent's `<main>` element but bypass inner wrapper divs. This cleanly opts the chat route out of `max-w-7xl p-6` without touching AppShell.
+
+---
 
 ## Architectural Patterns
 
-### Pattern 1: Feature-Scoped Zustand Stores (extend existing pattern)
+### Pattern 1: Chat Route Escapes Global Padding via Segment Layout
 
-**What:** Each major feature gets its own Zustand store. The existing codebase already does this: `useChatStore` (ephemeral streaming state), `useAppStore` (persisted sidebar), `useOrchestrationStore` (mission streaming).
-**When to use:** Any client-side state spanning multiple components within a feature.
-**Trade-offs:** More files, but each store is small, focused, and testable. No accidental coupling between features.
+**What:** The root `layout.tsx` wraps all content in `max-w-7xl p-6`. Add a `layout.tsx` inside `app/chat/[sessionId]/` that renders `{children}` in a full-height container. Next.js composes layouts, so the segment layout receives the children after `AppShell`'s `<main>` element but before the `max-w-7xl` div — that div simply never exists for this route.
 
-```typescript
-// src/store/project.ts -- follows same pattern as existing stores
-import { create } from "zustand";
+**When to use:** Any route requiring custom viewport-filling layout diverging from the global shell.
 
-interface ProjectState {
-  tasks: Task[];
-  draggedTaskId: string | null;
-  setTasks: (tasks: Task[]) => void;
-  moveTask: (taskId: string, newStatus: string, newOrder: number) => void;
-  revertTask: (taskId: string, prevStatus: string, prevOrder: number) => void;
-}
-
-export const useProjectStore = create<ProjectState>()((set) => ({
-  tasks: [],
-  draggedTaskId: null,
-  setTasks: (tasks) => set({ tasks }),
-  moveTask: (taskId, newStatus, newOrder) =>
-    set((s) => ({
-      tasks: s.tasks.map((t) =>
-        t.id === taskId ? { ...t, status: newStatus, order: newOrder } : t
-      ),
-    })),
-  revertTask: (taskId, prevStatus, prevOrder) =>
-    set((s) => ({
-      tasks: s.tasks.map((t) =>
-        t.id === taskId ? { ...t, status: prevStatus, order: prevOrder } : t
-      ),
-    })),
-}));
-```
+**Trade-offs:** The chat route renders its own sizing. AppShell still provides Sidebar and Header correctly.
 
 ```typescript
-// src/store/command.ts
-import { create } from "zustand";
-
-interface CommandState {
-  isOpen: boolean;
-  query: string;
-  results: SearchResult[];
-  selectedIndex: number;
-  open: () => void;
-  close: () => void;
-  setQuery: (q: string) => void;
-  setResults: (r: SearchResult[]) => void;
-  selectNext: () => void;
-  selectPrev: () => void;
+// src/app/chat/[sessionId]/layout.tsx  (NEW)
+export default function ChatSessionLayout({ children }: { children: React.ReactNode }) {
+  return <div className="h-full overflow-hidden">{children}</div>;
 }
 ```
 
-### Pattern 2: Server Fetch, Client Interact (match existing pattern)
+Note: `AppShell` renders `<main className="flex-1 overflow-y-auto">`. This segment layout sits inside that `main` and fills it. The `<div className="mx-auto max-w-7xl p-6">` in `AppShell` is replaced by this layout for the chat route — actually, looking at the code, `AppShell` renders children directly inside `<div className="mx-auto max-w-7xl p-6"><PageTransition>`. A segment layout cannot remove that parent div. The fix is to make `ChatPage` use negative margins to break out, or — preferably — move the padding div inside `PageTransition` so segment layouts can override it. The cleanest solution: add an optional `fullViewport` prop to `AppShell` triggered by the chat route, or simply adjust the chat route's `page.tsx` to pass `className="h-full overflow-hidden -m-6"` to compensate for the parent padding.
 
-**What:** Server components fetch initial data, pass to client components as props. Client components handle mutations through API routes with optimistic Zustand updates.
-**When to use:** Every new page/route. This is the established pattern -- see `DashboardPage` (server) passing data to `StatCards`/`ActivityFeed`, and `ChatPage` (client) receiving `session` prop from server component.
-**Trade-offs:** Requires serializable props across the server/client boundary. Eliminates loading spinners on initial page load.
+**Confidence:** HIGH for the segment layout approach. The exact margin-override technique needs implementation validation.
+
+### Pattern 2: Zustand Artifacts Store as Single Source of Truth for Panel State
+
+**What:** A dedicated `artifacts` store holds the active deliverable ID, its content snapshot (avoiding refetch), panel open/collapsed state, and whether comments are visible. Components communicate panel focus via store actions.
+
+**When to use:** Multiple components must coordinate around the active artifact — `MessageBubble` sets it on click, `ArtifactsPanel` reads it to render the preview, `ExportBar` reads content for export, `KeyboardShortcutHandler` navigates it.
+
+**Trade-offs:** Adds a store, but keeps `chat.ts` focused on streaming. Cross-store coordination (shortcuts calling `chat.ts` approve actions) is explicit and auditable.
 
 ```typescript
-// src/app/projects/[id]/page.tsx (server component -- matches Dashboard pattern)
-export default async function ProjectPage({ params }: { params: { id: string } }) {
-  const project = await projectService.getById(params.id);
-  const tasks = await projectService.getTasks(params.id);
-  return <KanbanBoard project={project} initialTasks={tasks} />;
-}
+// src/store/artifacts.ts
+interface ArtifactsState {
+  activeDeliverableId: string | null;
+  activeContent: string | null;
+  activeDocType: DocumentType | null;
+  panelOpen: boolean;
+  commentsVisible: boolean;
 
-// src/components/projects/KanbanBoard.tsx (client -- matches ChatPage pattern)
-"use client";
-export function KanbanBoard({ project, initialTasks }: Props) {
-  const { tasks, moveTask } = useProjectStore();
-  useEffect(() => {
-    useProjectStore.getState().setTasks(initialTasks);
-  }, [initialTasks]);
-  // render columns, handle drag-and-drop
+  setActiveDeliverable: (id: string, content: string, docType: DocumentType) => void;
+  clearActive: () => void;
+  togglePanel: () => void;
+  toggleComments: () => void;
+  updateContent: (content: string) => void; // sync from InlineEditor on save
 }
 ```
 
-### Pattern 3: Optimistic Updates with Rollback (match existing pattern)
+### Pattern 3: Document Type Inferred at Parse Time, Stored on Deliverable
 
-**What:** Update Zustand state immediately on user action, persist via API in background, revert on failure. The existing `useChatStore.approveDeliverable()` already implements this pattern exactly.
-**When to use:** All mutations: task moves, approvals, inline edits, comment creation.
-**Trade-offs:** More code per mutation, but instant UI. Already proven in the codebase.
+**What:** When `deliverableService.upsertStatus()` creates a deliverable, run a heuristic classifier on the content to set `docType`. The classifier examines: markdown table density, heading count, code fence count, list density, and presence of key-value patterns.
+
+**When to use:** Must be set when the deliverable is first persisted — the `done` SSE event triggers deliverable creation, which is the right time to classify.
+
+**Trade-offs:** Rule-based classification handles common cases but will misclassify edge cases. The user can override via a dropdown in the artifacts panel UI. No LLM call needed — speed and predictability matter here.
 
 ```typescript
-// Following the approveDeliverable pattern in store/chat.ts
-async function handleTaskMove(taskId: string, newStatus: string, newOrder: number) {
-  const prev = tasks.find(t => t.id === taskId);
-  moveTask(taskId, newStatus, newOrder);  // Optimistic
-  try {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus, order: newOrder }),
-    });
-  } catch {
-    revertTask(taskId, prev.status, prev.order);  // Rollback
-    toast.error("Failed to move task");
-  }
+// src/lib/document-type.ts
+export type DocumentType =
+  | 'business-doc'
+  | 'technical-spec'
+  | 'creative'
+  | 'spreadsheet'
+  | 'code'
+  | 'generic';
+
+export function inferDocumentType(content: string): DocumentType {
+  const tableRows = (content.match(/^\|.+\|$/gm) ?? []).length;
+  const headings = (content.match(/^#{1,3} /gm) ?? []).length;
+  const codeBlocks = (content.match(/```/g) ?? []).length / 2;
+  const listItems = (content.match(/^[-*] /gm) ?? []).length;
+
+  if (tableRows > 3) return 'spreadsheet';
+  if (codeBlocks >= 2) return 'technical-spec';
+  if (headings >= 4 && listItems >= 4) return 'business-doc';
+  if (content.length > 500 && headings <= 2 && listItems <= 2) return 'creative';
+  return 'generic';
 }
 ```
 
-## Data Flow
+### Pattern 4: Export as Client-Side Pure Functions (except PDF)
 
-### Custom Agents
+**What:** docx, xlsx, csv, markdown, and html exports are pure client-side functions in `lib/export/`. They accept a content string and trigger a browser download. PDF uses a POST to `/api/export/pdf` because server-side jsPDF produces a text-selectable PDF (not an image).
 
-```
-AgentEditor (client form)
-    |
-    v
-POST /api/agents { name, slug, division, description, systemPrompt, isCustom: true }
-    |
-    v
-agentService.create() -> Agent table (isCustom = true)
-    |
-    v
-Appears in agent grid with "Custom" badge
-Edit/delete buttons only shown when agent.isCustom === true
-```
+**When to use:** All format exports. Dynamic import the `docx` and `xlsx` libraries so their ~600KB bundle weight only loads when the user actually clicks Export.
 
-The `isCustom` boolean already exists on the Agent model (schema line 20). The `agentService` needs `create()`, `update()`, `delete()` methods added alongside existing `getAll()`, `getBySlug()`, `getDivisions()`, `getCount()`. Seeded agents (isCustom = false) remain read-only. The slug must be auto-generated from name (slugify) to maintain the existing URL pattern `/agents/[slug]`.
+**Trade-offs:** Dynamic import adds a small delay on first use. For a local app with a warm server, this is imperceptible.
 
-### Diff View (Deliverable Versioning)
+```typescript
+// src/lib/export/exportDocx.ts
+export async function exportDocx(content: string, filename: string): Promise<void> {
+  const { Document, Packer, Paragraph, HeadingLevel } = await import('docx');
+  // parse markdown lines → Paragraph/Heading nodes
+  const doc = new Document({ sections: [{ children: buildParagraphs(content) }] });
+  const blob = await Packer.toBlob(doc);
+  triggerDownload(blob, `${filename}.docx`);
+}
 
-```
-Deliverable created from chat message
-    |
-    v
-deliverableService.snapshotContent() extracts content from Message.content
-    using existing parseDeliverables() logic, saves as DeliverableVersion v1
-    |
-    v
-User requests revision -> useChatStore.requestRevision() (already exists)
-    |
-    v
-Agent produces revised content -> new Message saved
-    |
-    v
-deliverableService.snapshotContent() saves as DeliverableVersion v2
-    |
-    v
-DiffViewer fetches GET /api/deliverables/[id]/versions
-    computes diff client-side using `diff` npm package
-    renders with green/red line highlighting
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 ```
 
-**Critical schema change:** Currently, deliverable content only exists inline in `Message.content`, extracted at render time by `parseDeliverables()` in `lib/deliverable-parser.ts`. For versioning, the `Deliverable` model needs a `content` field that snapshots the extracted text. This is the single most impactful schema change.
+### Pattern 5: Inline Comments Stored with Character Offset Anchors
 
-### Inline Editing + Comments
+**What:** A new `DeliverableComment` Prisma model stores: `deliverableId`, `anchor` (JSON string with `{start, end}` character offsets — null for general comments), `text`, `resolved`. Character offsets reference the current `Deliverable.content` at comment creation time.
 
-```
-MessageBubble renders deliverable segment (existing)
-    |
-    v
-InlineEditor wraps deliverable content (replaces raw markdown display)
-    |
-    v
-User clicks to edit -> contenteditable mode
-    -> PATCH /api/deliverables/[id] { content: editedText }
-    -> Creates new DeliverableVersion automatically
-    |
-    v
-User clicks line gutter -> comment form appears
-    -> POST /api/deliverables/[id]/comments { lineStart, lineEnd, content }
-    -> Comment rendered as annotation in gutter
-```
+**When to use:** v3.0 inline commenting feature. The anchor approach is simpler than XPath or line-number anchoring and sufficient for single-user markdown documents.
 
-### Global Search (Cmd+K)
+**Trade-offs:** Offsets go stale when content is edited. For a single-user local tool this is acceptable — comment anchors may shift after edits but general comments remain valid. If anchor precision becomes important, snapshot the content version number alongside the anchor.
 
-```
-KeyboardShortcutsProvider detects Cmd+K
-    |
-    v
-useCommandStore.open() -> CommandPalette renders
-    |
-    v
-User types query -> useCommandStore.setQuery() (debounced 200ms)
-    |
-    v
-GET /api/search?q=...
-    |
-    v
-searchService.search(query) runs parallel Prisma queries:
-  Promise.all([
-    prisma.agent.findMany({ where: { OR: [
-      { name: { contains: query } },
-      { description: { contains: query } }
-    ]}}),
-    prisma.chatSession.findMany({ where: { title: { contains: query } } }),
-    prisma.project.findMany({ where: { OR: [
-      { name: { contains: query } },
-      { description: { contains: query } }
-    ]}}),
-  ])
-    |
-    v
-Results grouped by type, arrow keys navigate, Enter navigates to item
-```
+---
 
-SQLite `contains` (LIKE) is sub-millisecond at this scale. No search engine needed.
+## Schema Changes Required
 
-### Kanban Board (Project Tasks)
-
-```
-ProjectPage (server) -> projectService.getById() + projectService.getTasks()
-    |
-    v
-KanbanBoard (client) -> useProjectStore.setTasks(initialTasks)
-    |
-    v
-Four columns: To Do | In Progress | Review | Done
-    |
-    v
-@dnd-kit/core handles drag events
-    |
-    v
-onDragEnd -> useProjectStore.moveTask() (optimistic)
-    -> PATCH /api/tasks/[id] { status, order }
-    -> POST /api/tasks/reorder { taskIds } for sibling reorder
-```
-
-Use `@dnd-kit/core` + `@dnd-kit/sortable` for drag-and-drop. Task `order` is an integer field; on drop, recalculate order values for affected tasks.
-
-### Mission Kanban (Orchestration Deliverables)
-
-```
-Existing orchestration/[missionId]/page.tsx
-    |
-    v
-Add tab toggle: "Lanes" (existing) | "Review Board" (new)
-    |
-    v
-MissionKanban groups all deliverables from all lanes by status:
-  Pending | Approved | Revision Requested
-    |
-    v
-Same DnD pattern but simpler (status change only, no reorder needed)
-```
-
-### Session History
-
-```
-Enhanced /chat page.tsx (already shows sessions via chatService.getRecentSessions())
-    |
-    v
-Add: search input + agent filter dropdown + date sort toggle
-    |
-    v
-chatService.searchSessions(query, agentId?) -- NEW method
-    |
-    v
-Auto-title: when session.title is null, generate from first user message
-    chatService.updateSessionTitle() already exists
-    |
-    v
-Click session -> navigate to /chat/[sessionId] -> ChatPage loads with existing history
-```
-
-### Keyboard Shortcuts
-
-```
-KeyboardShortcutsProvider wraps AppShell children (in layout.tsx)
-    |
-    v
-Global keydown listener (document.addEventListener)
-    |
-    v
-Check: if activeElement is input/textarea -> skip (don't capture typing)
-    |
-    v
-j: useReviewStore.focusNext()     -- navigate deliverables
-k: useReviewStore.focusPrev()
-a: useChatStore.approveDeliverable(focused)
-r: useChatStore.requestRevision(focused)
-Cmd+K: useCommandStore.open()
-```
-
-### Theme Toggle
-
-```
-ThemeToggle component in Header
-    |
-    v
-next-themes useTheme() -> already configured in ThemeProvider
-    (attribute="class", defaultTheme="dark", enableSystem)
-    |
-    v
-Toggle between "light" and "dark" with sun/moon icon
-    |
-    v
-Zero additional infrastructure needed
-```
-
-## Schema Changes (Prisma Migration)
-
-### New Models
+Two additions to `prisma/schema.prisma`:
 
 ```prisma
-model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  status      String   @default("active")  // active | archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tasks       Task[]
+// Modified: Deliverable — add docType column and comments relation
+model Deliverable {
+  // ... all existing fields unchanged ...
+  docType   String?              // 'business-doc' | 'technical-spec' | 'creative' | 'spreadsheet' | 'code' | 'generic'
+  comments  DeliverableComment[]
 }
 
-model Task {
-  id          String       @id @default(cuid())
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  status      String       @default("todo")  // todo | in_progress | review | done
-  priority    String       @default("medium")  // low | medium | high
-  agentId     String?
-  agent       Agent?       @relation(fields: [agentId], references: [id])
-  sessionId   String?      @unique
-  session     ChatSession? @relation(fields: [sessionId], references: [id])
-  order       Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
-model DeliverableVersion {
+// New model: DeliverableComment
+model DeliverableComment {
   id            String      @id @default(cuid())
   deliverableId String
   deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  version       Int
-  content       String
-  createdAt     DateTime    @default(now())
-
-  @@unique([deliverableId, version])
-}
-
-model Comment {
-  id            String      @id @default(cuid())
-  deliverableId String
-  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  lineStart     Int?        // null = general comment
-  lineEnd       Int?
-  content       String
+  anchor        String?     // JSON: { start: number, end: number } — null = general comment
+  text          String
   resolved      Boolean     @default(false)
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
 }
 ```
 
-### Modified Models
+Apply with `npx prisma db push` (no migration files needed — single-user local app using `db push` pattern already established in the project).
 
-```prisma
-// Agent: add Task relation
-model Agent {
-  // ... existing fields unchanged ...
-  tasks        Task[]       // NEW relation
-}
+---
 
-// ChatSession: add Task relation
-model ChatSession {
-  // ... existing fields unchanged ...
-  task         Task?        // NEW relation
-}
+## New API Routes Required
 
-// Deliverable: add content field + new relations
-model Deliverable {
-  // ... existing fields unchanged ...
-  content      String?      // NEW: snapshot of deliverable text (nullable for migration)
-  versions     DeliverableVersion[]  // NEW relation
-  comments     Comment[]             // NEW relation
-}
+| Route | Method | Purpose | Notes |
+|-------|--------|---------|-------|
+| `PATCH /api/deliverables/[id]` | PATCH | **Modified** — add `{ docType }` path alongside existing content/status/project paths | Extend existing route handler |
+| `GET /api/deliverables/[id]/comments` | GET | Fetch all comments for a deliverable | New sub-route |
+| `POST /api/deliverables/[id]/comments` | POST | Create comment `{ anchor?, text }` | New sub-route |
+| `PATCH /api/deliverables/[id]/comments/[commentId]` | PATCH | Resolve/unresolve or edit comment text | New sub-route |
+| `DELETE /api/deliverables/[id]/comments/[commentId]` | DELETE | Delete a comment | New sub-route |
+| `POST /api/export/pdf` | POST | Server-side PDF generation `{ content, filename }` → returns `application/pdf` | New route |
+
+The existing `GET /api/deliverables/[messageId]` response automatically includes `docType` once the column is added to the Prisma model — no route change needed.
+
+---
+
+## Data Flows
+
+### Deliverable Activation Flow (MessageBubble → ArtifactsPanel)
+
+```
+Claude streams response
+    ↓
+SSE "done" event → messageId assigned to last assistant message
+    ↓
+MessageBubble fetches GET /api/deliverables/[messageId]
+    → returns [{ id, index, status, docType, content, ... }]
+    ↓
+deliverableRecords state set in MessageBubble
+    ↓
+User clicks a deliverable block in chat
+    ↓
+artifacts store: setActiveDeliverable(record.id, record.content, record.docType)
+    ↓
+ArtifactsPanel reads { activeDeliverableId, activeContent, activeDocType }
+    → DocumentPreview renders with docType-aware layout
+    → ExportBar renders format options
+    → CommentThread fetches GET /api/deliverables/[id]/comments
 ```
 
-**Migration strategy:** The `Deliverable.content` field should be nullable initially. A backfill script can extract content from parent `Message.content` using the existing `parseDeliverables()` function for any existing deliverables.
+No second network call to get content — `Deliverable.content` is already in the initial `GET /api/deliverables/[messageId]` response.
 
-## Scaling Considerations
+### Export Flow (client-side formats)
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Current (~61 agents, <100 sessions) | Everything works. LIKE queries sub-millisecond. |
-| 500+ sessions | Add cursor-based pagination to session list (already has `take: limit`). |
-| 5000+ sessions | Consider SQLite FTS5 for global search. Virtualize long lists with @tanstack/virtual. |
+```
+User clicks "Export DOCX" in ExportBar
+    ↓
+ExportBar reads activeContent + activeDocType from artifacts store
+    ↓
+Calls lib/export/exportDocx(content, filename)
+    ↓
+Dynamic import of `docx` library (first use only)
+    ↓
+Build Document AST from markdown content
+    ↓
+Packer.toBlob() → Blob
+    ↓
+triggerDownload(blob, 'filename.docx') → browser downloads file
+```
 
-### Scaling Priorities
+### Export Flow (PDF)
 
-1. **First bottleneck:** Session list rendering with many items. Fix with pagination (chatService already accepts limit param).
-2. **Second bottleneck:** Kanban board with many tasks per column. Fix with virtualization if >100 tasks per column (unlikely for single-user).
-3. **Non-issue:** Search performance. At single-user scale with SQLite, LIKE queries across a few hundred rows are effectively instant.
+```
+User clicks "Export PDF" in ExportBar
+    ↓
+ExportBar calls lib/export/exportPdf(content, filename)
+    ↓
+POST /api/export/pdf { content, filename }
+    ↓
+API route: parse markdown → build jsPDF document
+    ↓
+Return Response with Content-Type: application/pdf
+    ↓
+Client: URL.createObjectURL(blob) → trigger download
+```
 
-## Anti-Patterns
+### Comment Creation Flow
 
-### Anti-Pattern 1: Monolithic Zustand Store
+```
+User selects text range in DocumentPreview
+    ↓
+CommentThread captures window.getSelection() → compute char offsets
+    ↓
+User types comment text → POST /api/deliverables/[id]/comments
+    { anchor: { start, end }, text }
+    ↓
+deliverableService.createComment() → DeliverableComment record
+    ↓
+CommentThread refetches → list updates
+    ↓
+DocumentPreview highlights anchored range (span with highlight class)
+```
 
-**What people do:** Adding project, command, and review state to the existing `useChatStore` or `useAppStore`.
-**Why it's wrong:** `useChatStore` is already 300 lines with streaming, messages, and deliverable state. Adding Kanban drag state, search results, and keyboard focus tracking would make it unmanageable. The existing architecture deliberately separates stores by feature.
-**Do this instead:** Three new stores: `useProjectStore`, `useCommandStore`, `useReviewStore`. Each under 100 lines.
+### Keyboard Shortcut Flow
 
-### Anti-Pattern 2: Full Editor for Diff View
+```
+KeyboardShortcutHandler mounts inside ChatPage
+    ↓
+document.addEventListener('keydown', handler)
+    ↓
+Guard: if (activeElement is input/textarea/[contenteditable]) → skip
+    ↓
+Key 'a' → chatStore.approveDeliverable(activeMessageId, activeDeliverableIndex)
+Key 'r' → open revision feedback inline
+Key 'n' → artifacts store: navigate to next deliverable in session
+Key 'p' → artifacts store: navigate to previous deliverable in session
+```
 
-**What people do:** Embedding Monaco Editor or CodeMirror for deliverable diffing.
-**Why it's wrong:** Adds 500KB+ to bundle. Deliverables are markdown text, not source code. The existing app uses ReactMarkdown for rendering. A full editor is architecturally inconsistent.
-**Do this instead:** Use the `diff` npm package (~5KB) to compute text diffs. Render with a custom component that shows added/removed lines with green/red backgrounds, staying consistent with the existing markdown rendering approach.
+### InlineEditor ↔ DocumentPreview Content Sync
 
-### Anti-Pattern 3: WebSocket for Kanban Real-Time
+```
+User edits deliverable in InlineEditor (chat column)
+    ↓
+InlineEditor.handleSave() → PATCH /api/deliverables/[messageId] { content }
+    + POST /api/deliverables/[id]/versions { content }
+    ↓
+On success: artifacts store: updateContent(draft)
+    ↓
+DocumentPreview re-renders with updated content
+    (no second network fetch — content comes from store)
+```
 
-**What people do:** Adding WebSocket infrastructure for "real-time" Kanban updates.
-**Why it's wrong:** Single-user local app. No second client exists. The SSE pattern is for LLM streaming only.
-**Do this instead:** Optimistic UI via Zustand. DB is source of truth, synced on page load by server components.
-
-### Anti-Pattern 4: Full-Text Search Engine
-
-**What people do:** Adding Meilisearch, Elasticsearch, or complex FTS5 setup for Cmd+K.
-**Why it's wrong:** ~61 agents, hundreds of sessions, single-user. Prisma `contains` on SQLite is sub-millisecond. A search engine adds operational complexity for zero performance benefit.
-**Do this instead:** Fan out parallel Prisma queries in `searchService.search()` using `Promise.all`.
-
-### Anti-Pattern 5: Client-Side Initial Data Fetching
-
-**What people do:** Using `useEffect` + `fetch` for page-load data in new pages.
-**Why it's wrong:** The existing architecture uses server components for initial data (DashboardPage, AgentGrid, ChatIndexPage). Client-side fetching adds loading spinners and violates the established pattern.
-**Do this instead:** Fetch in server component, pass as props. Zustand only for mutations and ephemeral interaction state.
-
-### Anti-Pattern 6: Rewriting the Deliverable Parser
-
-**What people do:** Replacing the regex-based `parseDeliverables()` with an AST parser or LLM-based extraction.
-**Why it's wrong:** The existing XML `<deliverable>` tag regex parser is deterministic, tested, and fast. Changing it risks breaking the entire review workflow.
-**Do this instead:** Keep the parser. Use it as the extraction function when snapshotting deliverable content into the new `Deliverable.content` field.
+---
 
 ## Integration Points
 
-### External Services
+### ArtifactsPanel ↔ Chat Panel (ResizablePanelGroup)
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Anthropic Claude API | Existing SSE via `/api/chat` route | Custom agents use same streaming path with different systemPrompt. No changes needed. |
-| next-themes | Already configured in ThemeProvider | Add toggle button using `useTheme()`. Zero setup. |
+`ChatPage` wraps both columns in `ResizablePanelGroup` with `direction="horizontal"`. The artifacts panel uses `collapsible` + `collapsedSize={0}` props from `react-resizable-panels` v4. Panel collapse state syncs to the artifacts Zustand store so a "Show Artifacts" button in the chat column can re-expand it.
 
-### Internal Boundaries
+Install shadcn's resizable: `npx shadcn add resizable`. This adds `src/components/ui/resizable.tsx` wrapping `react-resizable-panels`. The package is not yet in `package.json`.
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| KanbanBoard <-> Task API | REST + optimistic Zustand | DnD state scoped to useProjectStore |
-| DiffViewer <-> Version API | REST, client-side diff | Server returns raw version strings; diff computed in browser |
-| CommandPalette <-> Search API | REST with 200ms debounce | Single endpoint, parallel DB queries |
-| ReviewQueue <-> Dashboard | Server component composition | ReviewQueue is a server component fetching its own data |
-| KeyboardShortcuts <-> Stores | Direct Zustand action calls | Reads from useReviewStore (focus), writes to useChatStore (approve/revise) and useCommandStore (open) |
-| InlineEditor <-> Deliverable API | REST for content + comments | Creates DeliverableVersion on every edit save |
-| AgentEditor <-> Agent API | REST CRUD | Only operates on agents where isCustom = true |
+### MessageBubble ↔ ArtifactsPanel (via artifacts store)
 
-## New vs Modified -- Explicit Breakdown
+Deliverable blocks in `MessageBubble` get an `onClick` handler calling `artifacts.setActiveDeliverable(record.id, record.content, record.docType ?? 'generic')`. The panel auto-opens on first click if collapsed. No prop drilling — both components are decoupled via the store.
 
-### New Files (~40 files)
+### InlineEditor ↔ DocumentPreview (content sync)
 
-| Category | Count | Details |
-|----------|-------|---------|
-| Prisma migration | 1 | Add Project, Task, DeliverableVersion, Comment; modify Agent, ChatSession, Deliverable |
-| Services | 3 | project.ts, search.ts, comment.ts |
-| Stores | 3 | project.ts, command.ts, review.ts |
-| API Routes | 12 | agents/[slug], projects, projects/[id], projects/[id]/tasks, tasks/[id], tasks/reorder, search, review/pending, deliverables/[id]/versions, deliverables/[id]/comments, comments/[id] |
-| Components | 11 | AgentEditor, ReviewQueue, InlineEditor, DiffViewer, KanbanBoard, KanbanColumn, TaskCard, ProjectList, MissionKanban, CommandPalette, ThemeToggle |
-| Pages | 4 | /projects, /projects/[id], /agents/new, /agents/[slug]/edit |
-| Providers | 1 | KeyboardShortcutsProvider |
+After `InlineEditor.handleSave()` persists content to the API, it calls `artifacts.updateContent(draft)`. `DocumentPreview` reads `activeContent` from the store and re-renders. Content stays fresh without a second GET call.
 
-### Modified Files (~12 files)
+### Export Functions ↔ Deliverable Content
 
-| File | What Changes |
-|------|-------------|
-| `prisma/schema.prisma` | Add 4 new models, add relations to Agent/ChatSession/Deliverable |
-| `src/lib/services/agent.ts` | Add `create()`, `update()`, `delete()` methods |
-| `src/lib/services/deliverable.ts` | Add `getPending()`, `getVersions()`, `updateContent()`, `snapshotContent()` |
-| `src/lib/services/chat.ts` | Add `searchSessions()`, auto-title on session creation |
-| `src/lib/services/dashboard.ts` | Add pending review count to `getStats()` |
-| `src/components/layout/Sidebar.tsx` | Add `{ href: "/projects", label: "Projects", icon: FolderKanban }` to `navItems` |
-| `src/components/layout/Header.tsx` | Add ThemeToggle component and Cmd+K trigger button |
-| `src/app/layout.tsx` | Wrap AppShell children with KeyboardShortcutsProvider |
-| `src/app/page.tsx` | Add ReviewQueue widget to dashboard grid layout |
-| `src/app/chat/page.tsx` | Add search input, agent filter, date sorting for session browsing |
-| `src/components/chat/MessageBubble.tsx` | Integrate InlineEditor for deliverable segments (alongside existing ReviewPanel) |
-| `src/app/orchestration/[missionId]/page.tsx` | Add tab toggle between lane view and Kanban review board |
+`ExportBar` receives `content` and `docType` directly from the artifacts store via `useArtifactsStore()`. No prop threading. Export functions are invoked client-side (or via API for PDF) using the cached content string.
 
-## Suggested Build Order (Dependency-Driven)
+### KeyboardShortcutHandler ↔ Chat Store + Artifacts Store
 
+Reads `activeDeliverableId` from artifacts store to know which deliverable to act on. Calls `approveDeliverable` / `requestRevision` from the existing `chat` store (already handles API calls + status updates). Mounts inside `ChatPage` — not in `AppShell` — so bindings are scoped to the chat route and don't leak to other pages.
+
+---
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Putting the Artifacts Panel in AppShell
+
+**What people do:** Add the panel to the global layout so it's "available everywhere."
+**Why it's wrong:** Dashboard, Projects, Agents, Orchestration have no deliverables to preview. A global panel couples AppShell to chat context and bloats every page's bundle.
+**Do this instead:** Keep the panel inside `ChatPage`. The segment layout handles the viewport override cleanly.
+
+### Anti-Pattern 2: Client-Side PDF via html2canvas
+
+**What people do:** Use html2canvas + jsPDF client-side for zero-server PDF.
+**Why it's wrong:** html2canvas produces an image-based PDF — no text selection, no search, large file size, browser-dependent rendering. For a document workspace where PDF is a first-class output format, this is unacceptable quality.
+**Do this instead:** `POST /api/export/pdf` API route using jsPDF server-side, building the PDF from the markdown content's parsed structure. Text remains selectable.
+
+### Anti-Pattern 3: Storing docType on Message Instead of Deliverable
+
+**What people do:** Classify the full message and attach `docType` to `Message`.
+**Why it's wrong:** One message can contain multiple `<deliverable>` blocks of different types. The type belongs on the individual `Deliverable` record.
+**Do this instead:** `docType` column on `Deliverable` model, inferred per block.
+
+### Anti-Pattern 4: Refetching Deliverable Content in ArtifactsPanel
+
+**What people do:** Trigger a `GET /api/deliverables/[id]` call when the user clicks a deliverable to load content for the preview pane.
+**Why it's wrong:** The content is already in the `MessageBubble`'s `deliverableRecords` state (from the initial fetch). A second fetch causes flicker and is redundant.
+**Do this instead:** `setActiveDeliverable(id, content, docType)` — pass content directly from the already-fetched record into the artifacts store. Zero extra requests.
+
+### Anti-Pattern 5: Keyboard Shortcuts Without an Input Guard
+
+**What people do:** Add global `document` keydown listeners without checking whether a form field has focus.
+**Why it's wrong:** Pressing 'A' to approve while typing in the chat input would both fire the shortcut and insert the letter. The existing `AppShell` keyboard handler for Cmd+K already handles this correctly — replicate that guard.
+**Do this instead:**
+
+```typescript
+function handler(e: KeyboardEvent) {
+  const tag = document.activeElement?.tagName;
+  const isEditable = document.activeElement?.getAttribute('contenteditable');
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || isEditable) return;
+  // ... handle shortcut
+}
 ```
-Phase 1: Schema + Foundation + Quick Wins
-  - Prisma migration (Project, Task, DeliverableVersion, Comment + model mods)
-  - New services (project, search, comment)
-  - Extended services (agent CRUD, deliverable versioning + content snapshot)
-  - Theme toggle (trivial -- just a button using existing next-themes)
-  WHY FIRST: Every feature depends on schema. Services define the contract.
-  RISK: LOW -- standard Prisma migration, follows existing patterns exactly.
 
-Phase 2: Custom Agents + Session History
-  - AgentEditor component + /agents/new and /agents/[slug]/edit pages
-  - Agent API routes (POST /api/agents, PUT/DELETE /api/agents/[slug])
-  - Enhanced /chat page with search, agent filter, auto-titles
-  WHY SECOND: Independent features with no cross-dependencies. Quick wins
-    that are immediately visible and useful.
-  RISK: LOW -- extends existing patterns.
+### Anti-Pattern 6: Loading Export Libraries at Page Load
 
-Phase 3: Project Management + Task Kanban
-  - Project pages + API routes (/api/projects/*)
-  - KanbanBoard + KanbanColumn + TaskCard components
-  - useProjectStore with optimistic DnD
-  - @dnd-kit integration for drag-and-drop
-  - Agent assignment to tasks
-  WHY THIRD: Establishes the Kanban interaction pattern reused in Phase 4.
-  RISK: MEDIUM -- DnD is the most complex client-side interaction. Test thoroughly.
+**What people do:** Import `docx` and `xlsx` at the top of the export module files.
+**Why it's wrong:** `docx` is ~600KB and `xlsx` is ~400KB. Loading them at page load bloats the initial bundle unnecessarily — they're only needed when the user clicks an export button.
+**Do this instead:** Dynamic `import()` inside each export function. The library loads once on first use, then is cached by the browser.
 
-Phase 4: Advanced Review Features
-  - DeliverableVersion tracking triggered on revision
-  - DiffViewer component (uses `diff` npm package)
-  - InlineEditor + comment system
-  - ReviewQueue dashboard widget
-  - MissionKanban view (reuses patterns from Phase 3)
-  WHY FOURTH: Depends on versioning schema AND Kanban patterns from Phase 3.
-  RISK: MEDIUM -- InlineEditor with line-level comments has UI complexity.
+---
 
-Phase 5: Power User UX
-  - CommandPalette (Cmd+K) + useCommandStore
-  - KeyboardShortcutsProvider + useReviewStore
-  - Keyboard navigation (j/k/a/r) for review queue
-  WHY FIFTH: Search needs routes from Phases 2-4 to have navigation targets.
-    Shortcuts need reviewable content to act on.
-  RISK: LOW -- standard patterns, no data dependencies.
+## Build Order
 
-Phase 6: Production Polish
-  - Loading skeletons for all new pages
-  - Page transitions (CSS or framer-motion)
-  - Hover/focus animations on cards and list items
-  - Empty states for projects, tasks, search results
-  WHY LAST: Polish is cosmetic. Apply once functionality is stable.
-  RISK: LOW -- purely presentational.
-```
+Dependencies drive this order — each step unlocks the next:
+
+**Step 1 — Schema + shadcn resizable install**
+- `prisma db push` with `docType` on Deliverable + `DeliverableComment` model
+- `npx shadcn add resizable` → adds `components/ui/resizable.tsx` + installs `react-resizable-panels`
+- No UI yet, but the data contract is set
+
+**Step 2 — `lib/document-type.ts` + `store/artifacts.ts`**
+- Pure function, no dependencies. Write and unit-test in isolation.
+- Zustand store: shape defined, all actions stubbed. No UI consumers yet.
+
+**Step 3 — ChatPage layout refactor**
+- Add `app/chat/[sessionId]/layout.tsx` segment
+- Add `ResizablePanelGroup` to `ChatPage` with placeholder right panel
+- Verify split layout renders correctly before building panel content
+
+**Step 4 — `ArtifactsPanel` + `DocumentPreview`**
+- Panel shell with tabs (Preview / Comments)
+- `DocumentPreview` renders content from `activeContent` in artifacts store
+- Wire `MessageBubble` onClick to `setActiveDeliverable`
+- Panel toggle (collapse/expand)
+
+**Step 5 — `ExportBar` + `lib/export/` modules**
+- `exportMarkdown.ts` (trivial — just download the string)
+- `exportDocx.ts` (docx library)
+- `exportXlsx.ts` (SheetJS)
+- `exportPdf.ts` client wrapper + `/api/export/pdf` route
+- `ExportBar` UI with buttons for each format
+
+**Step 6 — `CommentThread` + comment API routes**
+- `deliverableService` comment methods
+- `/api/deliverables/[id]/comments/route.ts`
+- `CommentThread` component (list + add comment form)
+- Anchor highlighting in `DocumentPreview`
+
+**Step 7 — `KeyboardShortcutHandler`**
+- Mounts inside `ChatPage`
+- A/R for approve/revise, N/P for navigate deliverables
+- Input guard using existing AppShell pattern
+
+**Step 8 — docType classification wired into save path**
+- Modify `deliverableService.upsertStatus()` to call `inferDocumentType()` on content and set `docType` on create
+- Add `PATCH /api/deliverables/[id]` path for manual type override
+- `DocumentTypeIcon` component in panel header
+
+---
 
 ## Sources
 
-- Direct codebase analysis: `/Users/luke/onewave-agency/src/` (172 files, 6,823 LOC TypeScript)
-- Prisma schema: `prisma/schema.prisma` (7 existing models, Agent.isCustom already present)
-- Existing Zustand stores: `src/store/chat.ts` (302 lines), `src/store/app.ts` (18 lines), `src/store/orchestration.ts`
-- Existing services: `src/lib/services/agent.ts`, `chat.ts`, `deliverable.ts`, `dashboard.ts`, `orchestration.ts`
-- Existing deliverable parser: `src/lib/deliverable-parser.ts` (regex-based XML extraction)
-- Theme configuration: `src/components/providers/ThemeProvider.tsx` (next-themes already active)
-- Layout structure: `src/app/layout.tsx` (ThemeProvider > AppShell > Toaster)
-- Component patterns: `src/components/chat/MessageBubble.tsx` (deliverable rendering + ReviewPanel integration)
+- Direct codebase analysis: `/Users/luke/onewave-agency/src/` (12,504 LOC TypeScript, Prisma schema, Zustand stores, API routes)
+- shadcn resizable (built on react-resizable-panels v4): https://ui.shadcn.com/docs/components/resizable
+- react-resizable-panels npm: https://www.npmjs.com/package/react-resizable-panels
+- docx library v9.6.1 (browser + Node): https://www.npmjs.com/package/docx
+- SheetJS community edition (XLSX client-side): https://docs.sheetjs.com/docs/demos/frontend/react/
+- Server-side PDF in Next.js API routes (jsPDF): https://dev.to/jordykoppen/turning-react-apps-into-pdfs-with-nextjs-nodejs-and-puppeteer-mfi
+- html2canvas client-side PDF limitations: https://ekoopmans.github.io/html2pdf.js/
+- Next.js App Router nested layouts: https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates
 
 ---
-*Architecture research for: OneWave AI v2.0 feature integration*
-*Researched: 2026-03-10*
+
+*Architecture research for: OneWave AI Agency v3.0 Document Workspace*
+*Researched: 2026-03-16*

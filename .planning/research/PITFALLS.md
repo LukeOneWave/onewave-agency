@@ -1,353 +1,354 @@
 # Domain Pitfalls
 
-**Domain:** Adding v2.0 features (custom agents, Kanban, diff view, global search, inline editing, project management, keyboard shortcuts, production polish) to existing Next.js 16 + Prisma 7 + SQLite app
-**Researched:** 2026-03-10
-**Existing codebase:** 172 files, 6,823 LOC TypeScript
+**Domain:** Adding document workspace / artifacts panel (live preview, rich export, inline commenting, keyboard shortcuts) to existing Next.js 16 + Prisma 7 + SQLite + SSE streaming app
+**Researched:** 2026-03-16
+**Confidence:** HIGH (based on direct codebase audit + verified external sources)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, data loss, or major architectural debt.
+Mistakes that cause rewrites, streaming regressions, or data loss.
 
-### Pitfall 1: SQLite Schema Migration Destroys Existing Data
+### Pitfall 1: Artifacts Panel Layout Breaks the Existing Chat Layout
 
-**What goes wrong:** Adding Project, Task, Comment, and AgentVersion models with relations to existing Agent, Deliverable, and ChatSession models. Running `prisma migrate dev` on the existing `dev.db` can fail or require a database reset, wiping all 61 seeded agents and chat history.
+**What goes wrong:** The current `ChatPage` renders as a simple single-column flex container (`flex h-full flex-col`). Adding a side-by-side artifacts panel requires converting this to a horizontal split layout. If this is done naively — wrapping the existing component in a new parent div — two problems emerge: (a) the `AppShell` already constrains `<main>` to `max-w-7xl p-6`, which leaves no room for an expanded split layout; (b) the page route passes a fully serialized `ChatSession` from a Server Component, and restructuring the layout client-side after hydration causes SSE streaming to re-initialize as Zustand detects a session change.
 
-**Why it happens:** Prisma's SQLite support has limitations around adding required foreign keys to existing tables. If a new migration adds a required `projectId` column to an existing table, SQLite cannot add NOT NULL columns without defaults to populated tables. Prisma may suggest `prisma migrate reset` which drops everything.
+**Why it happens:** The `ChatPage` client component calls `useChatStore.getState().initSession()` on first render and guards it with a `current.sessionId === session.id` check. If the parent layout structure changes and triggers a re-mount, this guard is bypassed and the store resets — losing in-flight streaming state and any draft content in the artifacts panel.
 
-**Consequences:** Loss of seeded agent data (61 agents), chat history, mission data. Users must re-seed and lose all work.
+**How to avoid:**
+- Move the chat-level layout to a dedicated `layout.tsx` in `app/chat/[sessionId]/` so it exists outside `AppShell`'s `max-w-7xl` constraint. The artifacts panel needs full-width.
+- Add a `suppressArtifactsPanel` prop to `AppShell` or introduce a chat-specific shell variant that opts out of the `max-w-7xl p-6` wrapper.
+- Use `react-resizable-panels` (bvaughn) for the split — it handles SSR hydration with a documented workaround (persisted layout sizes trigger layout shift on hydration; wrap with `suppressHydrationWarning` on the panel group or use `dynamic` import with `ssr: false`).
+- Do NOT use CSS Grid column toggling driven by React state to show/hide the panel — this causes `ChatPage` to re-mount if the grid collapses the column. Use `visibility: hidden` + `width: 0` instead of removing from the DOM.
 
-**Prevention:**
-- All new foreign keys on existing tables MUST be optional (`projectId String?`) or have defaults
-- New models (Project, Task, Comment) can have required fields since they start empty
-- Run `prisma migrate dev --create-only` first, review the generated SQL before applying
-- Back up `dev.db` before every migration: `cp prisma/dev.db prisma/dev.db.backup`
-- Test migrations against a copy of the database, not the original
-- The `Agent.isCustom` field already exists (good foresight from v1.0) -- use it to distinguish custom agents rather than adding a separate table
+**Warning signs:** SSE streaming resets when artifacts panel is toggled. Chat store shows `sessionId: null` after panel open/close. Network tab shows second POST to `/api/chat` triggered by panel toggle.
 
-**Detection:** Migration error messages mentioning "cannot add NOT NULL column" or prompts to reset the database.
+**Phase to address:** Phase 1 of v3.0 — the layout restructure must happen before any artifacts panel content is built.
 
-**Phase:** Address at the start of every phase that touches the schema. Establish migration backup discipline as phase 1 infrastructure.
+---
 
-### Pitfall 2: Monolithic Zustand Store Becomes Unmaintainable
+### Pitfall 2: Document Export Libraries with Node.js-Only Dependencies Break the Client Bundle
 
-**What goes wrong:** The app currently has 3 Zustand stores (`app.ts`, `chat.ts`, `orchestration.ts`). Adding Kanban state, project management state, search state, keyboard shortcut registry, and inline editing state to existing stores or as ad-hoc additions creates a tangled state graph where actions in one domain trigger unexpected re-renders in others.
+**What goes wrong:** The most natural choices for Word (.docx) and Excel (.xlsx) export — `docx`, `exceljs`, `docx-templates` — use Node.js built-ins (`fs`, `path`, `stream`, `Buffer` in ways that browsers cannot polyfill). Importing them anywhere in `"use client"` components, or in a shared utility file used by both client and server, causes Next.js to bundle them into the browser bundle, producing build errors like `Module not found: Can't resolve 'fs'` or silent runtime crashes.
 
-**Why it happens:** Each feature feels small enough to "just add to the existing store." The chat store already handles streaming, deliverables, and sessions at 300 lines -- adding review queue state there would be the natural-but-wrong instinct. By feature 5, stores are 500+ lines with interdependent slices.
+**Why it happens:** The docx library (most popular Word generation lib) conditionally uses `fs.writeFile` when it detects a Node.js environment. When webpack 5 encounters this import in a client component tree, it either fails or includes a 600KB+ dead import in the browser bundle. `exceljs` is similar — it has browser builds but they are separate files that must be explicitly imported. The Next.js App Router makes this worse because the module boundary between Server Components and Client Components is not always obvious.
 
-**Consequences:** Debugging state becomes archaeological. Component re-renders cascade. Optimistic updates in one feature corrupt state in another. Every Kanban drag triggers chat component re-renders because they share state ancestry.
+**How to avoid:**
+- All document generation MUST happen in API route handlers (`/api/export/...`) — never in client components.
+- Use `docx` (npm package) server-side only for Word generation. It has no browser alternative. Return the result as a binary `application/octet-stream` response.
+- For Excel, use `exceljs/dist/exceljs.bare.min.js` if client-side is needed, or handle via API route with the standard `exceljs` build.
+- SheetJS (`xlsx`) has a genuine browser build at `dist/xlsx.full.min.js` but adds ~800KB to the bundle. Import it only in a dedicated API route or with dynamic `import()` behind the export action.
+- For HTML and Markdown export, these are pure string transformations — they are safe in any context.
+- For CSV, `array.join(',')` with proper escaping — no library needed, completely safe.
+- Add `@types/node` exclusions to `tsconfig.json` client paths if needed to enforce the boundary.
 
-**Prevention:**
-- Create dedicated stores per domain: `useProjectStore`, `useKanbanStore`, `useSearchStore`, `useShortcutStore`
-- Use Zustand selectors everywhere to prevent unnecessary re-renders: `const title = useProjectStore(s => s.activeProject?.title)`
-- Use `persist` with `partialize` -- do NOT persist Kanban drag state or streaming state
-- Keep server state (projects list, agents list) fetched via API; keep Zustand for UI-only state (active selection, panel visibility, drag position)
-- Do NOT mix server-cache state and UI state in the same store
+**Warning signs:** Build error mentioning `fs`, `path`, or `stream`. Bundle size suddenly increases by 500KB+. Export works in development but fails in production builds.
 
-**Detection:** More than 15 actions in one store. Components re-rendering when unrelated state changes. State bugs that require reading 3+ stores to debug.
+**Phase to address:** Phase 2 of v3.0 (Export) — establish the server-only export pattern as the first step before implementing any format.
 
-**Phase:** Address in Phase 1 (before building any features). Establish store architecture conventions as infrastructure.
+---
 
-### Pitfall 3: Keyboard Shortcuts Fire Inside Text Inputs
+### Pitfall 3: SSE Streaming and Artifacts Panel State Are Two Independent State Machines That Desynchronize
 
-**What goes wrong:** Global keyboard shortcuts (j/k navigate, a approve, r revise, Cmd+K search) fire when users are typing in chat input, revision feedback textarea, inline editing fields, or project name inputs. Pressing "a" to type "and" in a chat message triggers "approve deliverable."
+**What goes wrong:** The current `useChatStore` owns all streaming state. The artifacts panel will need its own state (which document is displayed, edit mode, comment threads). As streaming completes, a `done` SSE event carries the `messageId`, which triggers `parseDeliverables()` and populates artifacts. If the artifacts panel state is maintained in a separate store or local state, the hand-off between "streaming complete" and "artifact ready" becomes a race condition: the panel may try to render an artifact before the `done` event fires, or may miss the event entirely if it mounts after the event is processed.
 
-**Why it happens:** Event listeners attached to `document` or `window` don't distinguish between "user is typing content" and "user is issuing a command." Each feature adds its own `addEventListener('keydown')` independently, creating conflicts and memory leaks. With 20+ listeners accumulated, there are also performance implications.
+**Why it happens:** The `done` event updates Zustand store message ID and triggers `loadDeliverables()` asynchronously. A panel component that subscribes to this at mount time may subscribe after the event has already been processed, and the initial `deliverables: {}` state (which is reset on `initSession`) means a newly mounted panel has no knowledge of the just-completed stream.
 
-**Consequences:** Unusable text inputs. Users cannot type letters that are bound to shortcuts. Phantom approvals or navigation jumps while typing. Multiple listeners for same key create race conditions.
+**How to avoid:**
+- Extend `useChatStore` to include `activeArtifactId: string | null` and `artifactPanelOpen: boolean` — keep all streaming-related state in one store.
+- When the `done` SSE event fires, dispatch a single action that both marks streaming complete AND sets `activeArtifactId` to the first deliverable in the message.
+- The artifacts panel should derive its content from `useChatStore` selectors — it should not maintain its own copy of document content. Treat the panel as a view over the store, not a separate domain.
+- Do NOT reset `deliverables: {}` on `initSession` if the panel is open — check `artifactPanelOpen` before clearing.
 
-**Prevention:**
-- Build a centralized shortcut registry (`useShortcutStore`) with ONE document-level keydown listener
-- Always check `event.target` -- ignore shortcuts when target is `input`, `textarea`, `select`, or `[contenteditable]`
-- Use modifier keys for destructive actions: Cmd+A for approve (not bare "a") when in contexts where text input exists nearby
-- Implement shortcut scoping: shortcuts only active when their parent component/panel is focused
-- Use a callback ref pattern to avoid putting the callback in useEffect dependency arrays (prevents unnecessary teardown/setup cycles)
-- Provide a shortcut cheat sheet (? key) so users can discover bindings
+**Warning signs:** Artifacts panel shows "no document" immediately after a message streams in, then updates after a second delay. Panel shows stale content from previous session after navigating to a new chat.
 
-**Detection:** Typing in any text field triggers unintended actions. Multiple handlers firing for same keystroke. Memory climbing as components mount/unmount without cleaning up listeners.
+**Phase to address:** Phase 1 of v3.0 — design the unified state model before building any panel UI.
 
-**Phase:** Build the shortcut registry BEFORE building any individual shortcut features. This is Phase 1 infrastructure.
+---
 
-### Pitfall 4: Inline Editing with ContentEditable Cursor Jumping
+### Pitfall 4: PDF Generation in the Browser Produces Inconsistent Layout
 
-**What goes wrong:** Implementing inline editing of deliverables using `contentEditable` divs. On every React re-render, the cursor jumps to the beginning or end of the editable area. Safari and Firefox are especially affected. This is a long-standing React issue (facebook/react#2047, open since 2014, never fully resolved).
+**What goes wrong:** Using a client-side PDF library (`jsPDF`, `@react-pdf/renderer`, `pdfmake`) to generate PDFs from deliverable content produces output that does not match the screen rendering. Code blocks lose syntax highlighting. Tables collapse. Long lines overflow the page. The root cause is that none of these libraries render from the DOM or from CSS — they use their own layout engines that re-implement typography from scratch. `@react-pdf/renderer` requires rewriting all content using its own `<View>`, `<Text>`, `<Page>` primitives rather than reusing existing React components.
 
-**Why it happens:** React's reconciliation replaces DOM nodes on re-render, which resets the browser's Selection API state. The `dangerouslySetInnerHTML` approach compounds this -- any state update during typing triggers a re-render which resets cursor position. The browser's selection system is completely decoupled from React's state management.
+**Why it happens:** Developers see a deliverable rendered nicely with `react-markdown` + Tailwind and assume PDF export will capture that fidelity. It won't. `jsPDF` is an imperative canvas API (position text at x/y coordinates). `@react-pdf/renderer` is a separate React renderer entirely. `pdfmake` uses a JSON document definition. All three require re-expressing the document layout in their own format.
 
-**Consequences:** Users cannot type more than a few characters without the cursor jumping. Editing becomes practically impossible. This single bug makes the entire inline editing feature unusable -- it is not a minor annoyance, it is a complete blocker.
+**How to avoid:**
+- For fidelity PDF output: use Puppeteer or Playwright in an API route to render the deliverable as HTML and capture it. This uses the actual browser rendering engine and respects CSS. The overhead is acceptable for a local-only app where PDF is an explicit user action.
+- Add a minimal `/app/print/[deliverableId]/page.tsx` page styled for print (white background, print-optimized CSS, no sidebar). The Puppeteer API route navigates to this page, captures PDF, returns it.
+- Alternatively: `@react-pdf/renderer` is acceptable if a custom PDF layout component is built specifically for it — but budget 2-3x the implementation time versus screen rendering.
+- Do NOT use `jsPDF`'s `html()` method — it uses Canvas which produces blurry rasterized text, not selectable PDF text.
+- Do NOT use `window.print()` for PDF export — it exports the entire page including sidebar, header, and navigation.
 
-**Prevention:**
-- Do NOT use raw `contentEditable` with React state-driven updates
-- Use a click-to-edit pattern: display deliverable as read-only, click opens a controlled `<textarea>` overlay, save on blur/Enter -- this sidesteps the cursor problem entirely
-- If contenteditable is truly required, use `react-contenteditable` library which handles cursor preservation internally
-- If rich text editing is needed, use Tiptap or Plate (proper editors with their own DOM management) rather than raw contenteditable
-- If you must use contenteditable, use `useLayoutEffect` (not `useEffect`) to restore cursor position synchronously after DOM mutations
-- Store edits in a local ref, only sync to React state on blur/save -- never update React state on every keystroke
+**Warning signs:** PDF fonts look different from screen. Code blocks in PDF are unstyled or missing. Table formatting breaks. User reports exported PDF looks "terrible."
 
-**Detection:** Cursor jumping when typing. Edits appearing to duplicate or lose characters. Bug reports saying "editing doesn't work on Safari."
+**Phase to address:** Phase 2 of v3.0 (Export) — decide the PDF strategy (Puppeteer vs react-pdf) before implementing. Puppeteer is the high-confidence choice for quality; react-pdf requires more custom work.
 
-**Phase:** Phase where inline editing is built. Decide on click-to-edit vs contenteditable upfront. Recommendation: click-to-edit with textarea for v2.0; upgrade to Tiptap only if rich formatting is explicitly needed.
+---
 
-### Pitfall 5: Global Search (Cmd+K) Without Proper Full-Text Search
+### Pitfall 5: Deliverable Content Stored as `String?` in SQLite Cannot Hold Binary Export Formats
 
-**What goes wrong:** Implementing Cmd+K search across agents, projects, sessions, and deliverables using Prisma `contains` queries on SQLite. This performs sequential LIKE scans across multiple tables, returning results in 500ms+ which feels sluggish for a command palette that needs <100ms response times.
+**What goes wrong:** The current schema stores `Deliverable.content String?` — plain text or markdown. v3.0 adds document types (business doc, spreadsheet, technical spec). If the app needs to cache a generated DOCX or XLSX binary in the database for subsequent download without regeneration, SQLite stores it as BLOB, but Prisma 7 with the `sqlite` driver does not support `Bytes` field types the same way as PostgreSQL. Using `String` with Base64-encoded binary content increases storage by 33% and makes the content column semantically ambiguous.
 
-**Why it happens:** Prisma does NOT natively support SQLite FTS5 (full-text search). The `fullTextSearch` preview feature only works with PostgreSQL and MySQL. Developers default to `where: { name: { contains: query } }` which is an unindexed substring scan. For a command palette, users expect instant results as they type.
+**Why it happens:** The schema was designed for text content. Adding binary document storage is a natural extension that seems straightforward but introduces complexity at the Prisma layer.
 
-**Consequences:** Cmd+K palette feels laggy. Users type ahead of results. Search ranking is arbitrary (no relevance scoring). Cannot find partial matches or handle typos.
+**How to avoid:**
+- Do NOT cache binary export files in SQLite. Generate them on-demand in the export API route and stream the response directly to the browser. A 50KB DOCX generates in under 100ms — there is no benefit to caching it.
+- SQLite is well-suited for text documents up to several MB. The limit where reads become slow is around 100KB per row — most deliverable text will be under 50KB and is fine.
+- If document type metadata is needed (e.g., "this deliverable is a spreadsheet"), add a `documentType String? @default("markdown")` column to `Deliverable` — pure enumeration, no binary storage.
+- For larger generated documents (e.g., full report with many sections), consider a `Document` model that is separate from `Deliverable` — a deliberate user-created file rather than an auto-extracted deliverable.
 
-**Prevention:**
-- For a single-user local app with <1000 searchable items, use client-side fuzzy search with Fuse.js or MiniSearch -- this is simpler and faster than any database approach
-- Load a search index on app initialization: all agent names/descriptions, project names, recent session titles -- this fits easily in memory
-- Debounce search input at 150ms minimum
-- Show results grouped by category (Agents, Projects, Sessions) with 5 results per category max
-- If database search is needed later (searching within message content), use `prisma.$queryRaw` with SQLite FTS5 virtual tables -- FTS5 is built into SQLite but not exposed through Prisma's query builder
-- Do NOT try to search through all message content via Prisma `contains` -- it will not scale
+**Warning signs:** `Deliverable.content` contains Base64 strings starting with `UEsD`. Binary data appearing in text columns. Slow deliverable list queries as row sizes grow.
 
-**Detection:** Typing in Cmd+K palette and seeing visible delay before results appear. Search not finding partial matches or handling typos.
+**Phase to address:** Phase 3 of v3.0 (Document model) — decide the Document data model before building the artifacts panel persistence layer.
 
-**Phase:** Phase where global search is built. Recommendation: Fuse.js client-side search for this app's data volume. Only escalate to FTS5 raw queries if message content search is needed.
+---
+
+### Pitfall 6: Inline Commenting Anchor Positions Break on Content Resize
+
+**What goes wrong:** Inline comments require anchoring a UI element (comment bubble, highlight) to a specific text span within the deliverable. When using `document.getSelection()` + `Range` to capture the selection position, the anchor is stored as character offset within the raw text. When the content is later rendered at a different column width (panel resize, window resize, zoom), the character offset is valid but the pixel position changes — comments appear in wrong locations or overlap content.
+
+**Why it happens:** Pixel-based anchoring (storing `getBoundingClientRect()`) breaks on any resize. Character-offset anchoring (storing start/end character index within the text) is stable but converting back to pixel coordinates for rendering the UI widget requires re-running `Range` calculations at render time, which is expensive and can fail if the DOM structure changes (e.g., markdown re-renders the text into different `<p>` and `<code>` elements).
+
+**How to avoid:**
+- Store comment anchors as character offsets within the raw markdown string, not as DOM positions. The raw string is stable; the rendered DOM is not.
+- When rendering comments, walk the rendered DOM to find the text node at the stored character offset using a custom `findTextPosition()` utility. This is moderately complex but reliable.
+- Accept that comments on code blocks inside markdown are harder than comments on plain text — the syntax markers (`\`\`\``) contribute to character count but are not visible. Document this edge case.
+- Use a `highlight.js`-aware approach: apply comment highlights as CSS markers over the rendered output using `::highlight()` or a wrapper span, not absolutely-positioned overlays.
+- Alternatively: simplify the feature for v3.0 — allow comments only on entire deliverables, not on text selections. This is a significant scope reduction but eliminates the anchor complexity entirely. Inline text-selection comments are a Level 2 feature.
+
+**Warning signs:** Comments appear at wrong position after window resize. Comments on code blocks highlight the wrong text. Character count mismatch between stored offset and rendered text.
+
+**Phase to address:** Phase 4 of v3.0 (Inline Commenting) — define the anchoring strategy explicitly before building the comment UI. Recommend starting with deliverable-level comments only.
+
+---
+
+### Pitfall 7: Keyboard Shortcut Registry Conflicts with Existing Cmd+K and Browser Shortcuts
+
+**What goes wrong:** The existing `AppShell` registers a global `keydown` listener for `Cmd+K` (command palette). Adding review workflow shortcuts (`a` = approve, `r` = revise, `e` = edit, `Cmd+Enter` = submit) creates three classes of conflict: (a) new shortcuts fire inside text inputs (documented in v2.0 pitfalls as Pitfall 3); (b) `Cmd+K` is already bound at the shell level — if the artifacts panel adds its own `Cmd+K` handler for "link" in a rich text editor, both fire; (c) `Cmd+P` triggers the browser print dialog on macOS, `Cmd+S` may trigger page save in some browsers, `Cmd+B` triggers bold in many browser text inputs.
+
+**Why it happens:** The v2.0 shortcut research (Pitfall 3 in the prior PITFALLS.md) addressed the input-focus problem. The new problem is specifically about the artifacts panel adding a rich editing context where document editing shortcuts conflict with app navigation shortcuts. A document editor inherently wants `Cmd+B`, `Cmd+I`, `Cmd+Z` — all of which have browser meanings.
+
+**How to avoid:**
+- Do NOT implement rich text formatting keyboard shortcuts for the artifacts panel in v3.0. The current inline editor uses a `<textarea>` which handles `Cmd+Z` natively (undo). Keep this model.
+- If a rich text editor (Tiptap) is introduced, explicitly disable all its default keyboard shortcuts that conflict with global app shortcuts and re-bind them with scoping.
+- The shortcut registry from v2.0 infrastructure must be used — do not add a second `addEventListener('keydown')` in the artifacts panel.
+- Add the concept of "shortcut context" to the registry: when the artifacts panel is in edit mode, suspend all non-editor shortcuts. When the command palette is open, suspend all panel shortcuts.
+- Explicitly avoid: `Cmd+K` (taken by command palette), `Cmd+P` (browser print), `Cmd+S` (browser save), `Escape` (already handles streaming stop — must not conflict with panel close).
+
+**Warning signs:** Pressing `Cmd+K` in the artifacts panel opens the command palette AND a link dialog. `Escape` key closes the panel but also aborts streaming. `Cmd+S` triggers browser save-page dialog.
+
+**Phase to address:** Phase 1 of v3.0 — update the shortcut registry to support context scoping before adding any new shortcuts.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 6: Kanban Drag-and-Drop Breaks with Server Components
+### Pitfall 8: Rich Document Preview Fires Expensive Re-Renders During Streaming
 
-**What goes wrong:** dnd-kit requires client-side interactivity (pointer events, drag sensors, DOM measurements). Wrapping Kanban columns or cards in Server Components (Next.js 16 default) causes hydration mismatches or completely non-functional drag handles.
-
-**Why it happens:** Next.js 16 App Router defaults to Server Components. Developers create a Kanban page as a Server Component, then try to add drag behavior to child components without properly establishing the client boundary. The DndContext provider must be in a client component, and all draggable/droppable children must also be client components.
+**What goes wrong:** The artifacts panel displays a live preview of the document being streamed. If the panel subscribes to the Zustand `messages` slice and re-renders `ReactMarkdown` on every text chunk, each streaming update (which can arrive 10-30 times per second) triggers a full re-render of the preview including syntax highlighting. For deliverables longer than 500 tokens, this creates visible lag.
 
 **Prevention:**
-- Mark the entire Kanban board and all draggable children as `"use client"` components
-- Keep the data-fetching wrapper as a Server Component, pass serializable data as props to the client Kanban board
-- Use `@dnd-kit/core` + `@dnd-kit/sortable` (not react-beautiful-dnd which is unmaintained)
-- Test drag-and-drop ACROSS columns, not just within columns -- cross-container sorting is where most bugs hide in dnd-kit
-- Persist column changes optimistically: update UI immediately, PATCH to API in background, revert on failure
-- There is a shadcn/ui + dnd-kit + Tailwind Kanban reference implementation (Georgegriff/react-dnd-kit-tailwind-shadcn-ui) that matches the existing tech stack
+- Derive the artifact preview content from a separate `streamingArtifactDraft` state, not from the messages array.
+- Use `useMemo` to memoize `parseDeliverables()` output — only re-parse when the full content string changes, not on every chunk.
+- Throttle artifact preview updates during streaming to 4 renders per second using a ref-based throttle — the preview does not need to update every chunk.
+- Use React's `useDeferredValue` for the preview content so main thread input handling takes priority over preview re-renders.
+- Disable syntax highlighting in `ReactMarkdown` during streaming — it is unnecessary latency on partial code blocks. Re-enable after streaming completes.
 
-**Detection:** Drag handles not responding. Console errors about hydration mismatches. Items snapping back to original position after drop.
-
-**Phase:** Phase where Kanban is built.
-
-### Pitfall 7: Diff View Performance on Large Deliverables
-
-**What goes wrong:** Computing and rendering diffs for large deliverables (generated code files, long documents) blocks the main thread. The diff algorithm is O(n*m) on text length, running synchronously, causing the UI to freeze for 1-3 seconds on deliverables with 500+ lines.
-
-**Why it happens:** Diff algorithms are computationally expensive. Most React diff viewer libraries compute the diff synchronously in the render path. When a user clicks "show diff" on a large deliverable, the entire UI locks while the diff computes.
-
-**Prevention:**
-- Use `react-diff-viewer-continued` (maintained fork) or `git-diff-view` -- NOT the original `react-diff-viewer` which is abandoned
-- For deliverables >500 lines, compute diff in a Web Worker to avoid blocking the main thread
-- Enable virtualization (only render visible diff lines) for large diffs -- both recommended libraries support this
-- Cache computed diffs -- same two versions always produce the same diff, no need to recompute
-- Consider storing deliverable versions as separate records (a `DeliverableVersion` model) rather than trying to reconstruct versions from message history
-- Show a loading skeleton while diff computes
-
-**Detection:** UI freezing when opening diff view. Browser "page unresponsive" warnings on large deliverables.
-
-**Phase:** Phase where diff view is built.
-
-### Pitfall 8: Custom Agent CRUD Without Validation Creates Broken Agents
-
-**What goes wrong:** Users create custom agents with missing system prompts, invalid division names, duplicate slugs, or prompts that cause Claude API errors. The existing `Agent` schema allows this because seeded agents were always well-formed from the agency-agents repository.
-
-**Why it happens:** The seed script guarantees data quality at import time. A CRUD form has no such guarantees. The current schema has only one constraint on agents (`slug @unique`), so Prisma will happily store an agent with an empty system prompt.
-
-**Consequences:** Chat page crashing when using a custom agent (empty system prompt sent to Claude API). Duplicate slug errors breaking page routing. Agents appearing in wrong divisions or with missing metadata.
-
-**Prevention:**
-- Add Zod validation on the API route for agent creation/update -- validate before it hits Prisma
-- System prompt is REQUIRED and must be non-empty (minimum 50 chars is reasonable)
-- Auto-generate slug from name with collision detection: `my-agent`, `my-agent-2`, etc.
-- Division must be from a predefined list (reuse existing 9 divisions + a "Custom" division)
-- Use the existing `isCustom` boolean field to protect seeded agents from editing/deletion -- seeded agents should be read-only
-- Client-side validation should mirror server-side but never replace it
-- Preview/test button that makes a minimal Claude API call with the custom system prompt before saving
-
-**Detection:** Empty agent cards on the agents page. Chat failing with API errors for specific agents. Duplicate slug 500 errors.
-
-**Phase:** Phase where custom agent CRUD is built.
-
-### Pitfall 9: Project Management Scope Creep
-
-**What goes wrong:** "Project management" balloons from simple task tracking into a full PM tool with timelines, dependencies, resource allocation, Gantt charts, and reporting. Each addition seems small but collectively they triple the scope and complexity of the milestone.
-
-**Why it happens:** Project management is a deep domain with infinite features. Once you build tasks, you want subtasks. Once you have subtasks, you want dependencies. Once you have dependencies, you want a timeline view. The existing review workflow and orchestration features create natural expansion points that feel like they "need" PM features.
-
-**Consequences:** v2.0 ships late or never ships. The PM features are half-built and worse than not having them. Core features (custom agents, review improvements, search) get deprioritized for PM features nobody asked for.
-
-**Prevention:**
-- Define a strict MVP scope: Project = name + description + assigned agents + tasks (title, status, assignee)
-- Task statuses are exactly 4: To Do, In Progress, Review, Done (the Kanban columns)
-- No due dates, no dependencies, no time tracking, no subtasks in v2.0
-- A deliverable belongs to a task; a task belongs to a project -- that is the full relationship model
-- Resist adding "just one more field" -- every field needs UI, validation, API route, migration, and tests
-- The schema should add at most 2 new models: Project and Task (reuse Deliverable for task outputs)
-
-**Detection:** Schema has more than 3 new models for project management. Task model has more than 8 columns. PM features are taking more than 40% of v2.0 development time.
-
-**Phase:** Phase where project management is built. Define scope explicitly in the roadmap and treat it as a hard boundary.
-
-### Pitfall 10: Review Queue Widget N+1 Query Problem
-
-**What goes wrong:** The dashboard review queue widget fetches pending deliverables, then for each deliverable fetches the associated message, then the session, then the agent. This N+1 query pattern on SQLite creates cascading database reads that compound in latency.
-
-**Why it happens:** Prisma makes it easy to write code that fetches a list, then `.include`s relations in a loop. The deliverable -> message -> session -> agent chain is 4 levels deep. Without explicit eager loading, each level triggers a separate query.
-
-**Prevention:**
-- Single Prisma query with nested `include` to join deliverables -> messages -> sessions -> agents
-- Filter at database level: `where: { status: 'pending' }` with `take: 10`
-- Return denormalized data from the API: `{ deliverableId, agentName, agentSlug, sessionTitle, contentPreview, createdAt }`
-- Add a database index on `Deliverable.status` since it will be queried frequently for review queue
-
-**Detection:** Dashboard takes >500ms to load. Multiple sequential database queries visible in server logs for a single widget render.
-
-**Phase:** Phase where review queue is built.
-
-### Pitfall 11: SSE Streaming Conflicts with New Real-Time Features
-
-**What goes wrong:** The existing SSE streaming for chat and orchestration assumes one active stream per page. Adding review queue real-time updates, project status changes, or Kanban live updates creates multiple competing SSE connections or requires multiplexing that the current architecture does not support.
-
-**Why it happens:** Each new "live" feature seems to need its own event stream. Developers add `/api/review-queue/stream`, `/api/projects/stream`, etc. Browser connection limits (6 per domain for HTTP/1.1) get consumed quickly, especially combined with existing chat and orchestration streams.
-
-**Consequences:** After opening chat + dashboard + Kanban, streaming stops working. New connections fail silently.
-
-**Prevention:**
-- Do NOT add more SSE endpoints for new features. This is a single-user local app -- real-time push is unnecessary for dashboard widgets
-- Use polling or refetch-on-focus for dashboard widgets (review queue count, project status)
-- Only chat and orchestration need streaming (already implemented and working)
-- If real-time updates are truly needed later, consolidate into a single multiplexed event bus rather than per-feature SSE endpoints
-
-**Detection:** Multiple `EventSource` connections open simultaneously in DevTools Network tab. Stale data in widgets while chat is active.
-
-**Phase:** All phases. Establish the convention early: SSE for AI streaming only, polling/refetch for UI freshness.
+**Phase to address:** Phase 1 of v3.0 when the artifacts panel receives streaming content.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 9: react-resizable-panels Hydration Mismatch in Next.js App Router
 
-### Pitfall 12: Dark/Light Toggle FOUC (Flash of Unstyled Content)
-
-**What goes wrong:** Theme toggle causes a flash of wrong-theme content on page load because the theme is stored in JavaScript state (Zustand) but CSS renders before JS hydrates. User sees white flash on dark mode, or dark flash on light mode.
+**What goes wrong:** `react-resizable-panels` stores panel sizes in `localStorage` and tries to restore them on mount. During SSR, `localStorage` is undefined. On client hydration, the server-rendered sizes (defaults) and client-rendered sizes (from localStorage) differ, causing React to throw a hydration warning or, in some Next.js versions, a hard error.
 
 **Prevention:**
-- Use `next-themes` library which injects a blocking `<script>` in `<head>` to set theme class before paint
-- Do NOT store theme in Zustand persist or in the database -- `next-themes` handles localStorage + script injection correctly
-- shadcn/ui already has dark mode support via CSS class strategy -- `next-themes` with `attribute="class"` is the intended integration
-- The existing app already has dark mode (v1.0 shipped with "dark default") -- check if `next-themes` is already in the stack before adding it
+- The library author has documented this — use the library's `storage` prop with a custom storage that returns `null` on the server side.
+- Alternatively wrap the `PanelGroup` component in `dynamic(() => import('./ArtifactsLayout'), { ssr: false })` — this delays render to client-only, eliminating the mismatch at the cost of a brief layout shift on load.
+- The bvaughn/react-resizable-panels-demo-ssr repository is the reference for correct Next.js App Router integration.
+- Default panel sizes should be defined as explicit props (`defaultSize={60}` for chat, `defaultSize={40}` for artifacts) and matched between SSR and client initial render to prevent layout shift.
 
-**Detection:** White flash on page load in dark mode. Theme "blinks" during hydration. Theme reverts to default briefly on navigation.
-
-**Phase:** Phase where dark/light toggle is built.
-
-### Pitfall 13: Animation/Transition Performance in Lists
-
-**What goes wrong:** Adding Framer Motion `layout` animations to Kanban cards, review queue items, and search results causes jank when lists have 20+ items. Each `AnimatePresence` exit/enter triggers layout recalculation across all siblings.
-
-**Prevention:**
-- Use CSS transitions for simple opacity/transform animations (no library needed, zero bundle cost)
-- Reserve Framer Motion for complex orchestrated animations only (page transitions, modal enters)
-- For Kanban card moves, animate only `transform` (GPU-accelerated) -- never animate `width`, `height`, or `top`/`left`
-- Add loading skeletons as simple CSS animations, not Framer Motion components
-- Virtualize long lists BEFORE adding animations to them
-
-**Detection:** Dropped frames visible in Chrome DevTools Performance tab during Kanban drag. Visible jank when filtering search results or expanding lists.
-
-**Phase:** Production polish phase. Add animations LAST, not during feature development.
-
-### Pitfall 14: Session History Loads All Message Content
-
-**What goes wrong:** The "past session browsing" feature fetches all sessions with all messages to display a session list. For a user with 100+ sessions containing long Claude responses, this returns megabytes of data for what should be a simple list view.
-
-**Prevention:**
-- Session list API returns only metadata: id, title, agent name, created date, message count
-- Load full messages only when a specific session is opened
-- Auto-generate session titles from first user message (the `title` field already exists as optional on `ChatSession`)
-- Paginate session history (20 per page)
-- Add an index on `ChatSession.updatedAt` for efficient recent-first sorting
-
-**Detection:** Slow page load on session history view. Large network payloads (>1MB) visible in DevTools for session list.
-
-**Phase:** Phase where session history is built.
+**Phase to address:** Phase 1 of v3.0 — the layout setup phase.
 
 ---
 
-## Cross-Cutting Concerns
+### Pitfall 10: Document Type Detection Requires Agent Coordination
 
-### Integration Pitfall: Features Built in Isolation Never Connect
+**What goes wrong:** The artifacts panel needs to know whether a deliverable is a "business doc", "spreadsheet data", "technical spec", or "creative content" to render it correctly (e.g., table view for spreadsheet data, formatted prose for business docs). If this detection is pure regex/heuristic on the content, it will misclassify frequently. If the agent must explicitly output a structured type header, existing agents (61 of them) will not produce this format without prompt changes.
 
-**What goes wrong:** The biggest meta-pitfall for v2.0 is building features as standalone pages that don't integrate with each other. Projects should link to tasks, tasks should link to chat sessions, chat sessions should produce deliverables, deliverables should appear in the review queue, and the Kanban board should be a view over tasks. If each feature is built independently, the app becomes a collection of disconnected tools rather than an integrated platform.
+**Why it happens:** The existing deliverable extraction uses `<deliverable>` XML tags. Adding a `<document type="spreadsheet">` attribute pattern sounds simple but requires updating all 61 agent system prompts, and many user-created sessions will have the old format for existing deliverables.
 
-**Prevention:** Define the entity relationship graph BEFORE building any features:
+**How to avoid:**
+- Add optional `type` attribute to the `<deliverable>` tag: `<deliverable type="spreadsheet">`. Default to `"document"` when absent. This is backward-compatible — all existing deliverables continue to work as plain documents.
+- Update only the agents most likely to produce structured data (Data Analysis, Finance division agents) to emit type attributes. Leave other agents with the default.
+- For content-based heuristic detection as a fallback: check if content starts with a CSV header pattern or Markdown table (first line contains `|` separators) to identify spreadsheet-type content.
+- Store the `documentType` on the `Deliverable` model as a nullable string — populated when detected, null for old deliverables.
 
-```
-Project -> Task -> ChatSession -> Message -> Deliverable
-                                                  |
-                                          Review Queue (view over pending deliverables)
-                                          Kanban Board (view over tasks by status)
-```
-
-Kanban and Review Queue are VIEWS over existing data, not separate data models. This insight must drive the schema design.
-
-### Integration Pitfall: API Route Explosion
-
-**What goes wrong:** v1.0 has 5 API route files. v2.0 could easily add 15+ more (agents CRUD, projects CRUD, tasks CRUD, search, comments, session history, etc.). Each route duplicates error handling, validation, and response formatting.
-
-**Prevention:**
-- Create shared API utilities: `apiHandler(fn)` wrapper with consistent error handling and response formatting
-- Use Zod for all request validation, shared across routes
-- Group related routes: `/api/projects/[id]/tasks/route.ts` not `/api/tasks/route.ts` with query param filtering
-- Reuse the existing Prisma client instance from `src/lib/prisma.ts`
-
-### Integration Pitfall: Component Library Sprawl
-
-**What goes wrong:** Each feature introduces its own card, modal, dropdown, and list components because developers don't discover existing shadcn/ui components or prior custom components. The `src/components/ui/` directory has shadcn primitives, but feature components don't compose them consistently.
-
-**Prevention:**
-- Audit existing shadcn/ui components before building any feature
-- Use shadcn/ui's `Dialog` for all modals, `Command` for Cmd+K (it's literally built for this), `Card` for all cards
-- Create a shared `DataTable` component if multiple features need sortable/filterable tables
-- Maintain a component checklist: before building a new component, search for an existing one
+**Phase to address:** Phase 3 of v3.0 (rich document types).
 
 ---
 
-## Phase-Specific Warnings
+### Pitfall 11: Excel Export of Markdown Tables Requires Parsing, Not Direct Streaming
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Infrastructure / Store Setup | Monolithic store grows unmanageable | Split stores by domain before building features |
-| Infrastructure / Shortcuts | Shortcuts fire in text inputs | Build centralized registry with input filtering first |
-| Schema Migrations | Data loss on existing tables | Optional foreign keys, backup dev.db, --create-only review |
-| Custom Agent CRUD | Broken agents from missing validation | Zod validation, auto-slug, protect seeded agents via `isCustom` |
-| Review Queue | N+1 queries on dashboard | Single Prisma include query with nested relations |
-| Inline Editing | ContentEditable cursor jumping | Use click-to-edit with textarea, not raw contenteditable |
-| Diff View | Main thread blocking on large diffs | react-diff-viewer-continued with virtualization |
-| Kanban Boards | Server Component hydration mismatch | "use client" boundary on entire board, use dnd-kit |
-| Project Management | Scope creep into full PM tool | Strict 2-model limit (Project + Task), 4 statuses only |
-| Global Search (Cmd+K) | Prisma lacks SQLite FTS, laggy results | Client-side Fuse.js for this app's scale |
-| Dark/Light Toggle | FOUC on page load | next-themes library, not custom Zustand state |
-| Session History | Loading all message content for list | Metadata-only list endpoint, paginate, load on open |
-| SSE Architecture | Connection limit hit with new streams | SSE for AI streaming only, polling for UI freshness |
-| Production Polish | Animation jank in lists | CSS transitions first, Framer Motion sparingly, virtualize first |
+**What goes wrong:** Deliverable content is stored as markdown. Excel/CSV export requires parsing the markdown table syntax into row/column data before generating the spreadsheet. Naive string splitting on `|` characters fails for cells that contain embedded `|` or for multiline table cells. Using a markdown AST parser (remark + remark-gfm) adds dependency weight; writing a custom parser introduces subtle bugs.
+
+**Prevention:**
+- Use `remark` + `remark-gfm` to parse the markdown AST on the server side. Extract table nodes as structured data. This is already in the dependency tree (`remark-gfm` is used client-side for rendering) — but use it server-side for AST parsing in the export route.
+- For CSV: implement a minimal RFC 4180 compliant serializer — quote fields containing commas, newlines, or quotes. Do not use `.join(',')` without escaping.
+- For Excel: use `exceljs` in the API route. Limit features to: header row formatting, auto-column widths, frozen header row. Do not attempt charts or formulas in v3.0.
+- If content has no parseable tables, fall back to exporting the raw markdown text as a single-cell spreadsheet with a warning comment.
+
+**Phase to address:** Phase 2 of v3.0 (Export).
+
+---
+
+### Pitfall 12: The `max-w-7xl` AppShell Wrapper Clips the Artifacts Panel
+
+**What goes wrong:** `AppShell` renders `<div className="mx-auto max-w-7xl p-6">` around all page content. An artifacts panel that needs to use the full horizontal viewport width cannot work within this constraint — the chat content and artifacts panel together would be constrained to 1280px with 48px padding on each side (max 1184px usable). On 1440px or 1920px monitors, significant horizontal space is wasted.
+
+**Why it happens:** The `max-w-7xl` is appropriate for single-column pages (agent list, dashboard, project detail) but inappropriate for a split-layout document workspace that benefits from full-width use.
+
+**How to avoid:**
+- Add a `fullWidth` prop to `AppShell` (or create a `ChatShell` variant) that removes the `max-w-7xl` constraint for chat pages.
+- The chat route already differs from other routes — it has no page padding in the content area since the chat itself fills the viewport. Making this explicit with a shell variant is cleaner than fighting the default styles.
+- The `Sidebar` and `Header` remain unchanged — only the `<main>` content area wrapper changes.
+
+**Phase to address:** Phase 1 of v3.0 — part of the layout restructure.
+
+---
+
+## Technical Debt Patterns
+
+Shortcuts that seem reasonable but create long-term problems.
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Store artifact content in component state instead of Zustand | Simpler component code | Artifact state lost on navigation, streaming desync | Never — streaming completion events must update global store |
+| Generate DOCX client-side with a browser-compatible library | No API route needed | fs module errors in Next.js build, or 600KB+ bundle | Never — keep export server-only |
+| Use `window.print()` for PDF | Zero implementation effort | Exports entire page with nav/sidebar, terrible output | Only as a temporary fallback with explicit labeling |
+| Absolute-position comment bubbles using `getBoundingClientRect()` | Simpler to implement | Breaks on resize, scroll, and zoom | Never — store character offsets instead |
+| Add a new SSE endpoint for artifact live updates | Real-time feel | Hits browser HTTP/1.1 connection limit (6 per domain) when combined with existing chat SSE | Never — use polling or Zustand-driven updates |
+| Use Tiptap for rich text editing from day one | Powerful editor | 150KB bundle, learning curve, complex cursor/selection management | Only if explicit formatting (bold/italic/tables) is a v3.0 requirement |
+| Detect document type from content heuristics only | No prompt changes | Frequent misclassification, brittle | Acceptable as fallback only — primary detection should use explicit XML attribute |
+
+---
+
+## Integration Gotchas
+
+Common mistakes when connecting to the existing system.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Existing SSE streaming + artifacts panel | Subscribe to `messages` array, re-render on every chunk | Subscribe to `isStreaming` + `activeArtifactId` from store; throttle preview updates |
+| Existing `Deliverable` schema + document types | Add new model for "Document" separate from Deliverable | Add `documentType` and `artifactData` columns to existing `Deliverable` model — avoids schema churn |
+| Existing `InlineEditor` (textarea) + artifacts panel | Replace InlineEditor with a new rich editor | Keep textarea-based InlineEditor in the review panel; use a separate preview pane in artifacts panel |
+| Export API routes + Next.js client components | Import `docx`/`exceljs` in client component | All export libraries in API routes only; client sends export request and handles binary response |
+| `AppShell` layout + full-width split pane | Toggle CSS classes to show/hide artifacts column | Use a chat-specific shell that opts out of `max-w-7xl` — prevents DOM thrash and layout shift |
+| Existing `deliverables` Zustand slice + artifact panel state | Create second `artifactStore` | Add `activeArtifactId` and `panelOpen` to existing `useChatStore` to keep streaming state colocated |
+| Existing `cmdk` Command Palette (Cmd+K) + editor shortcuts | Register new Cmd+K binding in artifacts panel | Use existing shortcut registry with context scoping — never add a second document-level keydown listener |
+
+---
+
+## Performance Traps
+
+Patterns that work but degrade user experience.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Re-render `ReactMarkdown` on every SSE text chunk | Visible lag in artifacts preview during streaming | Throttle preview to 4 fps; use `useDeferredValue` | Deliverables > 200 lines during active streaming |
+| Generate DOCX synchronously in API route for large documents | HTTP timeout for long documents | Streaming response or background job — but for local app, synchronous under 5 seconds is fine | Documents > 100 pages (unlikely for this app) |
+| Load all comments for a deliverable in a single query without pagination | Slow comment load on well-commented documents | Limit to 50 comments with `take: 50` | Any deliverable with > 50 comments |
+| Run `parseDeliverables()` on every message re-render | CPU spike when message list has 50+ messages | Memoize per `messageId` + `content` hash — only re-parse when content changes | Sessions with > 20 messages |
+| Binary export response without `Content-Disposition` header | Browser opens binary file inline instead of downloading | Always set `Content-Disposition: attachment; filename="..."` on export responses | Every export |
+
+---
+
+## UX Pitfalls
+
+Common user experience mistakes in this domain.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Artifacts panel opens and shifts the chat scrollback to the wrong position | User loses context of the conversation mid-stream | Preserve scroll position on panel toggle; use `scrollTop` restoration on layout change |
+| Export format buttons visible but disabled before a deliverable exists | Confusing affordance — buttons that don't do anything | Hide export controls entirely until a deliverable is present in the panel |
+| Inline comment UI overlaps the text being commented on | Comment covers the content the user wants to read | Offset comment bubbles to the right margin, not floating over text |
+| "Approve" action available in artifacts panel AND in the existing ReviewPanel below the message | Two ways to do the same action, risk of double-action | Keep approve/revise actions in ReviewPanel only; artifacts panel is view + edit only |
+| Streaming preview shows partial XML tags (`<deliv`) during stream | Visual noise that confuses users | Strip incomplete XML tags from preview using a regex during streaming |
+| Export to Word produces a file named "document.docx" | Users can't find their file in Downloads | Auto-generate filename from deliverable content: first 50 chars of title or first line, sanitized |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **Artifacts panel:** Often missing scroll sync with chat — when user jumps to a message, panel should show that message's artifact. Verify artifact panel tracks active message.
+- [ ] **DOCX export:** Often missing: heading styles, code block formatting, table borders. Verify exported file opens correctly in Microsoft Word, not just LibreOffice.
+- [ ] **PDF export:** Often missing: page breaks inside long code blocks, correct font rendering. Verify PDF text is selectable (not rasterized).
+- [ ] **Excel export:** Often missing: header row is not frozen/bolded. Verify row 1 has formatting that distinguishes it from data rows.
+- [ ] **Inline commenting:** Often missing: comments persist after page navigation and reload. Verify comments are fetched from DB on mount, not just from component state.
+- [ ] **Keyboard shortcuts:** Often missing: shortcuts listed in the UI somewhere discoverable. Verify a `?` key or tooltip shows all active shortcuts.
+- [ ] **Panel resize:** Often missing: panel size is not persisted across sessions. Verify localStorage-based size restoration works after page reload.
+- [ ] **Binary export downloads:** Often missing: `Content-Disposition: attachment` header. Verify the browser downloads the file rather than displaying garbled binary content.
+
+---
+
+## Recovery Strategies
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Artifacts panel layout breaks streaming | HIGH | Revert to single-column layout, isolate layout changes from store changes, rebuild incrementally |
+| fs module error from export library in client bundle | LOW | Move import to API route, add `"use server"` directive, clear `.next` cache and rebuild |
+| Streaming desync between chat store and artifacts panel | MEDIUM | Add logging to `done` event handler, trace `activeArtifactId` assignment, verify no double `initSession` calls |
+| PDF output quality unacceptable | MEDIUM | Switch from client-side library to Puppeteer API route approach; add a print-optimized page route |
+| Inline comment anchors break after content edit | MEDIUM | Add content hash to comment record; invalidate/disable comments when content hash changes post-edit |
+| Keyboard shortcut conflict with browser | LOW | Check `e.metaKey`/`e.ctrlKey` combination, rename conflicting shortcut, update shortcut registry |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Artifacts panel breaks chat layout | Phase 1: Layout & Shell Restructure | Toggle panel open/close 5 times during active streaming — verify no store reset |
+| Export libraries break client bundle | Phase 2: Export | `next build` succeeds with zero `fs`/`path` module errors |
+| SSE + artifacts state desync | Phase 1: Unified state model | Send a message, verify artifact appears in panel within 200ms of `done` event |
+| PDF layout quality | Phase 2: Export | Export a deliverable with code blocks and tables — verify selectable text and correct layout |
+| SQLite binary storage | Phase 3: Document model | Confirm no binary data in `Deliverable.content` column; export is always on-demand |
+| Inline comment anchors break on resize | Phase 4: Inline Commenting | Resize panel while comments are visible — verify comment positions update correctly |
+| Keyboard shortcut conflicts | Phase 1: Shortcut Registry Update | Test all existing shortcuts after adding new ones; test in chat input, artifact edit mode, command palette |
+| Preview re-render lag during streaming | Phase 1: Artifacts panel | Stream a 2000-token response — verify preview updates feel smooth, no UI blocking |
+| react-resizable-panels hydration | Phase 1: Layout | Hard reload chat page — verify no React hydration warning in console |
+| Document type detection | Phase 3: Rich document types | Test with agent that doesn't emit type attribute — verify graceful fallback to markdown rendering |
+| AppShell max-w-7xl clips panel | Phase 1: Layout | On 1440px monitor, verify chat + artifacts panel use >80% of horizontal space |
+| Excel table parsing | Phase 2: Export | Export a deliverable with a GFM markdown table — verify cell alignment and header row formatting in Excel |
 
 ---
 
 ## Sources
 
-- [Prisma FTS5 SQLite Issue #9414](https://github.com/prisma/prisma/issues/9414)
-- [Prisma Full-Text Search Docs](https://www.prisma.io/docs/orm/prisma-client/queries/full-text-search)
-- [React ContentEditable Caret Issue #2047](https://github.com/facebook/react/issues/2047)
-- [ContentEditable Caret Fix with useLayoutEffect](https://www.codegenes.net/blog/caret-position-reverts-to-start-of-contenteditable-span-on-re-render-in-react-in-safari-and-firefox/)
-- [dnd-kit Official Documentation](https://dndkit.com/)
-- [Shadcn/ui + dnd-kit Kanban Reference](https://github.com/Georgegriff/react-dnd-kit-tailwind-shadcn-ui)
-- [Building Kanban Board with dnd-kit (LogRocket)](https://blog.logrocket.com/build-kanban-board-dnd-kit-react/)
-- [react-diff-viewer-continued](https://github.com/Aeolun/react-diff-viewer-continued)
-- [Primer React: Overlay Events Conflicting with Global Shortcuts](https://github.com/primer/react/issues/1802)
-- [Keyboard Shortcut Hook in React (Tania Rascia)](https://www.taniarascia.com/keyboard-shortcut-hook-react/)
-- [Zustand GitHub Repository](https://github.com/pmndrs/zustand)
-- [React State Management in 2025](https://www.developerway.com/posts/react-state-management-2025)
-- [Prisma Migrate Documentation](https://www.prisma.io/docs/orm/prisma-migrate)
-- [Prisma SQLite Shadow Tables Issue #8106](https://github.com/prisma/prisma/issues/8106)
-- [App Router Pitfalls (imidef)](https://imidef.com/en/2026-02-11-app-router-pitfalls)
+- Codebase audit: `/Users/luke/onewave-agency/src/components/chat/ChatPage.tsx`, `AppShell.tsx`, `chat.ts` (Zustand store), `InlineEditor.tsx`, `prisma/schema.prisma`
+- [react-resizable-panels SSR issue #144](https://github.com/bvaughn/react-resizable-panels/issues/144) — hydration mismatch with localStorage
+- [react-resizable-panels SSR demo (Next.js)](https://github.com/bvaughn/react-resizable-panels-demo-ssr) — reference implementation
+- [Next.js App Router layout re-mount issue #52558](https://github.com/vercel/next.js/issues/52558) — components re-rendering on navigation
+- [Next.js dynamic segment re-mount RFC Discussion #50711](https://github.com/vercel/next.js/discussions/50711)
+- [Next.js fs module resolution Discussion #58642](https://github.com/vercel/next.js/discussions/58642) — Node.js modules in client bundles
+- [Module not found: Can't resolve 'fs' — Sentry](https://sentry.io/answers/module-not-found-nextjs/)
+- [Top JS PDF libraries for 2026 — Nutrient](https://www.nutrient.io/blog/top-js-pdf-libraries/)
+- [PDF generation comparison — npm-compare](https://npm-compare.com/@react-pdf/renderer,jspdf,pdfmake,react-pdf)
+- [SheetJS bundle size issue #694](https://github.com/SheetJS/sheetjs/issues/694) — 1MB+ bundle
+- [SQLite Internal vs External BLOBs — sqlite.org](https://sqlite.org/intern-v-extern-blob.html) — 100KB threshold
+- [SQLite Implementation Limits — sqlite.org](https://sqlite.org/limits.html)
+- [Handling State Update Race Conditions in React — Medium/CyberArk](https://medium.com/cyberark-engineering/handling-state-update-race-conditions-in-react-8e6c95b74c17)
+- [CSS Anchor Positioning API — Chrome for Developers](https://developer.chrome.com/docs/css-ui/anchor-positioning-api)
+- [Keyboard shortcuts for web applications — xjavascript.com](https://www.xjavascript.com/blog/available-keyboard-shortcuts-for-web-applications/)
+- Prior v2.0 pitfalls research (Pitfalls 1-14, 2026-03-10) — retained as reference for carried-forward issues
+
+---
+*Pitfalls research for: v3.0 Document Workspace / Artifacts Panel additions to existing Next.js 16 + Prisma 7 + SSE app*
+*Researched: 2026-03-16*
