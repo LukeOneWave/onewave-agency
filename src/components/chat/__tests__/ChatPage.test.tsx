@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import React from "react";
 
 // ---------------------------------------------------------------------------
 // Mock: useChatStore — define spies INSIDE the factory to avoid hoisting issues
 // ---------------------------------------------------------------------------
 const mockTogglePanel = vi.fn();
+
+// Mutable variable: tests can set this before re-render to simulate reactive state change
+let mockPanelOpen = false;
 
 vi.mock("@/store/chat", () => {
   const togglePanel = vi.fn();
@@ -21,7 +24,7 @@ vi.mock("@/store/chat", () => {
     selector({
       error: null,
       sessionId: "session-1",
-      panelOpen: false,
+      get panelOpen() { return mockPanelOpen; },
       activeDeliverableId: null,
       messages: [],
       isStreaming: false,
@@ -31,6 +34,15 @@ vi.mock("@/store/chat", () => {
 
   return { useChatStore };
 });
+
+// ---------------------------------------------------------------------------
+// Shared mock imperative handle — accessible by all tests for assertions
+// ---------------------------------------------------------------------------
+const mockPanelHandle = {
+  isCollapsed: vi.fn(() => false),
+  collapse: vi.fn(),
+  expand: vi.fn(),
+};
 
 // ---------------------------------------------------------------------------
 // Mock: ResizablePanelGroup, ResizablePanel, ResizableHandle
@@ -56,13 +68,9 @@ vi.mock("@/components/ui/resizable", () => ({
     panelRef?: React.Ref<unknown>;
     [key: string]: unknown;
   }) => {
-    // Attach ref to a mock imperative handle if panelRef is provided
+    // Attach shared mock imperative handle if panelRef is provided
     if (panelRef && typeof panelRef === "object" && "current" in panelRef) {
-      (panelRef as React.MutableRefObject<unknown>).current = {
-        isCollapsed: vi.fn(() => false),
-        collapse: vi.fn(),
-        expand: vi.fn(),
-      };
+      (panelRef as React.MutableRefObject<unknown>).current = mockPanelHandle;
     }
     return (
       <div data-testid="resizable-panel">
@@ -122,6 +130,9 @@ const session = {
 describe("ChatPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mutable state between tests
+    mockPanelOpen = false;
+    mockPanelHandle.isCollapsed.mockReturnValue(false);
   });
 
   it("Test 1: renders ResizablePanelGroup with two ResizablePanel children", () => {
@@ -212,5 +223,43 @@ describe("ChatPage", () => {
     expect(preventDefaultSpy).not.toHaveBeenCalled();
 
     document.body.removeChild(textarea);
+  });
+
+  it("Test 7: panelOpen transitioning to false triggers imperative collapse on the panel ref", () => {
+    // Start with panel open
+    mockPanelOpen = true;
+    mockPanelHandle.isCollapsed.mockReturnValue(false);
+
+    const { rerender } = render(<ChatPage session={session} />);
+
+    // Simulate store toggling panelOpen to false (e.g., ] key pressed)
+    mockPanelOpen = false;
+
+    // Re-render so the useEffect re-runs with the new panelOpen value
+    act(() => {
+      rerender(<ChatPage session={session} />);
+    });
+
+    expect(mockPanelHandle.collapse).toHaveBeenCalledTimes(1);
+    expect(mockPanelHandle.expand).not.toHaveBeenCalled();
+  });
+
+  it("Test 8: panelOpen transitioning to true triggers imperative expand on the panel ref", () => {
+    // Start with panel collapsed
+    mockPanelOpen = false;
+    mockPanelHandle.isCollapsed.mockReturnValue(true);
+
+    const { rerender } = render(<ChatPage session={session} />);
+
+    // Simulate store toggling panelOpen to true (e.g., ] key pressed to re-open)
+    mockPanelOpen = true;
+
+    // Re-render so the useEffect re-runs with the new panelOpen value
+    act(() => {
+      rerender(<ChatPage session={session} />);
+    });
+
+    expect(mockPanelHandle.expand).toHaveBeenCalledTimes(1);
+    expect(mockPanelHandle.collapse).not.toHaveBeenCalled();
   });
 });
