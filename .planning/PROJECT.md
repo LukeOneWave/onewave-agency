@@ -37,7 +37,15 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 
 ### Active
 
-(None — planning next milestone)
+- [ ] Artifacts panel alongside chat with live document preview
+- [ ] Rich document types (business docs, creative content, technical specs, spreadsheet data)
+- [ ] In-place document iteration (edit, ask agent to revise, see changes live)
+- [ ] Export to Word (.docx)
+- [ ] Export to PDF
+- [ ] Export to Excel (.xlsx) and CSV
+- [ ] Export to Markdown and HTML
+- [ ] Inline commenting on deliverables (REVW-04, deferred from v2.0)
+- [ ] Keyboard shortcuts for review workflow (REVW-05, deferred from v2.0)
 
 ### Out of Scope
 
@@ -47,8 +55,6 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 - Real-time collaboration — single user
 - Agent-to-agent communication — agents work independently on shared briefs
 - AI model marketplace / multi-provider — Anthropic Claude only
-- Inline commenting on deliverables (REVW-04) — deferred from v2.0
-- Keyboard shortcuts for review workflow (REVW-05) — deferred from v2.0
 - Task dependencies/subtasks — keep project management lightweight
 - Due dates on tasks — keep project management lightweight
 - Custom Kanban columns — fixed status categories sufficient
@@ -90,5 +96,17 @@ The ability to review, approve, and iterate on agent-produced deliverables — t
 | db push (no migrations) | Single-user local app — no migration history needed, simpler schema changes | ✓ Good |
 | confirmedRef for optimistic UI | useRef tracks server-confirmed state for drag revert-on-error without stale closures | ✓ Good |
 
+## Current Milestone: v3.0 Document Workspace
+
+**Goal:** Transform OneWave's deliverable output from plain markdown text into rich, exportable documents with a live preview artifacts panel — making agent output directly usable as professional files.
+
+**Target features:**
+- Artifacts panel alongside chat for live document preview and editing
+- Rich document types: business docs, creative content, technical specs, spreadsheet data
+- In-place iteration: edit documents, ask agent to revise, see changes live
+- Export to Word (.docx), PDF, Excel (.xlsx), CSV, Markdown (.md), HTML
+- Inline commenting on deliverables (carried from v2.0)
+- Keyboard shortcuts for review workflow (carried from v2.0)
+
 ---
-*Last updated: 2026-03-12 after v2.0 milestone*
+*Last updated: 2026-03-16 after v3.0 milestone started*
