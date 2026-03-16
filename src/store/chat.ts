@@ -17,6 +17,8 @@ interface ChatState {
   error: string | null;
   _abortController: AbortController | null;
   deliverables: Record<string, DeliverableState>;
+  panelOpen: boolean;
+  activeDeliverableId: string | null;
 
   initSession: (
     sessionId: string,
@@ -26,6 +28,9 @@ interface ChatState {
   ) => void;
   setModel: (model: string) => void;
   sendMessage: (content: string, attachments?: ChatAttachment[]) => Promise<void>;
+  openPanel: (deliverableId?: string) => void;
+  closePanel: () => void;
+  togglePanel: () => void;
   clearChat: () => void;
   stopStreaming: () => void;
   approveDeliverable: (messageId: string, deliverableIndex: number) => Promise<void>;
@@ -43,6 +48,20 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   error: null,
   _abortController: null,
   deliverables: {},
+  panelOpen: false,
+  activeDeliverableId: null,
+
+  openPanel: (deliverableId?: string) => {
+    set({ panelOpen: true, ...(deliverableId && { activeDeliverableId: deliverableId }) });
+  },
+
+  closePanel: () => {
+    set({ panelOpen: false });
+  },
+
+  togglePanel: () => {
+    set((s) => ({ panelOpen: !s.panelOpen }));
+  },
 
   initSession: (sessionId, agentSlug, agentName, existingMessages) => {
     set({
@@ -52,6 +71,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       messages: existingMessages ?? [],
       error: null,
       deliverables: {},
+      panelOpen: false,
+      activeDeliverableId: null,
     });
 
     // Lazily load deliverable statuses for existing assistant messages
@@ -222,6 +243,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       error: null,
       _abortController: null,
       deliverables: {},
+      panelOpen: false,
+      activeDeliverableId: null,
     });
   },
 
