@@ -35,6 +35,7 @@ const PANEL_SIZES_KEY = "chat-panel-sizes";
 
 export function ChatPage({ session }: ChatPageProps) {
   const error = useChatStore((s) => s.error);
+  const panelOpen = useChatStore((s) => s.panelOpen);
 
   // Imperative handle for the artifacts panel — used for ] shortcut collapse/expand
   const artifactsPanelRef = useRef<PanelImperativeHandle | null>(null);
@@ -58,6 +59,17 @@ export function ChatPage({ session }: ChatPageProps) {
       // ignore malformed storage or unavailable localStorage
     }
   }, []);
+
+  // Sync store panelOpen state to the visual panel via imperative ref
+  useEffect(() => {
+    const panel = artifactsPanelRef.current;
+    if (!panel) return;
+    if (panelOpen && panel.isCollapsed()) {
+      panel.expand();
+    } else if (!panelOpen && !panel.isCollapsed()) {
+      panel.collapse();
+    }
+  }, [panelOpen]);
 
   // Session initialization guard — don't reinit if same session
   useEffect(() => {
