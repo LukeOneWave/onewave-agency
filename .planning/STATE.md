@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Document Workspace
-status: ready_to_plan
-stopped_at: Roadmap created — ready to plan Phase 12
-last_updated: "2026-03-16"
-last_activity: 2026-03-16 -- v3.0 roadmap created (5 phases, 23 requirements mapped)
+status: planning
+stopped_at: Completed 12-01-PLAN.md — resizable primitives, panel state, segment layout, ArtifactsPanel shell
+last_updated: "2026-03-16T20:37:10.578Z"
+last_activity: 2026-03-16 — v3.0 roadmap created, 23/23 requirements mapped across 5 phases
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -43,6 +43,9 @@ Recent decisions affecting current work:
 - Research: AppShell `max-w-7xl p-6` bypass requires route segment layout at `app/chat/[sessionId]/layout.tsx` — validate exact technique before restructuring ChatPage
 - Research: PDF strategy unresolved — `@react-pdf/renderer` vs Puppeteer requires proof-of-concept with code blocks + tables before Phase 15 planning begins
 - Research: Use `visibility: hidden` / `width: 0` for panel collapse (never remove from DOM) to protect `initSession` SSE guard from re-mount
+- [Phase 12-layout-shell-unified-state]: ArtifactsPanel always mounted to protect SSE guards — use visibility/width-0 for collapse, never conditional rendering
+- [Phase 12-layout-shell-unified-state]: closePanel does not clear activeDeliverableId — preserves selection when panel is re-opened
+- [Phase 12-layout-shell-unified-state]: Segment layout -m-6 confirmed working to cancel AppShell p-6 padding constraint
 
 ### Pending Todos
 
@@ -55,6 +58,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16
-Stopped at: Roadmap created — v3.0 phases 12-16 defined, all files written
+Last session: 2026-03-16T20:37:10.573Z
+Stopped at: Completed 12-01-PLAN.md — resizable primitives, panel state, segment layout, ArtifactsPanel shell
 Resume file: None

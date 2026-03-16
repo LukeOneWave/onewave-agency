@@ -9,7 +9,7 @@ Requirements for v3.0 Document Workspace. Each maps to roadmap phases.
 
 ### Artifacts Panel
 
-- [ ] **ARTF-01**: User sees a split-panel layout with chat on the left and artifacts panel on the right
+- [x] **ARTF-01**: User sees a split-panel layout with chat on the left and artifacts panel on the right
 - [ ] **ARTF-02**: User sees an artifact card in the chat stream when agent produces a deliverable
 - [ ] **ARTF-03**: User sees the document preview update live as the agent streams its response
 - [ ] **ARTF-04**: User sees rendered document (formatted headings, tables, code) not raw markdown
@@ -18,7 +18,7 @@ Requirements for v3.0 Document Workspace. Each maps to roadmap phases.
 - [ ] **ARTF-07**: User can navigate between artifact versions (v1, v2, v3) within the panel
 - [ ] **ARTF-08**: User can toggle diff view to see changes between artifact versions
 - [ ] **ARTF-09**: User can copy artifact content to clipboard with one click
-- [ ] **ARTF-10**: User can dismiss/minimize the artifacts panel to return to full-width chat
+- [x] **ARTF-10**: User can dismiss/minimize the artifacts panel to return to full-width chat
 
 ### Document Rendering
 
@@ -73,7 +73,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARTF-01 | Phase 12 | Pending |
+| ARTF-01 | Phase 12 | Complete |
 | ARTF-02 | Phase 13 | Pending |
 | ARTF-03 | Phase 13 | Pending |
 | ARTF-04 | Phase 13 | Pending |
@@ -82,7 +82,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARTF-07 | Phase 14 | Pending |
 | ARTF-08 | Phase 14 | Pending |
 | ARTF-09 | Phase 14 | Pending |
-| ARTF-10 | Phase 12 | Pending |
+| ARTF-10 | Phase 12 | Complete |
 | DOCR-01 | Phase 14 | Pending |
 | DOCR-02 | Phase 14 | Pending |
 | DOCR-03 | Phase 14 | Pending |
