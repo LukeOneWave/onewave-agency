@@ -55,8 +55,8 @@
   5. Review workflow keyboard shortcuts (j/k/a/r) work inside the chat view without conflicting with browser or Cmd+K shortcuts
 **Plans**: 2 plans
 Plans:
-- [ ] 12-01-PLAN.md — Install shadcn resizable, extend store with panel state, segment layout bypass, ArtifactsPanel shell
-- [ ] 12-02-PLAN.md — Restructure ChatPage with ResizablePanelGroup, keyboard shortcuts, localStorage persistence
+- [x] 12-01-PLAN.md — Install shadcn resizable, extend store with panel state, segment layout bypass, ArtifactsPanel shell
+- [x] 12-02-PLAN.md — Restructure ChatPage with ResizablePanelGroup, keyboard shortcuts, localStorage persistence
 
 ### Phase 13: Live Preview and Type Detection
 **Goal**: When an agent streams a deliverable, an artifact card appears in the chat and the panel shows a live updating document preview with the correct type label
@@ -122,7 +122,7 @@ Plans:
 | 9. Advanced Review | v2.0 | 3/3 | Complete | 2026-03-11 |
 | 10. Power User UX | v2.0 | 2/2 | Complete | 2026-03-12 |
 | 11. Production Polish | v2.0 | 2/2 | Complete | 2026-03-12 |
-| 12. Layout, Shell, and Unified State | 2/2 | Complete   | 2026-03-16 | - |
+| 12. Layout, Shell, and Unified State | v3.0 | 2/2 | Complete | 2026-03-16 |
 | 13. Live Preview and Type Detection | v3.0 | 0/TBD | Not started | - |
 | 14. Type-Aware Renderers and Version Navigation | v3.0 | 0/TBD | Not started | - |
 | 15. Multi-Format Export | v3.0 | 0/TBD | Not started | - |
@@ -130,4 +130,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-09 (v1.0), extended 2026-03-10 (v2.0), extended 2026-03-16 (v3.0)*
-*Last updated: 2026-03-16*
+*Last updated: 2026-03-16 — Phase 12 fully complete (checkpoint approved)*
