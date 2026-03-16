@@ -35,7 +35,7 @@
 
 **Milestone Goal:** Transform agent deliverables from plain markdown text into rich, exportable documents with a live-preview artifacts panel — making agent output directly usable as professional files.
 
-- [ ] **Phase 12: Layout, Shell, and Unified State** — Route segment layout bypassing AppShell, resizable split panel, artifacts Zustand store
+- [x] **Phase 12: Layout, Shell, and Unified State** — Route segment layout bypassing AppShell, resizable split panel, artifacts Zustand store (completed 2026-03-16)
 - [ ] **Phase 13: Live Preview and Type Detection** — Artifact card in chat stream, streaming document preview, heuristic doc-type classification
 - [ ] **Phase 14: Type-Aware Renderers and Version Navigation** — Markdown, spreadsheet, and technical spec viewers; version selector; diff toggle in panel
 - [ ] **Phase 15: Multi-Format Export** — Server-side Word, PDF, Excel; client-side CSV, Markdown, HTML; ExportBar component
@@ -122,7 +122,7 @@ Plans:
 | 9. Advanced Review | v2.0 | 3/3 | Complete | 2026-03-11 |
 | 10. Power User UX | v2.0 | 2/2 | Complete | 2026-03-12 |
 | 11. Production Polish | v2.0 | 2/2 | Complete | 2026-03-12 |
-| 12. Layout, Shell, and Unified State | 1/2 | In Progress|  | - |
+| 12. Layout, Shell, and Unified State | 2/2 | Complete   | 2026-03-16 | - |
 | 13. Live Preview and Type Detection | v3.0 | 0/TBD | Not started | - |
 | 14. Type-Aware Renderers and Version Navigation | v3.0 | 0/TBD | Not started | - |
 | 15. Multi-Format Export | v3.0 | 0/TBD | Not started | - |
