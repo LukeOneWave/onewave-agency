@@ -95,3 +95,12 @@ None - plan executed exactly as written.
 ---
 *Phase: 12-layout-shell-unified-state*
 *Completed: 2026-03-16*
+
+## Self-Check: PASSED
+
+- FOUND: src/components/chat/ChatPage.tsx
+- FOUND: src/components/chat/__tests__/ChatPage.test.tsx
+- FOUND: .planning/phases/12-layout-shell-unified-state/12-03-SUMMARY.md
+- FOUND: commit 90a5d13 (feat: wire panelOpen store state to imperative panel ref)
+- FOUND: commit 1e72976 (test: add Tests 7 and 8 verifying imperative collapse/expand)
+- FOUND: commit bd8f24f (docs: complete gap closure plan metadata)

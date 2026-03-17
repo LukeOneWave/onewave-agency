@@ -128,3 +128,12 @@ None - no external service configuration required.
 ---
 *Phase: 12-layout-shell-unified-state*
 *Completed: 2026-03-16*
+
+## Self-Check: PASSED
+
+All files verified present, all commits verified in git history:
+- FOUND: src/components/chat/ChatPage.tsx
+- FOUND: src/components/chat/__tests__/ChatPage.test.tsx
+- FOUND: .planning/phases/12-layout-shell-unified-state/12-02-SUMMARY.md
+- FOUND: 9809aa7 (test commit — TDD RED)
+- FOUND: d5d2cc5 (feat commit — TDD GREEN)
